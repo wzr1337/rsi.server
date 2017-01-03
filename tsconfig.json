@@ -1,0 +1,19 @@
+{
+  "files": [
+    "src/main.ts"
+  ],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "target": "es6",
+    "module": "commonjs"
+  },
+  "types": [
+    "node",
+    "rxjs"
+  ],
+  "typeroots": [
+    "../node_modules/@types",
+    "../node_modules/@reactivex"
+  ]
+}
