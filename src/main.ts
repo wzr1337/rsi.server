@@ -1,16 +1,26 @@
-import { Observable } from '@reactivex/rxjs'
+import { Observable, Subject } from '@reactivex/rxjs';
 
 // set up the server
 
 
 // register an Object
+var mySubject = new Subject();
+var subscription = mySubject.subscribe(
+  (x:any) => {
+    console.log('Next: ' + x);
+  },
+  (err:any) => {
+    console.log('Error: ' + err);
+  },
+  () => {
+    console.log('Completed');
+  });
 
 
 // push info into the Object
 
-var myObj = Observable.interval(1000)
-  .timeInterval();
+mySubject.next('foo');
 
-myObj.subscribe((x:any) => {
-  console.log("wow: ", x);
-});
+setInterval(() => {
+  mySubject.next('foo');
+}, 1000);
