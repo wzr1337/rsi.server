@@ -10,7 +10,7 @@ var paths = {
 }
 
 gulp.task("typescript", () => {
-    return tsProject.src()
+    return gulp.src("./src/**/*.ts")
         .pipe(tsProject())
         .js.pipe(gulp.dest(paths.bin));
 });

@@ -1,6 +1,6 @@
 {
   "files": [
-    "src/main.ts"
+    "src/**/*.ts"
   ],
   "compilerOptions": {
     "noImplicitAny": true,
@@ -10,7 +10,8 @@
   },
   "types": [
     "node",
-    "rxjs"
+    "express",
+    "uuid"
   ],
   "typeroots": [
     "../node_modules/@types",
