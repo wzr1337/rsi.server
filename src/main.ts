@@ -1,10 +1,12 @@
 import { Observable, Observer, BehaviorSubject} from '@reactivex/rxjs';
 import * as express from 'express';
-import { Server } from "./expressapp";
-import * as uuid from "uuid"
+import { WebServer } from "./expressapp";
+import * as uuid from "uuid";
+
+const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 
 // set up the server
-var server = new Server();
+var server = new WebServer();
 server.init(); // need to init
 
 const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
@@ -88,6 +90,59 @@ server.app.get('/media/renderers/', (req: express.Request, res: express.Response
     data: resp
   });
 });
+
+
+
+/*var subscribers:{
+  [ws: WebSocket]: BehaviorSubject<{}>
+} = {};*/
+
+server.ws.on('connection', (ws) => {
+  ws.on("message", (message:string) => {
+    let msg = JSON.parse(message);
+    switch (msg.type) {
+      case "subscribe":
+        let captureGroups = msg.event.match(URIREGEX);
+        if (captureGroups) {
+          if (captureGroups[3]) {
+            // element subscription
+
+            // find the element requested by the client
+            let element = renderers.find((element:BehaviorSubject<{}>) => {
+              return (<{id:string}>element.getValue()).id === rendererId;
+            });
+
+            element.subscribe( //@TODO keep per client referenc for unsubscription etc.
+              (data:any) => {
+                ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
+              },
+              (err:any) => {
+                ws.send(JSON.stringify({type: "error", code: "500", data: err}));
+              });
+            ws.send(JSON.stringify({type: "subscribe", status: "ok", event: msg.event}));
+            ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: element.getValue()}));
+          }
+          else {
+            // resource subscription
+            ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+          }
+        } 
+        else { 
+          ws.send(JSON.stringify({type: "error", code: "404", data:"Not Found"}));
+        }
+        break;
+
+      case "unsubscribe":
+      case "reauthorize":
+      default:
+         ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+        break;
+    }
+    msg.type;
+
+  })
+});
+
 
 
 // register an Object

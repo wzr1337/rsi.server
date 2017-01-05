@@ -1,13 +1,14 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
-
+import * as WebSocketServer from 'ws';
 import http = require('http');
 
 
 
 // create server and listen on provided port (on all network interfaces).
-class Server {
-    public app: express.Express; 
+class WebServer {
+    public app: express.Express;
+    public ws: WebSocketServer.Server;
     private _server:any;
     private _port:number|string|boolean;
 
@@ -21,6 +22,8 @@ class Server {
         this.app.set('port', this._port);
 
         this._server = http.createServer(this.app);
+
+        this.ws = new WebSocketServer.Server({ server: this._server });
     }
 
     init() {
@@ -60,4 +63,4 @@ class Server {
     }
 };
 
-export { Server };
+export { WebServer };
