@@ -2,12 +2,43 @@ import { Observable, Observer, BehaviorSubject} from '@reactivex/rxjs';
 import * as express from 'express';
 import { WebServer } from "./expressapp";
 import * as uuid from "uuid";
+import * as fs from "fs";
+import * as path from "path";
 
-const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
+declare function require(moduleName: string): any;
+
+const PLUGINDIR = path.join(__dirname, "plugins");
+
 
 // set up the server
 var server = new WebServer();
 server.init(); // need to init
+
+
+/**
+ * Plugin loader
+ * 
+ * browses the PLUGINDIR for available plugins and registers them with the viwi sevrer 
+ */
+fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
+  if(err) {
+    console.error(err);
+  }
+  files.forEach(file => {
+    let module = path.join(PLUGINDIR, file);
+    if(fs.lstatSync(module).isDirectory()) {
+      let _module = require(module);
+      console.log("Loading Plugin:", file);
+      console.log(new _module().name());
+    }
+  });
+});
+
+
+
+const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
+
+
 
 const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
 
@@ -97,6 +128,22 @@ server.app.get('/media/renderers/', (req: express.Request, res: express.Response
   [ws: WebSocket]: BehaviorSubject<{}>
 } = {};*/
 
+
+class Media {
+  /**
+   * Renderer specific element retrieval
+   * 
+   */
+  static getElement(collection, elementId) {
+    return collection.find((element:BehaviorSubject<{}>) => {
+      return (<{id:string}>element.getValue()).id === elementId;
+  });
+  }
+}
+
+/**
+ * WebSocket stuff
+ */
 server.ws.on('connection', (ws) => {
   ws.on("message", (message:string) => {
     let msg = JSON.parse(message);
@@ -105,14 +152,12 @@ server.ws.on('connection', (ws) => {
         let captureGroups = msg.event.match(URIREGEX);
         if (captureGroups) {
           if (captureGroups[3]) {
-            // element subscription
+            // this is an element subscription
+            // === Service sepcific callback goes here ======
+            let element = Media.getElement(renderers, rendererId);
+            // ==============================================
 
-            // find the element requested by the client
-            let element = renderers.find((element:BehaviorSubject<{}>) => {
-              return (<{id:string}>element.getValue()).id === rendererId;
-            });
-
-            element.subscribe( //@TODO keep per client referenc for unsubscription etc.
+            element.subscribe( //@TODO keep per client reference for unsubscription etc.
               (data:any) => {
                 ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
               },
@@ -138,7 +183,6 @@ server.ws.on('connection', (ws) => {
          ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
         break;
     }
-    msg.type;
 
   })
 });
