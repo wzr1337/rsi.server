@@ -36,7 +36,7 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
         let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
         console.log("Registering endpoint:", service.name);
         server.app.get(basePath, resourceGET(service, resource));               //READ
-        server.app.post(basePath, resourcePOST(service, resource));              //CREATE
+        server.app.post(basePath, resourcePOST(service, resource));             //CREATE
         server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
         server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
         server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
@@ -47,8 +47,9 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
 
 const elementGET = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
-  console.log("GET", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log("Query: GET", req.path);
+
     if(!resource.getElement) {
       res.status(501).send("Not Implemented");
       return;
@@ -75,14 +76,14 @@ const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("GET", resourcePath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log("Query: GET", req.path);
     if(!resource.getResource) {
       res.status(501).send("Not Implemented");
       return;
     }
-    console.log(req.params);
     // get all available renderes and map their representation to JSON compatible values
     function parseNumberOrId(n:string|number):string|number {
-      return (!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString();
+      return (typeof n === "undefined") ? undefined : ((!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString());
     }
 
     let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
@@ -108,6 +109,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("POST", resourcePath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log("Query: POST", req.path);
     if(!resource.createElement) {
       res.status(501).send("Not Implemented");
       return;
@@ -119,6 +121,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   console.log("DELETE", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log("Query: DELETE", req.path);
 
     if(!resource.deleteElement) {
       res.status(501).send("Not Implemented");
@@ -143,7 +146,11 @@ const elementDELETE = (service:Service, resource:Resource) => {
 };
 
 const elementPOST = (service:Service, resource:Resource) => {
+  let elementPath = pathof(service, resource) + "/:id"
+  console.log("POST", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log("Query: POST", req.path);
+
     // find the element requested by the client
     let element = resource.getElement(req.params.id);
     if (element){

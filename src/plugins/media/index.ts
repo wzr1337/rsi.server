@@ -1,6 +1,5 @@
 import { BehaviorSubject } from '@reactivex/rxjs';
 import { Service, Resource } from "../viwiPlugin";
-import * as express from 'express';
 
 class Media implements Service {
   private _resources:Renderer[]=[];
@@ -51,9 +50,7 @@ class Renderer implements Resource {
     // retriev all element
     let resp:BehaviorSubject<{}>[];
 
-    console.log(typeof offset, offset.toString(),typeof limit, limit.toString());
     if((typeof offset === "number" && typeof limit === "number") || (typeof limit === "number" && !offset) || (typeof offset === "number" && !limit) || (!offset && !limit)) {
-      console.log(offset.toString(), limit.toString());
       resp = this._renderers.slice(<number>offset, <number>limit);
     }
 
@@ -63,7 +60,6 @@ class Renderer implements Resource {
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
   updateElement?(elementId:string, difference:any):Boolean {
-    console.log("whaaaat")
     let element = this.getElement(elementId);
     let renderer:any = element.getValue();
       if (difference.hasOwnProperty("state")) {
