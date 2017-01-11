@@ -37,14 +37,18 @@ class Renderer implements Resource {
 
   get name():string {
       return this._name;
-  }
+  };
+
+  get elementSubscribable():Boolean {
+    return true;
+  };
 
   getElement(elementId:string):BehaviorSubject<{}> {
     // find the element requested by the client
     return this._renderers.find((element:BehaviorSubject<{}>) => {
       return (<{id:string}>element.getValue()).id === elementId;
     });
-  }
+  };
 
   getResource(offset?:string|number, limit?:string|number):BehaviorSubject<{}>[]{
     // retriev all element
@@ -55,7 +59,7 @@ class Renderer implements Resource {
     }
 
     return resp;
-  }
+  };
 
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer

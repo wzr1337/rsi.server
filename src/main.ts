@@ -40,6 +40,9 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
         server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
         server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
         server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
+        server.ws.on('connection', (ws:any) => {
+          ws.on("message", handleWebSocketMessages(service, resource, ws));
+        });
       });
     }
   });
@@ -165,84 +168,59 @@ const elementPOST = (service:Service, resource:Resource) => {
   };
 };
 
-function pathof(service:Service, resource:Resource) {
-  return BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
-}
-
-/// TO BE REMOVED
-const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
-
-var renderers = [
-  new BehaviorSubject<{}>({
-    uri: "/media/renderers/" + rendererId,
-    id: rendererId,
-    name: "Netflux",
-    state: "idle",
-    offset: 0
-  })
-]
-/// TO BE REMOVED
-
-
-/*var subscribers:{
-  [ws: WebSocket]: BehaviorSubject<{}>
-} = {};*/
-
-
-class Media {
-  /**
-   * Renderer specific element retrieval
-   * 
-   */
-  static getElement(collection:any, elementId:string) {
-    return collection.find((element:BehaviorSubject<{}>) => {
-      return (<{id:string}>element.getValue()).id === elementId;
-  });
-  }
-}
-
 /**
- * WebSocket stuff
+ * 
  */
-server.ws.on('connection', (ws) => {
-  ws.on("message", (message:string) => {
+function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocket) {
+ return (message:string) => {
     let msg = JSON.parse(message);
     switch (msg.type) {
       case "subscribe":
+        console.log("New subscription:", msg.event);
         let captureGroups = msg.event.match(URIREGEX);
-        if (captureGroups) {
-          if (captureGroups[3]) {
-            // this is an element subscription
-            // === Service sepcific callback goes here ======
-            let element = Media.getElement(renderers, rendererId);
-            // ==============================================
+        if (captureGroups && (service.name === captureGroups[1] || "$") && (resource.name === captureGroups[2] || "$")) {
+          if (resource.elementSubscribable) {
+            let elementId = captureGroups[3];
+            if (elementId) {
+              // this is an element subscription
 
-            element.subscribe( //@TODO keep per client reference for unsubscription etc.
-              (data:any) => {
-                ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
-              },
-              (err:any) => {
-                ws.send(JSON.stringify({type: "error", code: "500", data: err}));
-              });
-            ws.send(JSON.stringify({type: "subscribe", status: "ok", event: msg.event}));
-            ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: element.getValue()}));
+              let element = resource.getElement(elementId);
+
+              if (element) {
+                element.subscribe( //@TODO keep per client reference for unsubscription etc.
+                (data:any) => {
+                  //@TODO client receives data before subscribe acknowledgement
+                  ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
+                },
+                (err:any) => {
+                  ws.send(JSON.stringify({type: "error", code: "500", data: err}));
+                });
+                ws.send(JSON.stringify({type: "subscribe", status: "ok", event: msg.event}));
+              }
+              else { 
+                ws.send(JSON.stringify({type: "error", code: "404", data:"Not Found"}));
+              }
+            }
+            else if (resource.elementSubscribable) {
+              // resource subscription
+              ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+            }
           }
           else {
-            // resource subscription
-            ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+            ws.send(JSON.stringify({type: "error", code: "400", data: "Bad subscription"}));
           }
-        } 
-        else { 
-          ws.send(JSON.stringify({type: "error", code: "404", data:"Not Found"}));
         }
         break;
 
       case "unsubscribe":
       case "reauthorize":
       default:
-         ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+        ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
         break;
     }
+  };
+};
 
-  })
-});
+function pathof(service:Service, resource:Resource) {
+  return BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
+}
