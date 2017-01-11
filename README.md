@@ -11,18 +11,34 @@ This project uses Gulp and typescript which needs to be available globally, so p
   $ npm install gulp typescript -g
 ```
 
-## Installation
+To install the servers dependencies run the following command
 
-To install the server run the following command
-
-@tbd
+```
+  $ npm install
+```
 
 
 ## Run it
 
-@tbd
+To run the server use.
 
+```
+  $ gulp build
+```
 
+## Examples
+
+### Client side subscription
+
+To subscribe to the netfux media renderer from within a javascipt application or the javascript console use the following code snippet
+
+```
+ws = new WebSocket("ws://localhost:3000");
+ws.onopen = () => {
+  ws.onmessage = (data) => {console.log(data)}
+  ws.send(JSON.stringify({type:"subscribe", event:"/media/renderers/d6ebfd90-d2c1-11e6-9376-df943f51f0d8"}))
+}
+```
 
 ## License (MIT)
 
