@@ -34,6 +34,10 @@ gulp.task('watch', ['typescript'], () => {
   })
 });
 
-gulp.task("default", ["typescript"], () => {
+gulp.task("build", ["typescript"], () => {
+    return;
+});
+
+gulp.task("default", ["build"], () => {
     return;
 });
