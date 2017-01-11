@@ -48,7 +48,6 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
 const elementGET = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log("Query: GET", req.path);
 
     if(!resource.getElement) {
       res.status(501).send("Not Implemented");
@@ -76,7 +75,6 @@ const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("GET", resourcePath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log("Query: GET", req.path);
     if(!resource.getResource) {
       res.status(501).send("Not Implemented");
       return;
@@ -109,7 +107,6 @@ const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("POST", resourcePath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log("Query: POST", req.path);
     if(!resource.createElement) {
       res.status(501).send("Not Implemented");
       return;
@@ -121,7 +118,6 @@ const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   console.log("DELETE", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log("Query: DELETE", req.path);
 
     if(!resource.deleteElement) {
       res.status(501).send("Not Implemented");
@@ -149,7 +145,6 @@ const elementPOST = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   console.log("POST", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log("Query: POST", req.path);
 
     // find the element requested by the client
     let element = resource.getElement(req.params.id);
