@@ -10,7 +10,7 @@ declare function require(moduleName: string): any;
 
 const PLUGINDIR = path.join(__dirname, "plugins");
 const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
-
+const BASEURI = "/";
 
 // set up the server
 var server = new WebServer();
@@ -24,7 +24,7 @@ server.init(); // need to init
  */
 fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
   if(err) {
-    console.error(err);
+    throw err;
   }
   files.forEach(file => {
     let module = path.join(PLUGINDIR, file);
@@ -35,18 +35,24 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
       service.resources.map((resource:Resource) => {
         let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
         console.log("Registering endpoint:", service.name);
-        if(resource.isGetable) {
-          server.app.get(basePath + ':id', elementGetTemplate(service, resource));
-        }
+        server.app.get(basePath, resourceGET(service, resource));               //READ
+        server.app.post(basePath, resourcePOST(service, resource));              //CREATE
+        server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
+        server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
+        server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
       });
     }
   });
 });
 
-const elementGetTemplate = (service:Service, resource:Resource) => {
-  let GETPathElement = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/:id"
-  console.log("GET", GETPathElement, "registered");
+const elementGET = (service:Service, resource:Resource) => {
+  let elementPath = pathof(service, resource) + "/:id"
+  console.log("GET", elementPath, "registered");
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if(!resource.getElement) {
+      res.status(501).send("Not Implemented");
+      return;
+    }
 
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
@@ -65,7 +71,103 @@ const elementGetTemplate = (service:Service, resource:Resource) => {
   };
 };
 
+const resourceGET = (service:Service, resource:Resource) => {
+  let resourcePath = pathof(service, resource);
+  console.log("GET", resourcePath, "registered");
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if(!resource.getResource) {
+      res.status(501).send("Not Implemented");
+      return;
+    }
+    console.log(req.params);
+    // get all available renderes and map their representation to JSON compatible values
+    function parseNumberOrId(n:string|number):string|number {
+      return (!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString();
+    }
 
+    let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
+
+    if(elements) {
+      let resp = elements.map((value) => {
+        return value.getValue();
+      });
+      res.status(200);
+      res.json({
+        status: "ok",
+        data: resp
+      });
+      return;
+    }
+    else {
+      res.status(404).send("Not found");
+    }
+  };
+};
+
+const resourcePOST = (service:Service, resource:Resource) => {
+  let resourcePath = pathof(service, resource);
+  console.log("POST", resourcePath, "registered");
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if(!resource.createElement) {
+      res.status(501).send("Not Implemented");
+      return;
+    }
+  };
+};
+
+const elementDELETE = (service:Service, resource:Resource) => {
+  let elementPath = pathof(service, resource) + "/:id"
+  console.log("DELETE", elementPath, "registered");
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+    if(!resource.deleteElement) {
+      res.status(501).send("Not Implemented");
+      return;
+    }
+    // proprietary element deletion
+    let succeeded = resource.deleteElement(req.params.id);
+
+    // respond
+    if(succeeded){
+      res.status(200);
+      res.json({
+        status: "ok"
+      });
+      return;
+    }
+    else {
+      res.status(500).send();
+      return;
+    }
+  };
+};
+
+const elementPOST = (service:Service, resource:Resource) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // find the element requested by the client
+    let element = resource.getElement(req.params.id);
+    if (element){
+      if(resource.updateElement(req.params.id, req.body)) {
+        res.status(200);
+        res.json({
+          status: "ok"
+        });
+      }
+      else {
+        res.status(500).send();
+      }
+    }
+    else {
+      res.status(404).send("Not Found");
+    }
+  };
+};
+
+function pathof(service:Service, resource:Resource) {
+  return BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
+}
+
+/// TO BE REMOVED
 const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
 
 var renderers = [
@@ -77,58 +179,7 @@ var renderers = [
     offset: 0
   })
 ]
-
-var interval:NodeJS.Timer; //@TODO has to become per-renderer
-server.app.post('/media/renderers/:id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-
-  // find the element requested by the client
-  let element = renderers.find((element:BehaviorSubject<{}>) => {
-    return (<{id:string}>element.getValue()).id === req.params.id;
-  });
-
-  if(element){
-    let renderer:any = element.getValue();
-
-    if (req.body.hasOwnProperty("state")) {
-      renderer.state = req.body.state;
-      if (req.body.state === "play") {
-        const speed = 1000;
-        interval = setInterval(() => {
-          renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
-          element.next(renderer);
-        }, speed);
-      }
-      else {
-        clearInterval(interval);
-      }
-    }
-
-    element.next(renderer); // @TODO: check diffs bevor updating without a need 
-    res.status(200);
-    res.json({
-      status: "ok",
-      data: renderers[0].getValue()
-    });
-  }
-  else {
-    res.status(404).send();
-  }
-});
-
-server.app.get('/media/renderers/', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  
-  // get all available renderes and map their representation to JSON compatible values
-  let resp = renderers.map((value) => {
-    return value.getValue();
-  });
-  
-  res.status(200);
-  res.json({
-    status: "ok",
-    data: resp
-  });
-});
-
+/// TO BE REMOVED
 
 
 /*var subscribers:{
@@ -193,18 +244,3 @@ server.ws.on('connection', (ws) => {
 
   })
 });
-
-
-
-// register an Object
-var subscription = renderers[0].subscribe(
-  (x:any) => {
-    console.log('Next: ' + JSON.stringify(x));
-  },
-  (err:any) => {
-    console.log('Error: ' + err);
-  },
-  () => {
-    console.log('Completed');
-  });
-

@@ -40,15 +40,50 @@ class Renderer implements Resource {
       return this._name;
   }
 
-  get isGetable():Boolean {
-    return true;
-  }
-
   getElement(elementId:string):BehaviorSubject<{}> {
     // find the element requested by the client
     return this._renderers.find((element:BehaviorSubject<{}>) => {
       return (<{id:string}>element.getValue()).id === elementId;
     });
+  }
+
+  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<{}>[]{
+    // retriev all element
+    let resp:BehaviorSubject<{}>[];
+
+    console.log(typeof offset, offset.toString(),typeof limit, limit.toString());
+    if((typeof offset === "number" && typeof limit === "number") || (typeof limit === "number" && !offset) || (typeof offset === "number" && !limit) || (!offset && !limit)) {
+      console.log(offset.toString(), limit.toString());
+      resp = this._renderers.slice(<number>offset, <number>limit);
+    }
+
+    return resp;
+  }
+
+
+  private _interval:NodeJS.Timer; //@TODO has to become per-renderer
+  updateElement?(elementId:string, difference:any):Boolean {
+    console.log("whaaaat")
+    let element = this.getElement(elementId);
+    let renderer:any = element.getValue();
+      if (difference.hasOwnProperty("state")) {
+        renderer.state = difference.state;
+        if (difference.state === "play") {
+          const speed = 1000;
+          this._interval = setInterval(() => {
+            renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
+            element.next(renderer);
+          }, speed);
+        }
+        else {
+          clearInterval(this._interval);
+        }
+        element.next(renderer); // @TODO: check diffs bevor updating without a need
+      }
+      else {
+        return false;
+      }
+    return true;
   }
 }
 
