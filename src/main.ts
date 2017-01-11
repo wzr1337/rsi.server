@@ -1,13 +1,15 @@
-import { Observable, Observer, BehaviorSubject} from '@reactivex/rxjs';
+import { BehaviorSubject} from '@reactivex/rxjs';
 import * as express from 'express';
 import { WebServer } from "./expressapp";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
+import { Service, Resource } from "./plugins/viwiPlugin";
 
 declare function require(moduleName: string): any;
 
 const PLUGINDIR = path.join(__dirname, "plugins");
+const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 
 
 // set up the server
@@ -28,16 +30,40 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
     let module = path.join(PLUGINDIR, file);
     if(fs.lstatSync(module).isDirectory()) {
       let _module = require(module);
-      console.log("Loading Plugin:", file);
-      console.log(new _module().name());
+      let service:Service = new _module();
+      console.log("Loading Plugin:", service.name);
+      service.resources.map((resource:Resource) => {
+        let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
+        console.log("Registering endpoint:", service.name);
+        if(resource.isGetable) {
+          server.app.get(basePath + ':id', elementGetTemplate(service, resource));
+        }
+      });
     }
   });
 });
 
+const elementGetTemplate = (service:Service, resource:Resource) => {
+  let GETPathElement = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/:id"
+  console.log("GET", GETPathElement, "registered");
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
+    // proprietary element fetching
+    let element = resource.getElement(req.params.id);
 
-const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
-
+    // respond
+    if(element){
+      res.status(200);
+      res.json({
+        status: "ok",
+        data: element.getValue()
+      });
+    }
+    else {
+      res.status(404).send();
+    }
+  };
+};
 
 
 const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
@@ -52,31 +78,12 @@ var renderers = [
   })
 ]
 
-server.app.get('/media/renderers/?:id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // find the element requested by the client
-  let element = renderers.find((element:BehaviorSubject<{}>) => {
-    return (<{id:string}>element.getValue()).id === rendererId;
-  });
-
-  // respond
-  if(element){
-    res.status(200);
-    res.json({
-      status: "ok",
-      data: element.getValue()
-    });
-  }
-  else {
-    res.status(404).send();
-  }
-});
-
 var interval:NodeJS.Timer; //@TODO has to become per-renderer
-server.app.post('/media/renderers/?:id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+server.app.post('/media/renderers/:id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
   // find the element requested by the client
   let element = renderers.find((element:BehaviorSubject<{}>) => {
-    return (<{id:string}>element.getValue()).id === rendererId;
+    return (<{id:string}>element.getValue()).id === req.params.id;
   });
 
   if(element){
@@ -134,7 +141,7 @@ class Media {
    * Renderer specific element retrieval
    * 
    */
-  static getElement(collection, elementId) {
+  static getElement(collection:any, elementId:string) {
     return collection.find((element:BehaviorSubject<{}>) => {
       return (<{id:string}>element.getValue()).id === elementId;
   });
