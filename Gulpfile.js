@@ -1,8 +1,10 @@
 var nodemon = require("gulp-nodemon"),
   gulp = require("gulp"),
   ts = require("gulp-typescript"),
-  path = require('path');
-tsProject = ts.createProject("tsconfig.json");
+  conventionalChangelog = require('gulp-conventional-changelog'),
+  file = require("gulp-file"),
+  path = require('path'),
+  tsProject = ts.createProject("tsconfig.json");
 
 var paths = {
   src: "./src",
@@ -32,6 +34,17 @@ gulp.task('watch', ['typescript'], () => {
       'NODE_ENV': 'development'
     }
   })
+});
+
+gulp.task('changelog', function () {
+  return file("CHANGELOG.md", "", { src: true })
+  .pipe(conventionalChangelog({
+    preset: 'angular',
+    releaseCount: 0
+  }, {}, {}, {
+    headerPattern: /^(\w*)(?:\(([\w\$\.\-\* ]*)\))?\:? (.*)$/m
+  }))
+  .pipe(gulp.dest("./")); // or any writable stream
 });
 
 gulp.task("build", ["typescript"], () => {
