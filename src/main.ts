@@ -1,4 +1,4 @@
-import { BehaviorSubject} from '@reactivex/rxjs';
+import { BehaviorSubject, Subject} from '@reactivex/rxjs';
 import * as express from 'express';
 import { WebServer } from "./expressapp";
 import * as uuid from "uuid";
@@ -11,6 +11,8 @@ declare function require(moduleName: string): any;
 const PLUGINDIR = path.join(__dirname, "plugins");
 const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 const BASEURI = "/";
+
+var unsubscriptions:Subject<string> = new Subject();
 
 // set up the server
 var server = new WebServer();
@@ -187,7 +189,8 @@ function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocke
               let element = resource.getElement(elementId);
 
               if (element) {
-                element.subscribe( //@TODO keep per client reference for unsubscription etc.
+                element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+                .subscribe(
                 (data:any) => {
                   //@TODO client receives data before subscribe acknowledgement
                   ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
@@ -213,6 +216,10 @@ function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocke
         break;
 
       case "unsubscribe":
+        console.log("Unsubscription:", msg.event);
+        unsubscriptions.next(msg.event);
+        ws.send(JSON.stringify({type: "unsubscribe", status: "ok", event: msg.event}));
+      break;
       case "reauthorize":
       default:
         ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
