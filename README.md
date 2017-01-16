@@ -7,34 +7,34 @@ This project implements the Volkswagen Infotainment Web Interface as published u
 
 ### Prerequisits
 
-This project uses Gulp and typescript which needs to be available globally, so please make them available via
+This project uses Gulp and TypeScript which needs to be available globally, so please make them available via
 
-```
-  $ npm install gulp typescript -g
+```sh
+$ npm install gulp typescript -g
 ```
 
-To install the servers dependencies run the following command
+To install the server's dependencies, run the following command
 
-```
-  $ npm install
+```sh
+$ npm install
 ```
 
 
 ## Run it
 
-To run the server use.
+To run the server, use
 
-```
-  $ gulp build
+```sh
+$ gulp build
 ```
 
 ## Examples
 
 ### Client side subscription
 
-To subscribe to the netfux media renderer from within a javascipt application or the javascript console use the following code snippet
+To subscribe to the netfux media renderer from within a JavaScript application or the JavaScript console, use the following code snippet
 
-```
+```js
 ws = new WebSocket("ws://localhost:3000");
 ws.onopen = () => {
   ws.onmessage = (data) => {console.log(data)}
