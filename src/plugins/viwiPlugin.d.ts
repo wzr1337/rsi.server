@@ -1,4 +1,4 @@
-import { BehaviorSubject } from '@reactivex/rxjs';
+import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 
 declare namespace viwiPlugin {
 
@@ -7,8 +7,15 @@ declare namespace viwiPlugin {
     resources:Resource[];
   }
 
+  enum resourceAction {
+    "add",
+    "move",
+    "remove"
+  }
+
   interface Resource {
     name:string;
+    change:Subject<resourceAction>;
 
     //@TODO: will returning promises make sense???
     getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<any>[];                              //GET /<service>/<resource>/

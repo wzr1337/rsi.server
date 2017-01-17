@@ -1,5 +1,5 @@
-import { BehaviorSubject } from '@reactivex/rxjs';
-import { Service, Resource } from "../viwiPlugin";
+import { BehaviorSubject, Subject } from '@reactivex/rxjs';
+import { Service, Resource, resourceAction } from "../viwiPlugin";
 
 class Media implements Service {
   private _resources:Renderer[]=[];
@@ -20,6 +20,7 @@ class Media implements Service {
 class Renderer implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<{}>[] = [];
+  private _change:Subject<resourceAction> = new Subject();
 
   constructor(private service:Service) {
     this._name = "renderers";
@@ -32,7 +33,8 @@ class Renderer implements Resource {
         state: "idle",
         offset: 0
       });
-    this._renderers.push(netfluxRenderer)
+    this._renderers.push(netfluxRenderer);
+    this._change.next(resourceAction.add);
   }
 
   get name():string {
@@ -42,6 +44,10 @@ class Renderer implements Resource {
   get elementSubscribable():Boolean {
     return true;
   };
+
+  get change():Subject<resourceAction> {
+    return this._change;
+  }
 
   getElement(elementId:string):BehaviorSubject<{}> {
     // find the element requested by the client
@@ -63,7 +69,7 @@ class Renderer implements Resource {
 
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
-  updateElement?(elementId:string, difference:any):Boolean {
+  updateElement(elementId:string, difference:any):Boolean {
     let element = this.getElement(elementId);
     let renderer:any = element.getValue();
       if (difference.hasOwnProperty("state")) {
