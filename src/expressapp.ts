@@ -4,6 +4,28 @@ import * as WebSocketServer from 'ws';
 import http = require('http');
 
 
+class viwiWebSocket {
+    constructor(private ws: WebSocket) {
+    }
+
+    data(event:string, payload:Object):void {
+        this.ws.send(JSON.stringify({type: "data", status: "ok", event: event, data: payload}));
+    }
+
+    error(code:number, err:Error):void {
+        this.ws.send(JSON.stringify({type: "error", code: "500", data: err.message}));
+    }
+
+    subscribeAck(event:string):void {
+        this.ws.send(JSON.stringify({type: "subscribe", status: "ok", event: event}));
+    }
+
+    unsubscribeAck(event:string):void {
+        this.ws.send(JSON.stringify({type: "unsubscribe", status: "ok", event: event}));
+    }
+}
+
+
 
 // create server and listen on provided port (on all network interfaces).
 class WebServer {
@@ -67,4 +89,4 @@ class WebServer {
     }
 };
 
-export { WebServer };
+export { WebServer, viwiWebSocket };

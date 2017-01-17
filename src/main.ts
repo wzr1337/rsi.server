@@ -1,6 +1,7 @@
 import { BehaviorSubject, Subject} from '@reactivex/rxjs';
 import * as express from 'express';
-import { WebServer } from "./expressapp";
+import { WebServer, viwiWebSocket } from "./expressapp";
+import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
@@ -29,10 +30,10 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
     throw err;
   }
   files.forEach(file => {
-    let module = path.join(PLUGINDIR, file);
-    if(fs.lstatSync(module).isDirectory()) {
-      let _module = require(module);
-      let service:Service = new _module();
+    let plugin = path.join(PLUGINDIR, file);
+    if(fs.lstatSync(plugin).isDirectory()) {
+      let _plugin = require(plugin);
+      let service:Service = new _plugin();
       console.log("Loading Plugin:", service.name);
       service.resources.map((resource:Resource) => {
         let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
@@ -42,7 +43,7 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
         server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
         server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
         server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
-        server.ws.on('connection', (ws:any) => {
+        server.ws.on('connection', (ws:any) => {                                //subscribe
           ws.on("message", handleWebSocketMessages(service, resource, ws));
         });
       });
@@ -50,6 +51,13 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
   });
 });
 
+
+/**
+ * handling GET requests on element level (retrieve element details).
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ */
 const elementGET = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -76,6 +84,13 @@ const elementGET = (service:Service, resource:Resource) => {
   };
 };
 
+
+/**
+ * handling GET requests on resource level (element listing).
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ */
 const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("GET", resourcePath, "registered");
@@ -108,6 +123,12 @@ const resourceGET = (service:Service, resource:Resource) => {
   };
 };
 
+/**
+ * handling POST requests on resource level (elment creation).
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ */
 const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
   console.log("POST", resourcePath, "registered");
@@ -119,6 +140,12 @@ const resourcePOST = (service:Service, resource:Resource) => {
   };
 };
 
+/**
+ * handling DELETE requests on element level (element removal or property reset).
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ */
 const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   console.log("DELETE", elementPath, "registered");
@@ -146,6 +173,13 @@ const elementDELETE = (service:Service, resource:Resource) => {
   };
 };
 
+
+/**
+ * handling POST requests on element level (modify an existing element).
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ */
 const elementPOST = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
   console.log("POST", elementPath, "registered");
@@ -171,11 +205,24 @@ const elementPOST = (service:Service, resource:Resource) => {
 };
 
 /**
+ * handling incoming websocket messages
  * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ * @param ws        The WebSocket the client is sending data on.
  */
-function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocket) {
- return (message:string) => {
-    let msg = JSON.parse(message);
+const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocket) => {
+  var _viwiWebSocket = new viwiWebSocket(ws);
+  return (message:string) => {
+    let msg:viwiClientWebSocketMessage;
+    // make sure we actually parse the incomming message
+    try {
+      msg = JSON.parse(message);
+    }
+    catch(err) {
+      _viwiWebSocket.error(500, new Error(err));
+      return;
+    }
     switch (msg.type) {
       case "subscribe":
         console.log("New subscription:", msg.event);
@@ -185,32 +232,29 @@ function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocke
             let elementId = captureGroups[3];
             if (elementId) {
               // this is an element subscription
-
               let element = resource.getElement(elementId);
-
               if (element) {
                 element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
                 .subscribe(
                 (data:any) => {
-                  //@TODO client receives data before subscribe acknowledgement
-                  ws.send(JSON.stringify({type: "data", status: "ok", event: msg.event, data: data}));
+                  _viwiWebSocket.data(msg.event, data);
                 },
                 (err:any) => {
-                  ws.send(JSON.stringify({type: "error", code: "500", data: err}));
+                  _viwiWebSocket.error(500, new Error(err));
                 });
-                ws.send(JSON.stringify({type: "subscribe", status: "ok", event: msg.event}));
+                _viwiWebSocket.subscribeAck(msg.event);
               }
-              else { 
-                ws.send(JSON.stringify({type: "error", code: "404", data:"Not Found"}));
+              else {
+                _viwiWebSocket.error(404, new Error("Not Found"));
               }
             }
             else if (resource.elementSubscribable) {
               // resource subscription
-              ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+              _viwiWebSocket.error(501, new Error("Not Implemented"));
             }
           }
           else {
-            ws.send(JSON.stringify({type: "error", code: "400", data: "Bad subscription"}));
+            _viwiWebSocket.error(400, new Error("Bad subscription"));
           }
         }
         break;
@@ -218,16 +262,24 @@ function handleWebSocketMessages(service:Service, resource:Resource, ws:WebSocke
       case "unsubscribe":
         console.log("Unsubscription:", msg.event);
         unsubscriptions.next(msg.event);
-        ws.send(JSON.stringify({type: "unsubscribe", status: "ok", event: msg.event}));
+        _viwiWebSocket.unsubscribeAck(msg.event);
       break;
       case "reauthorize":
       default:
-        ws.send(JSON.stringify({type: "error", code: "501", data: "Not Implemented"}));
+        _viwiWebSocket.error(501,new Error("Not Implemented"));
         break;
     }
   };
 };
 
+
+/**
+ * helper for generating a route string
+ * 
+ * @param service   The service name.
+ * @param resource  The resource name.
+ * @returns         The combined path use as a route.
+ */
 function pathof(service:Service, resource:Resource) {
   return BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
 }
