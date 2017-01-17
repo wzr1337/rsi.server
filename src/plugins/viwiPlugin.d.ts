@@ -7,15 +7,9 @@ declare namespace viwiPlugin {
     resources:Resource[];
   }
 
-  enum resourceAction {
-    "add",
-    "move",
-    "remove"
-  }
-
   interface Resource {
     name:string;
-    change:Subject<resourceAction>;
+    change:Subject<"add"|"move"|"remove">;
 
     //@TODO: will returning promises make sense???
     getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<any>[];                              //GET /<service>/<resource>/

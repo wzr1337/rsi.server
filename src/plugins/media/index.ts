@@ -1,11 +1,12 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
-import { Service, Resource, resourceAction } from "../viwiPlugin";
+import { Service, Resource } from "../viwiPlugin";
 
 class Media implements Service {
-  private _resources:Renderer[]=[];
+  private _resources:Resource[]=[];
 
   constructor() {
-    this._resources.push(new Renderer(this))
+    this._resources.push(new Renderers(this));
+    this._resources.push(new Collections(this))
   }
 
   get name() {
@@ -17,35 +18,51 @@ class Media implements Service {
   }
 }
 
-class Renderer implements Resource {
+interface RendererObject {
+  id: string;
+  name: string;
+  uri: string;
+  media?: Object;
+  currentMediaItem?: Object;
+  offset?: number;
+  scan?: "off"|"up"|"down";
+  state?: "idle"|"play"|"pause"|"stop"|"ff"|"fr";
+  repeat?: "off"|"repeatall"|"repeatone";
+  shuffle?: "on"|"off";
+  type?: "track"|"video"|"image";
+}
+
+class Renderers implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<{}>[] = [];
-  private _change:Subject<resourceAction> = new Subject();
+  private _change:Subject<string> = new Subject();
 
   constructor(private service:Service) {
-    this._name = "renderers";
 
     const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
-    let netfluxRenderer = new BehaviorSubject<{}>({
-        uri: "/" + this.service.name.toLowerCase() + "/" + this._name.toLowerCase() + "/" + rendererId,
+    //const collections = service.resources.map<Collections>(resource => resource.name === "collections");
+    //const initialCollection = collections.map( element => element.name === "default");
+    let netfluxRenderer = new BehaviorSubject<RendererObject>({
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
         id: rendererId,
         name: "Netflux",
         state: "idle",
-        offset: 0
+        offset: 0,
+        media: "initialCollection"
       });
     this._renderers.push(netfluxRenderer);
-    this._change.next(resourceAction.add);
+    this._change.next("add");
   }
 
   get name():string {
-      return this._name;
+      return this.constructor.name;
   };
 
   get elementSubscribable():Boolean {
     return true;
   };
 
-  get change():Subject<resourceAction> {
+  get change():Subject<string> {
     return this._change;
   }
 
@@ -91,6 +108,61 @@ class Renderer implements Resource {
       }
     return true;
   }
+}
+
+
+interface CollectionObject {
+  id: string;
+  name: string;
+  uri: string;
+  items?: Object[];
+}
+class Collections implements Resource {
+  private _collections:BehaviorSubject<{}>[] = [];
+  private _change:Subject<string> = new Subject();
+
+  constructor(private service:Service) {
+
+    const rendererId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
+    let initialCollection = new BehaviorSubject<CollectionObject>({
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
+        id: rendererId,
+        name: "default",
+        items: []
+      });
+    this._collections.push(initialCollection);
+    this._change.next("add");
+  }
+
+  get name():string {
+      return this.constructor.name;
+  };
+
+  get elementSubscribable():Boolean {
+    return true;
+  };
+
+  get change():Subject<string> {
+    return this._change;
+  }
+
+  getElement(elementId:string):BehaviorSubject<{}> {
+    // find the element requested by the client
+    return this._collections.find((element:BehaviorSubject<{}>) => {
+      return (<{id:string}>element.getValue()).id === elementId;
+    });
+  };
+
+  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<{}>[]{
+    // retriev all element
+    let resp:BehaviorSubject<{}>[];
+
+    if((typeof offset === "number" && typeof limit === "number") || (typeof limit === "number" && !offset) || (typeof offset === "number" && !limit) || (!offset && !limit)) {
+      resp = this._collections.slice(<number>offset, <number>limit);
+    }
+
+    return resp;
+  };
 }
 
 export = Media;

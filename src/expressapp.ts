@@ -13,7 +13,7 @@ class viwiWebSocket {
     }
 
     error(code:number, err:Error):void {
-        this.ws.send(JSON.stringify({type: "error", code: "500", data: err.message}));
+        this.ws.send(JSON.stringify({type: "error", code: code, data: err.message}));
     }
 
     subscribeAck(event:string):void {

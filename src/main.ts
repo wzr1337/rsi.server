@@ -37,7 +37,6 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
       console.log("Loading Plugin:", service.name);
       service.resources.map((resource:Resource) => {
         let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
-        console.log("Registering endpoint:", service.name);
         server.app.get(basePath, resourceGET(service, resource));               //READ
         server.app.post(basePath, resourcePOST(service, resource));             //CREATE
         server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
@@ -59,7 +58,8 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
  * @param resource  The resource name.
  */
 const elementGET = (service:Service, resource:Resource) => {
-  let elementPath = pathof(service, resource) + "/:id"
+  let elementPath = pathof(service, resource) + "/:id";
+  if(resource.getElement) { console.log("GET   ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.getElement) {
@@ -93,7 +93,7 @@ const elementGET = (service:Service, resource:Resource) => {
  */
 const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
-  console.log("GET", resourcePath, "registered");
+  if(resource.getResource ) { console.log("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
       res.status(501).send("Not Implemented");
@@ -131,7 +131,7 @@ const resourceGET = (service:Service, resource:Resource) => {
  */
 const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(service, resource);
-  console.log("POST", resourcePath, "registered");
+  if(resource.createElement) { console.log("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
       res.status(501).send("Not Implemented");
@@ -148,7 +148,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
  */
 const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
-  console.log("DELETE", elementPath, "registered");
+  if(resource.deleteElement) { console.log("DELETE", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.deleteElement) {
@@ -182,7 +182,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
  */
 const elementPOST = (service:Service, resource:Resource) => {
   let elementPath = pathof(service, resource) + "/:id"
-  console.log("POST", elementPath, "registered");
+  if(resource.updateElement) { console.log("POST  ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     // find the element requested by the client
@@ -220,20 +220,20 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
       msg = JSON.parse(message);
     }
     catch(err) {
-      _viwiWebSocket.error(500, new Error(err));
+      _viwiWebSocket.error(400, new Error(err));
       return;
     }
     switch (msg.type) {
       case "subscribe":
-        console.log("New subscription:", msg.event);
         let captureGroups = msg.event.match(URIREGEX);
-        if (captureGroups && (service.name === captureGroups[1] || "$") && (resource.name === captureGroups[2] || "$")) {
+        if (captureGroups && (service.name.toLowerCase() === captureGroups[1].toLowerCase()) && (resource.name.toLowerCase() === captureGroups[2].toLowerCase())) {
           if (resource.elementSubscribable) {
             let elementId = captureGroups[3];
             if (elementId) {
               // this is an element subscription
               let element = resource.getElement(elementId);
               if (element) {
+                console.log("New subscription:", msg.event);
                 element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
                 .subscribe(
                 (data:any) => {
