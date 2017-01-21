@@ -4,6 +4,7 @@ declare namespace viwiPlugin {
 
   interface Service {
     name:string;
+    id: string;
     resources:Resource[];
   }
 

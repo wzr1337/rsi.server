@@ -15,9 +15,19 @@ const BASEURI = "/";
 
 var unsubscriptions:Subject<string> = new Subject();
 
+var services:{id:string,name:string,uri:string}[] = [];
+
 // set up the server
 var server = new WebServer();
 server.init(); // need to init
+server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // respond
+  res.status(200);
+  res.json({
+    status: "ok",
+    data: services
+  });
+});
 
 
 /**
@@ -34,9 +44,14 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
     if(fs.lstatSync(plugin).isDirectory()) {
       let _plugin = require(plugin);
       let service:Service = new _plugin();
+      services.push({
+        id: service.id,
+        name: service.name,
+        uri: BASEURI + service.name.toLowerCase() + "/"
+      });
       console.log("Loading Plugin:", service.name);
       service.resources.map((resource:Resource) => {
-        let basePath = "/" + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
+        let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
         server.app.get(basePath, resourceGET(service, resource));               //READ
         server.app.post(basePath, resourcePOST(service, resource));             //CREATE
         server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
