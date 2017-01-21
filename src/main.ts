@@ -234,6 +234,7 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
               let element = resource.getElement(elementId);
               if (element) {
                 console.log("New subscription:", msg.event);
+                _viwiWebSocket.subscribeAck(msg.event);
                 element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
                 .subscribe(
                 (data:any) => {
@@ -242,7 +243,6 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
                 (err:any) => {
                   _viwiWebSocket.error(500, new Error(err));
                 });
-                _viwiWebSocket.subscribeAck(msg.event);
               }
               else {
                 _viwiWebSocket.error(404, new Error("Not Found"));
