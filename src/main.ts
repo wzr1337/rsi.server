@@ -15,55 +15,64 @@ const BASEURI = "/";
 
 var unsubscriptions:Subject<string> = new Subject();
 
-var services:{id:string,name:string,uri:string}[] = [];
+var availableServices:{id:string;name:string;uri:string}[] = [];
 
 // set up the server
-var server = new WebServer();
-server.init(); // need to init
-server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // respond
-  res.status(200);
-  res.json({
-    status: "ok",
-    data: services
-  });
-});
+var server:WebServer;
+
+var run = (port?:number):Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    server = new WebServer(port);
+    server.init(); // need to init
+
+    server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      // respond
+      res.status(200);
+      res.json({
+        status: "ok",
+        data: availableServices
+      });
+    });
 
 
-/**
- * Plugin loader
- * 
- * browses the PLUGINDIR for available plugins and registers them with the viwi sevrer 
- */
-fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
-  if(err) {
-    throw err;
-  }
-  files.forEach(file => {
-    let plugin = path.join(PLUGINDIR, file);
-    if(fs.lstatSync(plugin).isDirectory()) {
-      let _plugin = require(plugin);
-      let service:Service = new _plugin();
-      services.push({
-        id: service.id,
-        name: service.name,
-        uri: BASEURI + service.name.toLowerCase() + "/"
+    /**
+     * Plugin loader
+     * 
+     * browses the PLUGINDIR for available plugins and registers them with the viwi sevrer 
+     */
+    fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
+      if(err) {
+        throw err;
+      }
+      files.forEach(file => {
+        let plugin = path.join(PLUGINDIR, file);
+        if(fs.lstatSync(plugin).isDirectory()) {
+          let _plugin = require(plugin);
+          let service:Service = new _plugin();
+          availableServices.push({
+            id: service.id,
+            name: service.name,
+            uri: BASEURI + service.name.toLowerCase() + "/"
+          });
+          console.log("Loading Plugin:", service.name);
+          service.resources.map((resource:Resource) => {
+            let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
+            server.app.get(basePath, resourceGET(service, resource));               //READ
+            server.app.post(basePath, resourcePOST(service, resource));             //CREATE
+            server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
+            server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
+            server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
+            server.ws.on('connection', (ws:any) => {                                //subscribe
+              ws.on("message", handleWebSocketMessages(service, resource, ws));
+            });
+          });
+        }
       });
-      console.log("Loading Plugin:", service.name);
-      service.resources.map((resource:Resource) => {
-        let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
-        server.app.get(basePath, resourceGET(service, resource));               //READ
-        server.app.post(basePath, resourcePOST(service, resource));             //CREATE
-        server.app.post(basePath + ':id', elementPOST(service, resource));      //READ
-        server.app.get(basePath + ':id', elementGET(service, resource));        //UPDATE
-        server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
-        server.ws.on('connection', (ws:any) => {                                //subscribe
-          ws.on("message", handleWebSocketMessages(service, resource, ws));
-        });
-      });
-    }
+      resolve();
+    });
   });
-});
+};
+
 
 
 /**
@@ -73,7 +82,7 @@ fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: s
  * @param resource  The resource name.
  */
 const elementGET = (service:Service, resource:Resource) => {
-  let elementPath = pathof(service, resource) + "/:id";
+  let elementPath = pathof(BASEURI, service, resource) + "/:id";
   if(resource.getElement) { console.log("GET   ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
@@ -107,7 +116,7 @@ const elementGET = (service:Service, resource:Resource) => {
  * @param resource  The resource name.
  */
 const resourceGET = (service:Service, resource:Resource) => {
-  let resourcePath = pathof(service, resource);
+  let resourcePath = pathof(BASEURI, service, resource);
   if(resource.getResource ) { console.log("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
@@ -145,7 +154,7 @@ const resourceGET = (service:Service, resource:Resource) => {
  * @param resource  The resource name.
  */
 const resourcePOST = (service:Service, resource:Resource) => {
-  let resourcePath = pathof(service, resource);
+  let resourcePath = pathof(BASEURI, service, resource);
   if(resource.createElement) { console.log("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
@@ -162,7 +171,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
  * @param resource  The resource name.
  */
 const elementDELETE = (service:Service, resource:Resource) => {
-  let elementPath = pathof(service, resource) + "/:id"
+  let elementPath = pathof(BASEURI, service, resource) + "/:id"
   if(resource.deleteElement) { console.log("DELETE", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
@@ -196,7 +205,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
  * @param resource  The resource name.
  */
 const elementPOST = (service:Service, resource:Resource) => {
-  let elementPath = pathof(service, resource) + "/:id"
+  let elementPath = pathof(BASEURI, service, resource) + "/:id"
   if(resource.updateElement) { console.log("POST  ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
@@ -295,6 +304,8 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
  * @param resource  The resource name.
  * @returns         The combined path use as a route.
  */
-function pathof(service:Service, resource:Resource) {
-  return BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
+function pathof(baseUri: string, service:Service, resource:Resource) {
+  return baseUri + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
 }
+
+export {server, run, pathof}

@@ -4,12 +4,20 @@ var nodemon = require("gulp-nodemon"),
   conventionalChangelog = require('gulp-conventional-changelog'),
   file = require("gulp-file"),
   path = require('path'),
-  tsProject = ts.createProject("tsconfig.json");
+  tsProject = ts.createProject("tsconfig.json"),
+  jasmine = require('gulp-jasmine');
+
 
 var paths = {
   src: "./src",
   bin: "./bin"
 }
+ 
+gulp.task('test', ["build"], () =>
+  gulp.src('bin/test/**/*[sS]pec.js')
+    // gulp-jasmine works on filepaths so you can't have any plugins before it 
+    .pipe(jasmine())
+);
 
 gulp.task("typescript", () => {
   return gulp.src("./src/**/*.ts")
@@ -19,7 +27,7 @@ gulp.task("typescript", () => {
 
 gulp.task('watch', ['typescript'], () => {
   nodemon({
-    script: path.join(paths.bin, 'main.js'),
+    script: path.join(paths.bin, 'index.js'),
     ext: 'ts js',
     watch: [paths.src],
     tasks: (changedFiles) => {

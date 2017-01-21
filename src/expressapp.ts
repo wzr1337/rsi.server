@@ -34,7 +34,7 @@ class WebServer {
     private _server:any;
     private _port:number|string|boolean;
 
-    constructor (_port?:string) {
+    constructor (_port?:number) {
         this.app = express();
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
@@ -86,6 +86,13 @@ class WebServer {
         : 'port ' + addr.port;
 
     console.log('Listening on ' + bind);
+    }
+
+    /**
+     * Shutdown the server
+     */
+    close = () => {
+    this._server.close();
     }
 };
 
