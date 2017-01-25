@@ -38,6 +38,26 @@ describe("operate on /", () => {
     });
   });
 
+  it("should return an error for none existing elements", (done:DoneFn) => {
+    request(BASEURI + "/$/§", {method: "GET"}, (error, response, body) => {
+      if (error) {
+        console.log(error, response, body);
+      }
+      expect(response.statusCode).toBe(404);
+      done();
+    });
+  });
+
+  it("should return an error for none existing resource", (done:DoneFn) => {
+    request(BASEURI + "/$/", {method: "GET"}, (error, response, body) => {
+      if (error) {
+        console.log(error, response, body);
+      }
+      expect(response.statusCode).toBe(404);
+      done();
+    });
+  });
+
   it("should not implement POST on /", (done:DoneFn) => {
     request(BASEURI, {method: "POST"}, (error, response, body) => {
       if (error) {
