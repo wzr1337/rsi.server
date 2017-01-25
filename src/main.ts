@@ -6,6 +6,9 @@ import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
 import { Service, Resource } from "./plugins/viwiPlugin";
+import { viwiLogger } from "./log";
+
+const logger = viwiLogger.getInstance('verbose');
 
 declare function require(moduleName: string): any;
 
@@ -54,7 +57,7 @@ var run = (port?:number):Promise<void> => {
             name: service.name,
             uri: BASEURI + service.name.toLowerCase() + "/"
           });
-          console.log("Loading Plugin:", service.name);
+          logger.info("Loading Plugin:", service.name);
           service.resources.map((resource:Resource) => {
             let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
             server.app.get(basePath, resourceGET(service, resource));               //READ
@@ -83,7 +86,7 @@ var run = (port?:number):Promise<void> => {
  */
 const elementGET = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id";
-  if(resource.getElement) { console.log("GET   ", elementPath, "registered") };
+  if(resource.getElement) { logger.info("GET   ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.getElement) {
@@ -117,7 +120,7 @@ const elementGET = (service:Service, resource:Resource) => {
  */
 const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(BASEURI, service, resource);
-  if(resource.getResource ) { console.log("GET   ", resourcePath, "registered") };
+  if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
       res.status(501).send("Not Implemented");
@@ -155,7 +158,7 @@ const resourceGET = (service:Service, resource:Resource) => {
  */
 const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(BASEURI, service, resource);
-  if(resource.createElement) { console.log("POST  ", resourcePath, "registered") };
+  if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
       res.status(501).send("Not Implemented");
@@ -172,7 +175,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
  */
 const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id"
-  if(resource.deleteElement) { console.log("DELETE", elementPath, "registered") };
+  if(resource.deleteElement) { logger.info("DELETE", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.deleteElement) {
@@ -206,7 +209,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
  */
 const elementPOST = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id"
-  if(resource.updateElement) { console.log("POST  ", elementPath, "registered") };
+  if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     // find the element requested by the client
@@ -257,7 +260,7 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
               // this is an element subscription
               let element = resource.getElement(elementId);
               if (element) {
-                console.log("New subscription:", msg.event);
+                logger.debug("New subscription:", msg.event);
                 _viwiWebSocket.subscribeAck(msg.event);
                 element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
                 .subscribe(
@@ -284,7 +287,7 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
         break;
 
       case "unsubscribe":
-        console.log("Unsubscription:", msg.event);
+        logger.debug("Unsubscription:", msg.event);
         unsubscriptions.next(msg.event);
         _viwiWebSocket.unsubscribeAck(msg.event);
       break;
