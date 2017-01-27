@@ -1,4 +1,3 @@
-//import {describe, it, expect, jasmine} from '@types/jasmine';
 import { server, run, pathof} from "../main";
 import * as request from "request";
 

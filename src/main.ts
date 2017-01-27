@@ -51,7 +51,7 @@ var run = (port?:number):Promise<void> => {
         let plugin = path.join(PLUGINDIR, file);
         if(fs.lstatSync(plugin).isDirectory()) {
           let _plugin = require(plugin);
-          let service:Service = new _plugin();
+          let service:Service = new _plugin.Service();
           availableServices.push({
             id: service.id,
             name: service.name,
@@ -97,12 +97,17 @@ const elementGET = (service:Service, resource:Resource) => {
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
 
-    // respond
     if(element){
+      let data = element.getValue()
+      // filter the result before responding if needed
+      if (req.query.hasOwnProperty("$fields")) {
+        data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
+      }
+      //respond
       res.status(200);
       res.json({
         status: "ok",
-        data: element.getValue()
+        data: data
       });
     }
     else {
@@ -310,5 +315,25 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
 function pathof(baseUri: string, service:Service, resource:Resource) {
   return baseUri + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
 }
+
+
+/**
+ * filters an object by keys
+ * 
+ * @param inputObject   the input object
+ * @param keep          an array of strings (keys) to keep
+ * @returns             the filtered object
+ */
+function filterByKeys(inputObject:any, keep:string[]):Object {
+  if (! Array.isArray(keep) || keep.length === 0) return inputObject;
+  let result:any = {};
+  for (var i = 0, len = keep.length; i < len; i++) {
+    let key:string = keep[i];
+    if (inputObject.hasOwnProperty(key)) {
+      result[key] = inputObject[key];
+    }
+  }
+  return result;
+};
 
 export {server, run, pathof}

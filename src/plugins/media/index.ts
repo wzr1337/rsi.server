@@ -171,4 +171,4 @@ class Collections implements Resource {
   };
 }
 
-export = Media;
+export {Media as Service, Renderers, Collections};
