@@ -5,7 +5,7 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource } from "./plugins/viwiPlugin";
+import { Service, Resource, Element } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
 
 const logger = viwiLogger.getInstance('verbose');
@@ -96,9 +96,8 @@ const elementGET = (service:Service, resource:Resource) => {
 
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
-
     if(element){
-      let data = element.getValue()
+      let data = element.getValue().data;
       // filter the result before responding if needed
       if (req.query.hasOwnProperty("$fields")) {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
@@ -139,8 +138,8 @@ const resourceGET = (service:Service, resource:Resource) => {
     let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
 
     if(elements) {
-      let resp = elements.map((value) => {
-        return value.getValue();
+      let resp = elements.map((value:BehaviorSubject<Element>) => {
+        return value.getValue().data;
       });
       res.status(200);
       res.json({
@@ -269,8 +268,8 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
                 _viwiWebSocket.subscribeAck(msg.event);
                 element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
                 .subscribe(
-                (data:any) => {
-                  _viwiWebSocket.data(msg.event, data);
+                (data:Element) => {
+                  _viwiWebSocket.data(msg.event, data.data);
                 },
                 (err:any) => {
                   _viwiWebSocket.error(500, new Error(err));

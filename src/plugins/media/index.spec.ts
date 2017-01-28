@@ -36,7 +36,7 @@ describe("Renderers resource", () => {
     done();
   });
 
-  it("should not a renderer", (done:DoneFn) => {
+  it("should hold a renderer", (done:DoneFn) => {
     r.getElement('d6ebfd90-d2c1-11e6-9376-df943f51f0d8').subscribe((element) => {
       expect(element).toBeDefined();
     });

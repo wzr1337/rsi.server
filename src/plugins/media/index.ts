@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
-import { Service, Resource } from "../viwiPlugin";
+import { Service, Resource, Element } from "../viwiPlugin";
 
 class Media implements Service {
   private _resources:Resource[]=[];
@@ -38,9 +38,13 @@ interface RendererObject {
   type?: "track"|"video"|"image";
 }
 
+interface RendererElement extends Element {
+  data: RendererObject
+}
+
 class Renderers implements Resource {
   private _name:string;
-  private _renderers:BehaviorSubject<{}>[] = [];
+  private _renderers:BehaviorSubject<RendererElement>[] = [];
   private _change:Subject<string> = new Subject();
 
   constructor(private service:Service) {
@@ -48,14 +52,18 @@ class Renderers implements Resource {
     const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
     //const collections = service.resources.map<Collections>(resource => resource.name === "collections");
     //const initialCollection = collections.map( element => element.name === "default");
-    let netfluxRenderer = new BehaviorSubject<RendererObject>({
+    let netfluxRenderer = new BehaviorSubject<RendererElement>({
+      lastUpdate: Date.now(),
+      propertiesChanged: [],
+      data: {
         uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
         id: rendererId,
         name: "Netflux",
         state: "idle",
         offset: 0,
         media: "initialCollection"
-      });
+      }
+    });
     this._renderers.push(netfluxRenderer);
     this._change.next("add");
   }
@@ -72,16 +80,16 @@ class Renderers implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<{}> {
+  getElement(elementId:string):BehaviorSubject<RendererElement> {
     // find the element requested by the client
-    return this._renderers.find((element:BehaviorSubject<{}>) => {
-      return (<{id:string}>element.getValue()).id === elementId;
+    return this._renderers.find((element:BehaviorSubject<RendererElement>) => {
+      return (<{id:string}>element.getValue().data).id === elementId;
     });
   };
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<{}>[]{
+  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<RendererElement>[]{
     // retriev all element
-    let resp:BehaviorSubject<{}>[];
+    let resp:BehaviorSubject<RendererElement>[];
 
     if((typeof offset === "number" && typeof limit === "number") || (typeof limit === "number" && !offset) || (typeof offset === "number" && !limit) || (!offset && !limit)) {
       resp = this._renderers.slice(<number>offset, <number>limit);
@@ -94,20 +102,29 @@ class Renderers implements Resource {
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
   updateElement(elementId:string, difference:any):Boolean {
     let element = this.getElement(elementId);
-    let renderer:any = element.getValue();
+    let renderer:RendererObject = element.getValue().data;
       if (difference.hasOwnProperty("state")) {
         renderer.state = difference.state;
         if (difference.state === "play") {
           const speed = 1000;
           this._interval = setInterval(() => {
             renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
-            element.next(renderer);
+            element.next(
+              {
+                lastUpdate: Date.now(),
+                propertiesChanged: ["offset"],
+                data: renderer
+              });
           }, speed);
         }
         else {
           clearInterval(this._interval);
         }
-        element.next(renderer); // @TODO: check diffs bevor updating without a need
+        element.next({
+                lastUpdate: Date.now(),
+                propertiesChanged: ["state"],
+                data: renderer
+              }); // @TODO: check diffs bevor updating without a need
       }
       else {
         return false;
@@ -123,19 +140,29 @@ interface CollectionObject {
   uri: string;
   items?: Object[];
 }
+
+interface CollectionElement extends Element {
+  data: CollectionObject
+}
+
 class Collections implements Resource {
-  private _collections:BehaviorSubject<{}>[] = [];
+  private _collections:BehaviorSubject<CollectionElement>[] = [];
   private _change:Subject<string> = new Subject();
 
   constructor(private service:Service) {
 
     const rendererId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
-    let initialCollection = new BehaviorSubject<CollectionObject>({
+    let initialCollection = new BehaviorSubject<CollectionElement>(
+      {
+        lastUpdate: Date.now(),
+        propertiesChanged: [],
+        data: {
         uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
         id: rendererId,
         name: "default",
         items: []
-      });
+      }
+    });
     this._collections.push(initialCollection);
     this._change.next("add");
   }
@@ -152,16 +179,16 @@ class Collections implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<{}> {
+  getElement(elementId:string):BehaviorSubject<CollectionElement> {
     // find the element requested by the client
     return this._collections.find((element:BehaviorSubject<{}>) => {
       return (<{id:string}>element.getValue()).id === elementId;
     });
   };
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<{}>[]{
+  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<CollectionElement>[]{
     // retriev all element
-    let resp:BehaviorSubject<{}>[];
+    let resp:BehaviorSubject<CollectionElement>[];
 
     if((typeof offset === "number" && typeof limit === "number") || (typeof limit === "number" && !offset) || (typeof offset === "number" && !limit) || (!offset && !limit)) {
       resp = this._collections.slice(<number>offset, <number>limit);
