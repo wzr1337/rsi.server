@@ -1,4 +1,4 @@
-import { server, run, pathof} from "../main";
+import { server, run, pathof} from "./main";
 import * as request from "request";
 
 const PORT = 9999;

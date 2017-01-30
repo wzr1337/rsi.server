@@ -2,16 +2,45 @@ import * as winston from "winston";
 
 interface viwiLoggerInstance extends winston.LoggerInstance {};
 
-class viwiLogger {
-  private _logger:viwiLoggerInstance;
+const LOGFILE = 'viwiServer.log';
 
-  static getInstance():viwiLoggerInstance {
-    return new (winston.Logger)({
+
+class viwiLogger {
+
+  private static _instance:viwiLogger = new viwiLogger();
+  private _loggers:{[name: string]:viwiLoggerInstance} = {};
+
+  constructor() {
+      if(viwiLogger._instance){
+          throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
+      }
+      viwiLogger._instance = this;
+  }
+
+  public static getInstance():viwiLogger
+  {
+      return viwiLogger._instance;
+  }
+
+  getLogger(name:string):viwiLoggerInstance {
+    if (! this._loggers.hasOwnProperty(name)) {
+      this._loggers[name] = new (winston.Logger)({
         transports: [
-          new (winston.transports.Console)({ level: 'error' }),
-          new (winston.transports.File)({ filename: 'viwiServer.log', level: 'info' })
+          new (winston.transports.Console)({
+            level: 'error',
+            colorize: true,
+            prettyPrint: true,
+            timestamp: true,
+            label: name }),
+          new (winston.transports.File)({
+            filename: LOGFILE,
+            level: 'info',
+            timestamp: true,
+            label: name })
         ]
       });
+    }
+    return this._loggers[name];
   }
 }
 

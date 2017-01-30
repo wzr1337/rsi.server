@@ -37,7 +37,7 @@ class WebServer {
     private _logger:viwiLoggerInstance;
 
     constructor (_port?:number) {
-        this._logger = viwiLogger.getInstance();
+        this._logger = viwiLogger.getInstance().getLogger("general");
         this.app = express();
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));

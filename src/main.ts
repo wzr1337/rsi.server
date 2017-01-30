@@ -19,7 +19,7 @@ const optionDefinitions = [
 const cla = commandLineArgs(optionDefinitions);
 /** end parse command line argunments */
 
-const logger = viwiLogger.getInstance();
+const logger = viwiLogger.getInstance().getLogger("general");
 logger.transports["console"].level = cla.verbosity || 'verbose'; // for debug
 
 declare function require(moduleName: string): any;
