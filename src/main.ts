@@ -5,10 +5,22 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource, Element } from "./plugins/viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
 
-const logger = viwiLogger.getInstance('verbose');
+
+/**
+ * parse command line options
+ */
+const commandLineArgs = require('command-line-args')
+const optionDefinitions = [
+  { name: 'verbosity', alias: 'v', type: String }
+]
+const cla = commandLineArgs(optionDefinitions);
+/** end parse command line argunments */
+
+const logger = viwiLogger.getInstance();
+logger.transports["console"].level = cla.verbosity || 'verbose'; // for debug
 
 declare function require(moduleName: string): any;
 
@@ -257,35 +269,60 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
     switch (msg.type) {
       case "subscribe":
         let captureGroups = msg.event.match(URIREGEX);
-        if (captureGroups && (service.name.toLowerCase() === captureGroups[1].toLowerCase()) && (resource.name.toLowerCase() === captureGroups[2].toLowerCase())) {
-          if (resource.elementSubscribable) {
-            let elementId = captureGroups[3];
-            if (elementId) {
-              // this is an element subscription
-              let element = resource.getElement(elementId);
-              if (element) {
-                logger.debug("New subscription:", msg.event);
-                _viwiWebSocket.subscribeAck(msg.event);
-                element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
-                .subscribe(
-                (data:Element) => {
-                  _viwiWebSocket.data(msg.event, data.data);
-                },
-                (err:any) => {
-                  _viwiWebSocket.error(500, new Error(err));
-                });
-              }
-              else {
-                _viwiWebSocket.error(404, new Error("Not Found"));
-              }
+        if (!captureGroups) {
+          _viwiWebSocket.error(400, new Error("event url malformed"));
+          break; //leave immediately if 
+        }
+        else
+        {
+          let serviceName = captureGroups[1].toLowerCase();
+          let resourceName = captureGroups[2].toLowerCase();
+          let elementId = captureGroups[3];
+
+          // check if  processing needed at all
+          if ((service.name.toLowerCase() === serviceName) && (resource.name.toLowerCase() === resourceName)) {
+            if (elementId && resource.elementSubscribable) {
+                // this is an element subscription
+                let element = resource.getElement(elementId);
+                if (element) {
+                  logger.debug("New element level subscription:", msg.event);
+                  _viwiWebSocket.subscribeAck(msg.event);
+                  element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+                  .subscribe(
+                  (data:Element) => {
+                    _viwiWebSocket.data(msg.event, data.data);
+                  },
+                  (err:any) => {
+                    _viwiWebSocket.error(500, new Error(err));
+                  });
+                }
+                else {
+                  _viwiWebSocket.error(404, new Error("Not Found"));
+                }
             }
-            else if (resource.elementSubscribable) {
+            else if (elementId && !resource.elementSubscribable)
+            {
+              _viwiWebSocket.error(503, new Error("Not Implemented"));
+            }
+            if (!elementId && resource.resourceSubscribable) {
               // resource subscription
-              _viwiWebSocket.error(501, new Error("Not Implemented"));
+              logger.debug("New resource level subscription:", msg.event);
+              _viwiWebSocket.subscribeAck(msg.event);
+              resource.change.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+              .subscribe(
+              (data:ResourceUpdate) => {
+                //@TODO: needs rate limit by comparing last update timestamp with last update
+                let elements = resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
+                _viwiWebSocket.data(msg.event, elements);
+              },
+              (err:any) => {
+                _viwiWebSocket.error(500, new Error(err));
+              });
             }
-          }
-          else {
-            _viwiWebSocket.error(400, new Error("Bad subscription"));
+            else if (!elementId && !resource.resourceSubscribable)
+            {
+              _viwiWebSocket.error(503, new Error("Not Implemented"));
+            }
           }
         }
         break;

@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
-import { Service, Resource, Element } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate } from "../viwiPlugin";
 
 class Media implements Service {
   private _resources:Resource[]=[];
@@ -45,7 +45,7 @@ interface RendererElement extends Element {
 class Renderers implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<RendererElement>[] = [];
-  private _change:Subject<string> = new Subject();
+  private _change:Subject<ResourceUpdate> = new Subject();
 
   constructor(private service:Service) {
 
@@ -65,7 +65,7 @@ class Renderers implements Resource {
       }
     });
     this._renderers.push(netfluxRenderer);
-    this._change.next("add");
+    this._change.next({lastUpdate: Date.now(), action: "add"});
   }
 
   get name():string {
@@ -76,7 +76,7 @@ class Renderers implements Resource {
     return true;
   };
 
-  get change():Subject<string> {
+  get change():Subject<ResourceUpdate> {
     return this._change;
   }
 
@@ -147,24 +147,25 @@ interface CollectionElement extends Element {
 
 class Collections implements Resource {
   private _collections:BehaviorSubject<CollectionElement>[] = [];
-  private _change:Subject<string> = new Subject();
+  private _change:Subject<ResourceUpdate> = new Subject();
 
   constructor(private service:Service) {
 
-    const rendererId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
+    const collectionId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
         lastUpdate: Date.now(),
         propertiesChanged: [],
         data: {
-        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
-        id: rendererId,
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + collectionId,
+        id: collectionId,
         name: "default",
         items: []
       }
     });
     this._collections.push(initialCollection);
-    this._change.next("add");
+    this._change.next({lastUpdate: Date.now(), action: "add"});
+
   }
 
   get name():string {
@@ -175,7 +176,11 @@ class Collections implements Resource {
     return true;
   };
 
-  get change():Subject<string> {
+  get resourceSubscribable():Boolean {
+    return true;
+  };
+
+  get change():Subject<ResourceUpdate> {
     return this._change;
   }
 

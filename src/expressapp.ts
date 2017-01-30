@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as WebSocketServer from 'ws';
 import http = require('http');
+import { viwiLogger, viwiLoggerInstance } from "./log";
 
 
 class viwiWebSocket {
@@ -33,13 +34,15 @@ class WebServer {
     public ws: WebSocketServer.Server;
     private _server:any;
     private _port:number|string|boolean;
+    private _logger:viwiLoggerInstance;
 
     constructor (_port?:number) {
+        this._logger = viwiLogger.getInstance();
         this.app = express();
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
-        this.app.use((req:express.Request, res:express.Response, next:express.NextFunction)=>{
-            console.log("Query:", req.method, req.url);
+        this.app.use((req:express.Request, res:express.Response, next:express.NextFunction) => {
+            this._logger.info("Query:", req.method, req.url);
             next();
         })
 
