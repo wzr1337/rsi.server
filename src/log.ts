@@ -11,15 +11,15 @@ class viwiLogger {
   private _loggers:{[name: string]:viwiLoggerInstance} = {};
 
   constructor() {
-      if(viwiLogger._instance){
-          throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
-      }
-      viwiLogger._instance = this;
+    if(viwiLogger._instance){
+      throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
+    }
+    viwiLogger._instance = this;
   }
 
   public static getInstance():viwiLogger
   {
-      return viwiLogger._instance;
+    return viwiLogger._instance;
   }
 
   getLogger(name:string):viwiLoggerInstance {

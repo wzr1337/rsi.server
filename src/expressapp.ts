@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as WebSocketServer from 'ws';
+import * as cors from 'cors';
 import http = require('http');
 import { viwiLogger, viwiLoggerInstance } from "./log";
 
@@ -24,12 +25,12 @@ class viwiWebSocket {
     unsubscribeAck(event:string):void {
         this.ws.send(JSON.stringify({type: "unsubscribe", status: "ok", event: event}));
     }
-}
+    }
 
 
 
-// create server and listen on provided port (on all network interfaces).
-class WebServer {
+    // create server and listen on provided port (on all network interfaces).
+    class WebServer {
     public app: express.Express;
     public ws: WebSocketServer.Server;
     private _server:any;
@@ -39,6 +40,17 @@ class WebServer {
     constructor (_port?:number) {
         this._logger = viwiLogger.getInstance().getLogger("general");
         this.app = express();
+
+        var whitelist = ['127.0.0.1'];
+        let corsOpts:cors.CorsOptions = {
+            origin: function (origin, callback) {
+                let originIsWhitelisted = whitelist.indexOf(origin) !== -1
+                callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted)
+            },
+            exposedHeaders: 'Location'
+        }
+
+        this.app.use(cors());
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
         this.app.use((req:express.Request, res:express.Response, next:express.NextFunction) => {
@@ -56,8 +68,8 @@ class WebServer {
     }
 
     init() {
-      this._server.listen(this._port);
-      this._server.on('listening', this.onListening);
+        this._server.listen(this._port);
+        this._server.on('listening', this.onListening);
     }
 
     /**
