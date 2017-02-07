@@ -5,7 +5,22 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource } from "./plugins/viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate } from "./plugins/viwiPlugin";
+import { viwiLogger } from "./log";
+
+
+/**
+ * parse command line options
+ */
+const commandLineArgs = require('command-line-args')
+const optionDefinitions = [
+  { name: 'verbosity', alias: 'v', type: String }
+]
+const cla = commandLineArgs(optionDefinitions);
+/** end parse command line argunments */
+
+const logger = viwiLogger.getInstance().getLogger("general");
+logger.transports["console"].level = cla.verbosity || 'verbose'; // for debug
 
 declare function require(moduleName: string): any;
 
@@ -48,16 +63,14 @@ var run = (port?:number):Promise<void> => {
         let plugin = path.join(PLUGINDIR, file);
         if(fs.lstatSync(plugin).isDirectory()) {
           let _plugin = require(plugin);
-          let service:Service = new _plugin();
+          let service:Service = new _plugin.Service();
           availableServices.push({
             id: service.id,
             name: service.name,
             uri: BASEURI + service.name.toLowerCase() + "/"
           });
-
-
           server.app.get(BASEURI + service.name.toLowerCase() + "/", serviceGET(service));
-          console.log("Loading Plugin:", service.name);
+          logger.info("Loading Plugin:", service.name);
           service.resources.map((resource:Resource) => {
             let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
             server.app.get(basePath, resourceGET(service, resource));               //READ
@@ -104,7 +117,7 @@ const serviceGET = (service:Service, resource:Resource) => {
  */
 const elementGET = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id";
-  if(resource.getElement) { console.log("GET   ", elementPath, "registered") };
+  if(resource.getElement) { logger.info("GET   ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.getElement) {
@@ -114,13 +127,17 @@ const elementGET = (service:Service, resource:Resource) => {
 
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
-
-    // respond
     if(element){
+      let data = element.getValue().data;
+      // filter the result before responding if needed
+      if (req.query.hasOwnProperty("$fields")) {
+        data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
+      }
+      //respond
       res.status(200);
       res.json({
         status: "ok",
-        data: element.getValue()
+        data: data
       });
     }
     else {
@@ -138,7 +155,7 @@ const elementGET = (service:Service, resource:Resource) => {
  */
 const resourceGET = (service:Service, resource:Resource) => {
   let resourcePath = pathof(BASEURI, service, resource);
-  if(resource.getResource ) { console.log("GET   ", resourcePath, "registered") };
+  if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
       res.status(501).send("Not Implemented");
@@ -152,8 +169,8 @@ const resourceGET = (service:Service, resource:Resource) => {
     let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
 
     if(elements) {
-      let resp = elements.map((value) => {
-        return value.getValue();
+      let resp = elements.map((value:BehaviorSubject<Element>) => {
+        return value.getValue().data;
       });
       res.status(200);
       res.json({
@@ -176,7 +193,7 @@ const resourceGET = (service:Service, resource:Resource) => {
  */
 const resourcePOST = (service:Service, resource:Resource) => {
   let resourcePath = pathof(BASEURI, service, resource);
-  if(resource.createElement) { console.log("POST  ", resourcePath, "registered") };
+  if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
       res.status(501).send("Not Implemented");
@@ -193,7 +210,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
  */
 const elementDELETE = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id"
-  if(resource.deleteElement) { console.log("DELETE", elementPath, "registered") };
+  if(resource.deleteElement) { logger.info("DELETE", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.deleteElement) {
@@ -227,7 +244,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
  */
 const elementPOST = (service:Service, resource:Resource) => {
   let elementPath = pathof(BASEURI, service, resource) + "/:id"
-  if(resource.updateElement) { console.log("POST  ", elementPath, "registered") };
+  if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     // find the element requested by the client
@@ -271,41 +288,66 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
     switch (msg.type) {
       case "subscribe":
         let captureGroups = msg.event.match(URIREGEX);
-        if (captureGroups && (service.name.toLowerCase() === captureGroups[1].toLowerCase()) && (resource.name.toLowerCase() === captureGroups[2].toLowerCase())) {
-          if (resource.elementSubscribable) {
-            let elementId = captureGroups[3];
-            if (elementId) {
-              // this is an element subscription
-              let element = resource.getElement(elementId);
-              if (element) {
-                console.log("New subscription:", msg.event);
-                _viwiWebSocket.subscribeAck(msg.event);
-                element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
-                .subscribe(
-                (data:any) => {
-                  _viwiWebSocket.data(msg.event, data);
-                },
-                (err:any) => {
-                  _viwiWebSocket.error(500, new Error(err));
-                });
-              }
-              else {
-                _viwiWebSocket.error(404, new Error("Not Found"));
-              }
+        if (!captureGroups) {
+          _viwiWebSocket.error(400, new Error("event url malformed"));
+          break; //leave immediately if 
+        }
+        else
+        {
+          let serviceName = captureGroups[1].toLowerCase();
+          let resourceName = captureGroups[2].toLowerCase();
+          let elementId = captureGroups[3];
+
+          // check if  processing needed at all
+          if ((service.name.toLowerCase() === serviceName) && (resource.name.toLowerCase() === resourceName)) {
+            if (elementId && resource.elementSubscribable) {
+                // this is an element subscription
+                let element = resource.getElement(elementId);
+                if (element) {
+                  logger.debug("New element level subscription:", msg.event);
+                  _viwiWebSocket.subscribeAck(msg.event);
+                  element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+                  .subscribe(
+                  (data:Element) => {
+                    _viwiWebSocket.data(msg.event, data.data);
+                  },
+                  (err:any) => {
+                    _viwiWebSocket.error(500, new Error(err));
+                  });
+                }
+                else {
+                  _viwiWebSocket.error(404, new Error("Not Found"));
+                }
             }
-            else if (resource.elementSubscribable) {
+            else if (elementId && !resource.elementSubscribable)
+            {
+              _viwiWebSocket.error(503, new Error("Not Implemented"));
+            }
+            if (!elementId && resource.resourceSubscribable) {
               // resource subscription
-              _viwiWebSocket.error(501, new Error("Not Implemented"));
+              logger.debug("New resource level subscription:", msg.event);
+              _viwiWebSocket.subscribeAck(msg.event);
+              resource.change.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+              .subscribe(
+              (data:ResourceUpdate) => {
+                //@TODO: needs rate limit by comparing last update timestamp with last update
+                let elements = resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
+                _viwiWebSocket.data(msg.event, elements);
+              },
+              (err:any) => {
+                _viwiWebSocket.error(500, new Error(err));
+              });
             }
-          }
-          else {
-            _viwiWebSocket.error(400, new Error("Bad subscription"));
+            else if (!elementId && !resource.resourceSubscribable)
+            {
+              _viwiWebSocket.error(503, new Error("Not Implemented"));
+            }
           }
         }
         break;
 
       case "unsubscribe":
-        console.log("Unsubscription:", msg.event);
+        logger.debug("Unsubscription:", msg.event);
         unsubscriptions.next(msg.event);
         _viwiWebSocket.unsubscribeAck(msg.event);
       break;
@@ -328,5 +370,25 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
 function pathof(baseUri: string, service:Service, resource:Resource) {
   return baseUri + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
 }
+
+
+/**
+ * filters an object by keys
+ * 
+ * @param inputObject   the input object
+ * @param keep          an array of strings (keys) to keep
+ * @returns             the filtered object
+ */
+function filterByKeys(inputObject:any, keep:string[]):Object {
+  if (! Array.isArray(keep) || keep.length === 0) return inputObject;
+  let result:any = {};
+  for (var i = 0, len = keep.length; i < len; i++) {
+    let key:string = keep[i];
+    if (inputObject.hasOwnProperty(key)) {
+      result[key] = inputObject[key];
+    }
+  }
+  return result;
+};
 
 export {server, run, pathof}

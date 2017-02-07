@@ -14,7 +14,7 @@ var paths = {
 }
  
 gulp.task('test', ["build"], () =>
-  gulp.src('bin/test/**/*[sS]pec.js')
+  gulp.src('bin/**/*[sS]pec.js')
     // gulp-jasmine works on filepaths so you can't have any plugins before it 
     .pipe(jasmine())
 );

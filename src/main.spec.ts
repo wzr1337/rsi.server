@@ -1,5 +1,4 @@
-//import {describe, it, expect, jasmine} from '@types/jasmine';
-import { server, run, pathof} from "../main";
+import { server, run, pathof} from "./main";
 import * as request from "request";
 
 const PORT = 9999;
@@ -34,6 +33,26 @@ describe("operate on /", () => {
       expect(response.statusCode).toBe(200);
       expect(payload.status).toEqual("ok");
       expect(Array.isArray(payload.data)).toBe(true);
+      done();
+    });
+  });
+
+  it("should return an error for none existing elements", (done:DoneFn) => {
+    request(BASEURI + "/$/§", {method: "GET"}, (error, response, body) => {
+      if (error) {
+        console.log(error, response, body);
+      }
+      expect(response.statusCode).toBe(404);
+      done();
+    });
+  });
+
+  it("should return an error for none existing resource", (done:DoneFn) => {
+    request(BASEURI + "/$/", {method: "GET"}, (error, response, body) => {
+      if (error) {
+        console.log(error, response, body);
+      }
+      expect(response.statusCode).toBe(404);
       done();
     });
   });

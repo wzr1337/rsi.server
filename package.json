@@ -6,20 +6,26 @@
   "scripts": {
     "test": "node ./node_modules/jasmine/bin/jasmine.js jasmine.json",
     "watch": "node ./node_modules/nodemon/bin/nodemon.js index.js",
+    "debug": "node --inspect --debug-brk ./bin/main.js",
     "serve": "node ./bin/main.js"
   },
   "author": "Dr. Patrick Bartsch",
   "license": "MIT",
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
+    "@types/winston": "^2.2.0",
     "body-parser": "^1.15.2",
+    "command-line-args": "^3.0.5",
+    "cors": "^2.8.1",
     "express": "^4.14.0",
     "http": "0.0.0",
     "uuid": "^3.0.1",
+    "winston": "^2.3.1",
     "ws": "^1.1.1"
   },
   "devDependencies": {
     "@types/body-parser": "0.0.33",
+    "@types/cors": "^2.8.0",
     "@types/express": "^4.0.34",
     "@types/node": "^6.0.56",
     "@types/request": "0.0.39",
