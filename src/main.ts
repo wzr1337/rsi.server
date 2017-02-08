@@ -90,8 +90,14 @@ var run = (port?:number):Promise<void> => {
 };
 
 
-
-const serviceGET = (service:Service, resource:Resource) => {
+/**
+ * retrieve all resources of a service
+ * 
+ * @param service the service to discover
+ * 
+ * returns an express route callback
+ */
+const serviceGET = (service:Service) => {
 
   let resources:Array<any> = service.resources.map((res:Resource)=>{
     return {
