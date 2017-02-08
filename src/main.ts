@@ -69,6 +69,7 @@ var run = (port?:number):Promise<void> => {
             name: service.name,
             uri: BASEURI + service.name.toLowerCase() + "/"
           });
+          server.app.get(BASEURI + service.name.toLowerCase() + "/", serviceGET(service));
           logger.info("Loading Plugin:", service.name);
           service.resources.map((resource:Resource) => {
             let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
@@ -89,6 +90,24 @@ var run = (port?:number):Promise<void> => {
 };
 
 
+
+const serviceGET = (service:Service, resource:Resource) => {
+
+  let resources:Array<any> = service.resources.map((res:Resource)=>{
+    return {
+      name: res.name.toLowerCase(),
+      uri: BASEURI + service.name.toLowerCase() + "/" + res.name.toLowerCase() + "/"
+    }
+  });
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.status(200);
+    res.json({
+      status: "ok",
+      data: resources
+    });
+  };
+};
 
 /**
  * handling GET requests on element level (retrieve element details).
