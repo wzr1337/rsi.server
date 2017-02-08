@@ -32,6 +32,7 @@
     "@types/uuid": "^2.0.29",
     "@types/ws": "0.0.37",
     "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
     "gulp-conventional-changelog": "^1.1.0",
     "gulp-file": "^0.3.0",
     "gulp-jasmine": "^2.4.2",

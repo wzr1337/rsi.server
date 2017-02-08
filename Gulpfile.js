@@ -5,6 +5,7 @@ var nodemon = require("gulp-nodemon"),
   file = require("gulp-file"),
   path = require('path'),
   tsProject = ts.createProject("tsconfig.json"),
+  clean = require("gulp-clean"),
   jasmine = require('gulp-jasmine');
 
 
@@ -14,13 +15,13 @@ var paths = {
 }
  
 gulp.task('test', ["build"], () =>
-  gulp.src('bin/**/*[sS]pec.js')
+  gulp.src('./bin/**/*[sS]pec.js')
     // gulp-jasmine works on filepaths so you can't have any plugins before it 
     .pipe(jasmine())
 );
 
-gulp.task("typescript", () => {
-  return gulp.src("./src/**/*.ts")
+gulp.task("typescript", ["clean"], () => {
+  return gulp.src(path.join(paths.src, "**", "*.ts"))
     .pipe(tsProject())
     .js.pipe(gulp.dest(paths.bin));
 });
@@ -34,7 +35,9 @@ gulp.task('watch', ['typescript'], () => {
       var tasks = []
       changedFiles.forEach((file) => {
         // add typescript compilation if a *-ts file was changed
-        if (path.extname(file) === '.ts' && !~tasks.indexOf('typescript')) tasks.push('typescript')
+        if (path.extname(file) === '.ts' && !~tasks.indexOf('typescript')) { 
+          tasks.push('typescript');
+        } 
       })
       return tasks
     },
@@ -57,6 +60,11 @@ gulp.task('changelog', function () {
 
 gulp.task("build", ["typescript"], () => {
   return;
+});
+
+gulp.task("clean", () => {
+  return gulp.src(path.join(paths.bin, "**", "*.js"))
+    .pipe(clean());
 });
 
 gulp.task("default", ["build"], () => {
