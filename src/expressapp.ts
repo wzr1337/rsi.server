@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as WebSocketServer from 'ws';
 import * as cors from 'cors';
+import * as compression from 'compression';
 import http = require('http');
 import { viwiLogger, viwiLoggerInstance } from "./log";
 
@@ -56,7 +57,8 @@ class WebServer {
     this.app.use((req:express.Request, res:express.Response, next:express.NextFunction) => {
       this._logger.info("Query:", req.method, req.url);
       next();
-    })
+    });
+    this.app.use(compression());
     
     // Get port from environment and store in Express.
     this._port = this.normalizePort(process.env.PORT || _port || '3000');
