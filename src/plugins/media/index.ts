@@ -1,5 +1,6 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import { Service, Resource, Element, ResourceUpdate } from "../viwiPlugin";
+import * as uuid from "uuid";
 
 class Media implements Service {
   private _resources:Resource[]=[];
@@ -151,7 +152,7 @@ class Collections implements Resource {
 
   constructor(private service:Service) {
 
-    const collectionId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
+    const collectionId = "deadbeef-d2c1-11e6-9376-df943f51f0d8";
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
         lastUpdate: Date.now(),
@@ -186,10 +187,41 @@ class Collections implements Resource {
 
   getElement(elementId:string):BehaviorSubject<CollectionElement> {
     // find the element requested by the client
-    return this._collections.find((element:BehaviorSubject<{}>) => {
-      return (<{id:string}>element.getValue()).id === elementId;
+    return this._collections.find((element:BehaviorSubject<CollectionElement>) => {
+      return (<{id:string}>element.getValue().data).id === elementId;
     });
   };
+
+  createElement?(state:{name:string}):Boolean {
+    if (!state.name) return false;
+    const collectionId = uuid.v1();
+    let initialCollection = new BehaviorSubject<CollectionElement>(
+      {
+        lastUpdate: Date.now(),
+        propertiesChanged: [],
+        data: {
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + collectionId,
+        id: collectionId,
+        name: state.name,
+        items: []
+      }
+    });
+    this._collections.push(initialCollection);
+    this._change.next({lastUpdate: Date.now(), action: "add"});
+    return true;
+  };
+
+
+  deleteElement(elementId:string):boolean {
+    let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
+      return  (<{id:string}>element.getValue().data).id === elementId;
+    });
+    if (-1 !== idx) {
+      this._collections.slice(idx, 1); //remove one item from the collections array
+      return true;
+    }
+    return false;
+  } 
 
   getResource(offset?:string|number, limit?:string|number):BehaviorSubject<CollectionElement>[]{
     // retriev all element

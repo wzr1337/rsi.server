@@ -205,6 +205,15 @@ const resourcePOST = (service:Service, resource:Resource) => {
       res.status(501).send("Not Implemented");
       return;
     }
+    if(resource.createElement(req.body)) {
+       res.status(201);
+       res.json({
+        status: "ok"
+      });
+    }
+    else {
+      res.status(500).send("Internal Server Error");
+    }
   };
 };
 
