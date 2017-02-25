@@ -244,7 +244,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
       return;
     }
     else {
-      res.status(500).send();
+      res.status(500).send("Internal Server Error");
       return;
     }
   };
