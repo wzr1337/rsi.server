@@ -28,7 +28,7 @@ const PLUGINDIR = path.join(__dirname, "plugins");
 const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 const BASEURI = "/";
 
-var unsubscriptions:Subject<string> = new Subject();
+var unsubscriptions:Subject<{url:string, socket: WebSocket}> = new Subject();
 
 var availableServices:{id:string;name:string;uri:string}[] = [];
 
@@ -80,6 +80,11 @@ var run = (port?:number):Promise<void> => {
             server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
             server.ws.on('connection', (ws:any) => {                                //subscribe
               ws.on("message", handleWebSocketMessages(service, resource, ws));
+            });
+            server.ws.on('close', () => {
+              console.log('client disconnected');
+              throw new Error("oh shhhh... handling connection break is not yet implemented");
+              // @TODO can we just catch the "not connected error and use this trigger do unlink the sub?"
             });
           });
         }
@@ -321,7 +326,7 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
                 if (element) {
                   logger.debug("New element level subscription:", msg.event);
                   _viwiWebSocket.subscribeAck(msg.event);
-                  element.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+                  element.takeUntil(unsubscriptions.map(topic => {(topic.url === msg.event || topic.url === '*') && (topic.socket === ws)}))
                   .subscribe(
                   (data:Element) => {
                     _viwiWebSocket.data(msg.event, data.data);
@@ -340,14 +345,23 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
             }
             if (!elementId && resource.resourceSubscribable) {
               // resource subscription
-              logger.debug("New resource level subscription:", msg.event);
+              logger.info("New resource level subscription:", msg.event);
               _viwiWebSocket.subscribeAck(msg.event);
-              resource.change.takeUntil(unsubscriptions.map(topic => {topic === msg.event}))
+              resource.change.takeUntil(unsubscriptions.map(topic => {(topic.url === msg.event || topic.url === '*') && (topic.socket === ws) }))
               .subscribe(
               (data:ResourceUpdate) => {
                 //@TODO: needs rate limit by comparing last update timestamp with last update
+                logger.info("New resource data:", data);
                 let elements = resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
-                _viwiWebSocket.data(msg.event, elements);
+                if(elements) {
+                  let resp = elements.map((value:BehaviorSubject<Element>) => {
+                    return value.getValue().data;
+                  });
+                  _viwiWebSocket.data(msg.event, resp);
+                }
+                else {
+                  _viwiWebSocket.error(404, new Error("Not found"));
+                }
               },
               (err:any) => {
                 _viwiWebSocket.error(500, new Error(err));
@@ -363,13 +377,16 @@ const handleWebSocketMessages = (service:Service, resource:Resource, ws:WebSocke
 
       case "unsubscribe":
         logger.debug("Unsubscription:", msg.event);
-        unsubscriptions.next(msg.event);
+        unsubscriptions.next({url: msg.event, socket: ws});
         _viwiWebSocket.unsubscribeAck(msg.event);
       break;
       case "reauthorize":
       default:
         _viwiWebSocket.error(501,new Error("Not Implemented"));
         break;
+    }
+    ws.onclose = () => {
+      unsubscriptions.next({url: '*', socket: ws});
     }
   };
 };

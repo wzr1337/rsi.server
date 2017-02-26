@@ -18,7 +18,7 @@ declare namespace viwiPlugin {
 
   interface ResourceUpdate {
     lastUpdate: number;
-    action: "add"|"move"|"remove"
+    action: "init"|"add"|"move"|"remove";
   }
 
   interface Resource {

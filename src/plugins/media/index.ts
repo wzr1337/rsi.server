@@ -192,7 +192,7 @@ class Collections implements Resource {
     });
   };
 
-  createElement?(state:{name:string}):Boolean {
+  createElement(state:{name:string}):Boolean {
     if (!state.name) return false;
     const collectionId = uuid.v1();
     let initialCollection = new BehaviorSubject<CollectionElement>(
@@ -216,8 +216,9 @@ class Collections implements Resource {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
       return  (<{id:string}>element.getValue().data).id === elementId;
     });
+    console.log("index", idx);
     if (-1 !== idx) {
-      this._collections.slice(idx, 1); //remove one item from the collections array
+      this._collections.splice(idx, 1); //remove one item from the collections array
       return true;
     }
     return false;
