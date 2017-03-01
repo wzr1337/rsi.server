@@ -5,30 +5,7 @@ import * as cors from 'cors';
 import * as compression from 'compression';
 import http = require('http');
 import { viwiLogger, viwiLoggerInstance } from "./log";
-
-
-class viwiWebSocket {
-  constructor(private ws: WebSocket) {
-  }
-  
-  data(event:string, payload:Object):void {
-    this.ws.send(JSON.stringify({type: "data", status: "ok", event: event, data: payload}));
-  }
-  
-  error(code:number, err:Error):void {
-    this.ws.send(JSON.stringify({type: "error", code: code, data: err.message}));
-  }
-  
-  subscribeAck(event:string):void {
-    this.ws.send(JSON.stringify({type: "subscribe", status: "ok", event: event}));
-  }
-  
-  unsubscribeAck(event:string):void {
-    this.ws.send(JSON.stringify({type: "unsubscribe", status: "ok", event: event}));
-  }
-}
-
-
+import { BehaviorSubject, Subject} from '@reactivex/rxjs';
 
 // create server and listen on provided port (on all network interfaces).
 class WebServer {
@@ -113,4 +90,4 @@ class WebServer {
   }
 };
 
-export { WebServer, viwiWebSocket };
+export { WebServer };
