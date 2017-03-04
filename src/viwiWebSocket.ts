@@ -1,12 +1,15 @@
 import { viwiLogger, viwiLoggerInstance } from "./log";
+import * as uuid from "uuid";
 
 
 class viwiWebSocket {
+  private _id:string;
   private _logger:viwiLoggerInstance;
   
   constructor(private ws: WebSocket) {
     this._logger = viwiLogger.getInstance().getLogger("viwiWebSocket");
     this._logger.transports["console"].level = 'silly'; // for debug
+    this._id = uuid.v4();
   }
 
   private _send(viwiMessageObject:Object):boolean {
@@ -15,8 +18,12 @@ class viwiWebSocket {
       this.ws.send(JSON.stringify(viwiMessageObject));
       return true;
     }
-    this._logger.debug(this.constructor.name + "._send(): WebSocket readyState is ", this.ws.readyState);
+    this._logger.error(this.constructor.name + "._send(): WebSocket readyState is ", this.ws.readyState);
     return false;
+  }
+
+  get id():string {
+    return this._id;
   }
 
   /**
