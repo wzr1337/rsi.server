@@ -1,7 +1,7 @@
 {
   "name": "viwiserver",
-  "version": "0.0.1",
-  "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as publich in 2016 by W3C",
+  "version": "0.0.2",
+  "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as public in 2016 by W3C",
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/jasmine/bin/jasmine.js jasmine.json",
