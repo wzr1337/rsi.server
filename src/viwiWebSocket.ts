@@ -15,7 +15,7 @@ class viwiWebSocket {
       this.ws.send(JSON.stringify(viwiMessageObject));
       return true;
     }
-    this._logger.debug(this.constructor.name + "._send(): WebSocket readyState is ", this.ws.readyState);
+    this._logger.error(this.constructor.name + "._send(): WebSocket readyState is ", this.ws.readyState);
     return false;
   }
 
