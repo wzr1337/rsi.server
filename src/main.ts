@@ -113,8 +113,7 @@ var run = (port?:number):Promise<void> => {
 };
 
 class wsHandler {
-
-  private _unsubscriptions:Subject<string> = new Subject();
+  private _subscriptions = {};
 
   constructor(private service:Service, private resource:Resource) {
   }
@@ -156,12 +155,13 @@ class wsHandler {
   handleWebSocketMessages = (msg:viwiClientWebSocketMessage, _viwiWebSocket:viwiWebSocket) => {
       var eventObj = wsHandler.splitEvent(msg.event);
 
+      this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {};; // init if not yet initialized
+
       if (!eventObj.service || !eventObj.resource) {
         _viwiWebSocket.sendError(400, new Error("event url malformed"));
         return;
       }
 
-      logger.error("yeah");
       switch (msg.type) {
         case "subscribe":
           // check if  processing needed at all
@@ -172,8 +172,7 @@ class wsHandler {
                 logger.debug("New element level subscription:", msg.event);
                 _viwiWebSocket.acknowledgeSubscription(msg.event);
 
-                element
-                  .takeUntil(this._unsubscriptions.map((unsubscriptionEvent) => {logger.debug(`unsubscriptionEvent {msg.event +(unsubscriptionEvent === msg.event})`); return (unsubscriptionEvent === msg.event)}))
+                this._subscriptions[_viwiWebSocket.id][msg.event] = element
                   .subscribe((data:Element) => {
                     if (! _viwiWebSocket.sendData(msg.event, data.data)) element.complete();
                     },
@@ -194,8 +193,7 @@ class wsHandler {
             logger.info("New resource level subscription:", msg.event);
             _viwiWebSocket.acknowledgeSubscription(msg.event);
 
-            this.resource.change
-              .takeUntil(this._unsubscriptions.map((unsubscriptionEvent) => {logger.debug("unsubscriptionEvent %s", msg.event, unsubscriptionEvent, (unsubscriptionEvent === msg.event)); return (unsubscriptionEvent === msg.event)}))
+            this._subscriptions[_viwiWebSocket.id][msg.event] = this.resource.change
               .subscribe((data:ResourceUpdate) => {
                 //@TODO: needs rate limit by comparing last update timestamp with last update
                 logger.info("New resource data:", data);
@@ -222,7 +220,7 @@ class wsHandler {
 
         case "unsubscribe":
           logger.info("Unsubscription:", msg.event);
-          this._unsubscriptions.next(msg.event);
+          this._subscriptions[_viwiWebSocket.id][msg.event].unsubscribe();
           _viwiWebSocket.acknowledgeUnsubscription(msg.event); //might fail, but not important at this point
         break;
         case "reauthorize":
@@ -231,8 +229,6 @@ class wsHandler {
           _viwiWebSocket.sendError(501,new Error("Not Implemented"));
         break;
       }
-      this._unsubscriptions.map((unsubscriptionEvent) => {return unsubscriptionEvent + "bar"}).subscribe((ev)=>{logger.warn(ev.toString());})
-      //unsubscriptions.next("foo2");
 
     };
 }
