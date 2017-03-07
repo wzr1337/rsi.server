@@ -7,13 +7,13 @@
     "test": "node ./node_modules/jasmine/bin/jasmine.js jasmine.json",
     "watch": "node ./node_modules/nodemon/bin/nodemon.js index.js",
     "debug": "node --inspect --debug-brk ./bin/main.js",
-    "serve": "node ./bin/main.js"
+    "serve": "node ./bin/main.js",
+    "build:docker": "docker build -t viwi-server ."
   },
   "author": "Dr. Patrick Bartsch",
   "license": "MIT",
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
-    "@types/winston": "^2.2.0",
     "body-parser": "^1.15.2",
     "command-line-args": "^3.0.5",
     "compression": "^1.6.2",
@@ -31,6 +31,7 @@
     "@types/node": "^6.0.56",
     "@types/request": "0.0.39",
     "@types/uuid": "^2.0.29",
+    "@types/winston": "^2.2.0",
     "@types/ws": "0.0.37",
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
