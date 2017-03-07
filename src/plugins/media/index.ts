@@ -1,6 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
-import { Service, Resource, Element, ResourceUpdate } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
 import * as uuid from "uuid";
+import {RendererObject, CollectionObject, ItemObject} from "./schema";
 
 class Media implements Service {
   private _resources:Resource[]=[];
@@ -23,20 +24,6 @@ class Media implements Service {
   get resources() {
     return this._resources;
   }
-}
-
-interface RendererObject {
-  id: string;
-  name: string;
-  uri: string;
-  media?: Object;
-  currentMediaItem?: Object;
-  offset?: number;
-  scan?: "off"|"up"|"down";
-  state?: "idle"|"play"|"pause"|"stop"|"ff"|"fr";
-  repeat?: "off"|"repeatall"|"repeatone";
-  shuffle?: "on"|"off";
-  type?: "track"|"video"|"image";
 }
 
 interface RendererElement extends Element {
@@ -70,7 +57,7 @@ class Renderers implements Resource {
   }
 
   get name():string {
-      return this.constructor.name;
+    return this.constructor.name;
   };
 
   get elementSubscribable():Boolean {
@@ -135,13 +122,6 @@ class Renderers implements Resource {
 }
 
 
-interface CollectionObject {
-  id: string;
-  name: string;
-  uri: string;
-  items?: Object[];
-}
-
 interface CollectionElement extends Element {
   data: CollectionObject
 }
@@ -192,8 +172,8 @@ class Collections implements Resource {
     });
   };
 
-  createElement(state:{name:string}):Boolean {
-    if (!state.name) return false;
+  createElement(state:{name:string}):Element|Status {
+    if (!state.name) return Status.INTERNAL_SERVER_ERROR;
     const collectionId = uuid.v1();
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
@@ -208,7 +188,7 @@ class Collections implements Resource {
     });
     this._collections.push(initialCollection);
     this._change.next({lastUpdate: Date.now(), action: "add"});
-    return true;
+    return initialCollection.getValue();
   };
 
 
