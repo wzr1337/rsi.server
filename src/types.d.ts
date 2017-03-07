@@ -1,5 +1,5 @@
 
-interface viwiClientWebSocketMessage {
+export interface viwiClientWebSocketMessage {
   type:string,
   event:string,
   interval?:number,
@@ -7,4 +7,8 @@ interface viwiClientWebSocketMessage {
   Authorization?:string
 }
 
-export {viwiClientWebSocketMessage}
+export interface xObject {
+  id: string;
+  name: string;
+  uri: string;
+}
