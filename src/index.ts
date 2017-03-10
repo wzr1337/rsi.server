@@ -10,30 +10,20 @@ import { Service, Resource, Element, ResourceUpdate } from "./plugins/viwiPlugin
 import { viwiLogger } from "./log";
 import { splitEvent } from "./helpers";
 
-
-/**
- * parse command line options
- */
-const commandLineArgs = require('command-line-args')
-const optionDefinitions = [
-  { name: 'verbosity', alias: 'v', type: String },
-  { name: 'port', alias: 'p', type: Number }
-]
-const cla = commandLineArgs(optionDefinitions);
-/** end parse command line argunments */
-
-const logger = viwiLogger.getInstance().getLogger("general");
-
 declare function require(moduleName: string): any;
 
+// constants
 const PLUGINDIR = path.join(__dirname, "plugins");
 const BASEURI = "/";
 
+// globals
 var availableServices:{id:string;name:string;uri:string}[] = [];
-
-// set up the server
 var server:WebServer;
+const logger = viwiLogger.getInstance().getLogger("general");
 
+/**
+ * options to run the server
+ */
 export interface runOptions {
   port?:number,
   verbosity?:'silly'|'debug'|'verbose'|'info'|'warn'|'error'
@@ -47,9 +37,9 @@ export interface runOptions {
  * @returns a Promise that resolve on succesful startup of the server
  */
 var run = (options?:runOptions):Promise<void> => {
-  logger.transports["console"].level = options.verbosity || cla.verbosity || 'warn';
+  logger.transports["console"].level = options.verbosity || 'warn';
   return new Promise<void>((resolve, reject) => {
-    server = new WebServer(options.port || cla.port);
+    server = new WebServer(options.port);
     server.init(); // need to init
 
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
