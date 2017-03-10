@@ -1,7 +1,8 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
-import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
 import * as uuid from "uuid";
-import {RendererObject, CollectionObject, ItemObject} from "./schema";
+
+import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
+import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media implements Service {
   private _resources:Resource[]=[];

@@ -8,6 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Service, Resource, Element, ResourceUpdate } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
+import { splitEvent } from "./helpers";
 
 
 /**
@@ -26,7 +27,6 @@ logger.transports["console"].level = cla.verbosity || 'silly'; // for debug
 declare function require(moduleName: string): any;
 
 const PLUGINDIR = path.join(__dirname, "plugins");
-const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 const BASEURI = "/";
 
 var availableServices:{id:string;name:string;uri:string}[] = [];
@@ -96,7 +96,7 @@ var run = (port?:number):Promise<void> => {
             _viwiWebSocket.sendError(400, new Error(err));
             return;
           }
-          let event = wsHandler.splitEvent(msg.event);
+          let event = splitEvent(msg.event);
           let basePath = BASEURI + event.service + "/" + event.resource + "/";
           if(wsMapping[basePath] && wsMapping[basePath].isHandlingEvent(msg.event))
           {
@@ -113,7 +113,7 @@ var run = (port?:number):Promise<void> => {
 };
 
 class wsHandler {
-  private _subscriptions = {};
+  private _subscriptions:any = {};
 
   constructor(private service:Service, private resource:Resource) {
   }
@@ -122,18 +122,6 @@ class wsHandler {
     return this.service.name + "/" + this.resource.name + "/";
   }
 
-  static splitEvent(event:string):{service?:string, resource?:string, element?:string} {
-    let captureGroups = event.match(URIREGEX);
-    if (!captureGroups) {
-      return {}; //leave immediately if 
-    }
-    return {
-      service : captureGroups[1].toLowerCase(),
-      resource : captureGroups[2].toLowerCase(),
-      element : captureGroups[3]
-    }
-
-  }
   /**
    * check if the Handler is actually handling the event
    * @param event the event url in question
@@ -141,7 +129,7 @@ class wsHandler {
    * return true if instance handles event
    */
   isHandlingEvent(event:string):boolean {
-    let partials = wsHandler.splitEvent(event);
+    let partials = splitEvent(event);
     return (this.service.name.toLowerCase() === partials.service) && (this.resource.name.toLowerCase() === partials.resource);
   }
 
@@ -153,9 +141,9 @@ class wsHandler {
    * @param ws        The WebSocket the client is sending data on.
    */
   handleWebSocketMessages = (msg:viwiClientWebSocketMessage, _viwiWebSocket:viwiWebSocket) => {
-      var eventObj = wsHandler.splitEvent(msg.event);
+      var eventObj = splitEvent(msg.event);
 
-      this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {};; // init if not yet initialized
+      this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {}; // init if not yet initialized
 
       if (!eventObj.service || !eventObj.resource) {
         _viwiWebSocket.sendError(400, new Error("event url malformed"));
