@@ -16,7 +16,8 @@ import { splitEvent } from "./helpers";
  */
 const commandLineArgs = require('command-line-args')
 const optionDefinitions = [
-  { name: 'verbosity', alias: 'v', type: String }
+  { name: 'verbosity', alias: 'v', type: String },
+  { name: 'port', alias: 'p', type: Number }
 ]
 const cla = commandLineArgs(optionDefinitions);
 /** end parse command line argunments */
@@ -36,7 +37,7 @@ var server:WebServer;
 
 var run = (port?:number):Promise<void> => {
   return new Promise<void>((resolve, reject) => {
-    server = new WebServer(port);
+    server = new WebServer(cla.port);
     server.init(); // need to init
 
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
