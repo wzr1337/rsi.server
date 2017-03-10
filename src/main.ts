@@ -23,7 +23,6 @@ const cla = commandLineArgs(optionDefinitions);
 /** end parse command line argunments */
 
 const logger = viwiLogger.getInstance().getLogger("general");
-logger.transports["console"].level = cla.verbosity || 'silly'; // for debug
 
 declare function require(moduleName: string): any;
 
@@ -35,9 +34,22 @@ var availableServices:{id:string;name:string;uri:string}[] = [];
 // set up the server
 var server:WebServer;
 
-var run = (port?:number):Promise<void> => {
+export interface runOptions {
+  port?:number,
+  verbosity?:'silly'|'debug'|'verbose'|'info'|'warn'|'error'
+}
+
+/**
+ * runs a viwi server 
+ * 
+ * @param options the instance options
+ * 
+ * @returns a Promise that resolve on succesful startup of the server
+ */
+var run = (options?:runOptions):Promise<void> => {
+  logger.transports["console"].level = options.verbosity || cla.verbosity || 'warn';
   return new Promise<void>((resolve, reject) => {
-    server = new WebServer(port || cla.port);
+    server = new WebServer(options.port || cla.port);
     server.init(); // need to init
 
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {

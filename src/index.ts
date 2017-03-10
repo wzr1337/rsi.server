@@ -1,3 +1,3 @@
 import {server, run} from "./main";
 
-run();
+run({port: 3000, verbosity: 'silly'});
