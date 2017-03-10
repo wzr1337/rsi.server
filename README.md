@@ -20,9 +20,9 @@ $ npm install
 ```
 
 
-## Run it
+## Build it
 
-To run the server, use
+To nuild the server, use
 
 ```sh
 $ gulp build
@@ -37,6 +37,30 @@ $ gulp test
 ```
 
 Test specifications will always follow the `+.spec`form, i.e. source file named `myfile.ts` => test file named `myfile.spec.ts`.
+
+
+## Develop it
+
+To run a watch on the source file and trigger an automatic reload on file changes, use
+
+```sh
+$ gulp watch
+```
+
+# Run it
+
+To run the server separately, use the cli
+
+```
+  $ node ./bin/cli.js -p 9999 -v 'error'
+```
+
+### Available comman line arguments
+
+| long parameter | short parameter | type   | description                                    |
+|----------------|-----------------|--------|------------------------------------------------|
+| --port         | -p              | number | the port number to listen on                   |
+| --verbosity    | -v              | string | the winston log level to plot into the console |
 
 
 ## Examples
