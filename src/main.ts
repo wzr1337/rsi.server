@@ -37,7 +37,7 @@ var server:WebServer;
 
 var run = (port?:number):Promise<void> => {
   return new Promise<void>((resolve, reject) => {
-    server = new WebServer(cla.port);
+    server = new WebServer(port || cla.port);
     server.init(); // need to init
 
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
