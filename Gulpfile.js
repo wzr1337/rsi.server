@@ -28,7 +28,7 @@ gulp.task("typescript", ["clean"], () => {
 
 gulp.task('watch', ['typescript'], () => {
   nodemon({
-    script: path.join(paths.bin, 'index.js'),
+    script: path.join(paths.bin, 'cli.js'),
     ext: 'ts js',
     watch: [paths.src],
     tasks: (changedFiles) => {
