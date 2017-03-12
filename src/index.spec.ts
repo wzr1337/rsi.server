@@ -5,7 +5,7 @@ const PORT = 9999;
 const BASEURI = "http://127.0.0.1:" + PORT;
 
 beforeAll((done: DoneFn) => {
-  run(PORT).then(()=> {
+  run({port: PORT, verbosity: "error"}).then(()=> {
     done();
   });
 });
