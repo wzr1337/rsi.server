@@ -4,6 +4,16 @@ import * as request from "request";
 const PORT = 9999;
 const BASEURI = "http://127.0.0.1:" + PORT;
 
+function parseBody(body:string):any {
+  try {
+    return JSON.parse(body);
+  }
+  catch(err) {
+    //console.error(err);
+    return {error: err};
+  }
+}
+
 beforeAll((done: DoneFn) => {
   run({port: PORT, verbosity: "error"}).then(()=> {
     done();
@@ -76,8 +86,36 @@ describe("operate on /", () => {
       done();
     });
   });
-
 });
+
+describe("operate on resource level", () => {
+    it("should return a list of resources on GET /media/", (done:DoneFn) => {
+      request([BASEURI, "media"].join("/"), {method: "GET"}, (error, response, body) => {
+        if (error) {
+          console.log(error, response, body);
+        }
+        var payload = parseBody(body);
+
+        expect(response.statusCode).toBe(200);
+        expect(payload.status).toEqual("ok");
+        expect(Array.isArray(payload.data)).toBe(true);
+        done();
+      });
+    });
+
+    it("should return an error for non-implemented services GET /$$$$$$$$/", (done:DoneFn) => {
+      request([BASEURI, "$$$$$$$$"].join("/"), {method: "GET"}, (error, response, body) => {
+        if (error) {
+          console.log(error, response, body);
+        }
+        var payload = parseBody(body);
+
+        expect(response.statusCode).toBe(404);
+        //expect(payload.status).toEqual("error");
+        done();
+      });
+    });
+  });
 
 afterAll((done: DoneFn) => {
   server.close();
