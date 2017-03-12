@@ -30,3 +30,6 @@ src/plugins/*/
 # Mac stuff
 .DS_Store
 
+# yarn
+*.lock
+
