@@ -96,7 +96,7 @@ var run = (options?:runOptions):Promise<void> => {
             msg = JSON.parse(message);
           }
           catch(err) {
-            _viwiWebSocket.sendError(400, new Error(err));
+            _viwiWebSocket.sendError(msg.event, 400, new Error(err));
             return;
           }
           let event = splitEvent(msg.event);
@@ -106,7 +106,7 @@ var run = (options?:runOptions):Promise<void> => {
             wsMapping[basePath].handleWebSocketMessages(msg, _viwiWebSocket);
           }
           else {
-            _viwiWebSocket.sendError(403, new Error("Not Found"));
+            _viwiWebSocket.sendError(msg.event, 403, new Error("Not Found"));
           }
         });
       });
@@ -149,7 +149,7 @@ class wsHandler {
       this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {}; // init if not yet initialized
 
       if (!eventObj.service || !eventObj.resource) {
-        _viwiWebSocket.sendError(400, new Error("event url malformed"));
+        _viwiWebSocket.sendError(msg.event, 400, new Error("event url malformed"));
         return;
       }
 
@@ -168,16 +168,16 @@ class wsHandler {
                     if (! _viwiWebSocket.sendData(msg.event, data.data)) element.complete();
                     },
                     (err:any) => {
-                      if (! _viwiWebSocket.sendError(500, new Error(err))) element.complete();
+                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) element.complete();
                     });
               }
               else {
-                if (! _viwiWebSocket.sendError(404, new Error("Not Found"))) element.complete();
+                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) element.complete();
               }
           }
           else if (eventObj.element && !this.resource.elementSubscribable)
           {
-            _viwiWebSocket.sendError(503, new Error("Not Implemented"));
+            _viwiWebSocket.sendError(msg.event, 503, new Error("Not Implemented"));
           }
           if (!eventObj.element && this.resource.resourceSubscribable) {
             // resource subscription
@@ -185,9 +185,9 @@ class wsHandler {
             _viwiWebSocket.acknowledgeSubscription(msg.event);
 
             this._subscriptions[_viwiWebSocket.id][msg.event] = this.resource.change
-              .subscribe((data:ResourceUpdate) => {
+              .subscribe((change:ResourceUpdate) => {
                 //@TODO: needs rate limit by comparing last update timestamp with last update
-                logger.info("New resource data:", data);
+                logger.info("New resource data:", change);
                 let elements = this.resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
                 if(elements) {
                   let resp = elements.map((value:BehaviorSubject<Element>) => {
@@ -196,16 +196,16 @@ class wsHandler {
                   if(! _viwiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                 }
                 else {;
-                  if(! _viwiWebSocket.sendError(404, new Error("Not found"))) this.resource.change.complete();
+                  if(! _viwiWebSocket.sendError(msg.event, 404, new Error("Not found"))) this.resource.change.complete();
                 }
             },
             (err:any) => {
-              if(! _viwiWebSocket.sendError(500, new Error(err))) this.resource.change.complete();
+              if(! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) this.resource.change.complete();
             });
           }
           else if (!eventObj.element && !this.resource.resourceSubscribable)
           {
-            _viwiWebSocket.sendError(503, new Error("Not Implemented"));
+            _viwiWebSocket.sendError(msg.event, 501, new Error("Not Implemented"));
           }
         break;
 
@@ -217,7 +217,7 @@ class wsHandler {
         case "reauthorize":
         default:
           logger.error("Unsupported command on ws://:", msg.event);
-          _viwiWebSocket.sendError(501,new Error("Not Implemented"));
+          _viwiWebSocket.sendError(msg.event, 501, new Error("Not Implemented"));
         break;
       }
 

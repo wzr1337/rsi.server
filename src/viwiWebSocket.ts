@@ -45,9 +45,9 @@ class viwiWebSocket {
   *
   * @returns true on successful send
   */
-  sendError(code:number, err:Error):boolean {
-    this._logger.debug(this.constructor.name + ".sendError():", event);
-    return this._send({type: "error", code: code, data: err.message});
+  sendError(event: string, code:number, err:Error):boolean {
+    this._logger.debug(this.constructor.name + ".sendError():", event, code, err.message);
+    return this._send({type: "error", "event": event, code: code, data: err.message});
   }
   
   /**
