@@ -29,7 +29,7 @@ export interface ResourceUpdate {
 
 export interface Resource {
   name:string;
-  change:Subject<ResourceUpdate>;
+  change:BehaviorSubject<ResourceUpdate>;
 
   //@TODO: return a promise and handle success/failure accordingly
   getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<Element>[]; //GET /<service>/<resource>/

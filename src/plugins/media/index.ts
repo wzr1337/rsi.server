@@ -34,7 +34,7 @@ interface RendererElement extends Element {
 class Renderers implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<RendererElement>[] = [];
-  private _change:Subject<ResourceUpdate> = new Subject();
+  private _change:BehaviorSubject<ResourceUpdate>;
 
   constructor(private service:Service) {
 
@@ -54,7 +54,7 @@ class Renderers implements Resource {
       }
     });
     this._renderers.push(netfluxRenderer);
-    this._change.next({lastUpdate: Date.now(), action: "add"});
+    this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
   }
 
   get name():string {
@@ -65,7 +65,7 @@ class Renderers implements Resource {
     return true;
   };
 
-  get change():Subject<ResourceUpdate> {
+  get change():BehaviorSubject<ResourceUpdate> {
     return this._change;
   }
 
@@ -129,7 +129,7 @@ interface CollectionElement extends Element {
 
 class Collections implements Resource {
   private _collections:BehaviorSubject<CollectionElement>[] = [];
-  private _change:Subject<ResourceUpdate> = new Subject();
+  private _change:BehaviorSubject<ResourceUpdate>;
 
   constructor(private service:Service) {
 
@@ -146,7 +146,7 @@ class Collections implements Resource {
       }
     });
     this._collections.push(initialCollection);
-    this._change.next({lastUpdate: Date.now(), action: "add"});
+    this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
 
   }
 
@@ -162,7 +162,7 @@ class Collections implements Resource {
     return true;
   };
 
-  get change():Subject<ResourceUpdate> {
+  get change():BehaviorSubject<ResourceUpdate> {
     return this._change;
   }
 
