@@ -6,7 +6,7 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource, Element, ResourceUpdate } from "./plugins/viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, Status } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
 import { splitEvent } from "./helpers";
 
@@ -338,17 +338,24 @@ const resourcePOST = (service:Service, resource:Resource) => {
   if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
-      res.status(501).send("Not Implemented");
+      res.status(Status.NOT_IMPLEMENTED).send("Not Implemented");
       return;
     }
-    if(resource.createElement(req.body)) {
-       res.status(201);
-       res.json({
-        status: "ok"
-      });
+    let newElement = resource.createElement(req.body);
+    if(newElement) {
+      if(typeof(newElement) !== "number") {
+        res.status(201);
+        res.header({"Location": newElement.data.uri});
+        res.json({
+          status: "ok"
+        });
+      }
+      else {
+        res.status(newElement).send();
+      }
     }
     else {
-      res.status(500).send("Internal Server Error");
+      res.status(Status.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
   };
 };

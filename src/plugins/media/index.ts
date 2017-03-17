@@ -183,7 +183,6 @@ class Collections implements Resource {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
       return  (<{id:string}>element.getValue().data).id === elementId;
     });
-    console.log("index", idx);
     if (-1 !== idx) {
       this._collections.splice(idx, 1); //remove one item from the collections array
       return true;
