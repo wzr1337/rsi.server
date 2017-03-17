@@ -4,26 +4,12 @@ import * as uuid from "uuid";
 import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
-class Media implements Service {
-  private _resources:Resource[]=[];
-  private _id:string;
-
+class Media extends Service {
   constructor() {
-    this._id = "f9a1073f-e90c-4c56-8368-f4c6bd1d8c96"; //random id
-    this._resources.push(new Renderers(this));
-    this._resources.push(new Collections(this));
-  }
-
-  get name() {
-      return this.constructor.name;
-  }
-
-  get id() {
-      return this._id;
-  }
-
-  get resources() {
-    return this._resources;
+    super();
+    this.id = "f9a1073f-e90c-4c56-8368-f4c6bd1d8c96"; //random id
+    this.resources.push(new Renderers(this));
+    this.resources.push(new Collections(this));
   }
 }
 

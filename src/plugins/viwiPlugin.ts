@@ -10,10 +10,29 @@ export enum Status {
   "INTERNAL_SERVER_ERROR" = 500
 }
 
-export interface Service {
-  name:string;
-  id: string;
-  resources:Resource[];
+export class Service {
+  private _resources:Resource[]=[];
+  private _id:string;
+
+  get name() {
+   return this.constructor.name.toLowerCase();
+  }
+
+  get id() {
+   return this._id;
+  }
+
+  set id(id:string) {
+    this._id = id;
+  }
+
+  get resources() {
+    return this._resources;
+  }
+
+  getResource(name:string):Resource {
+    return this._resources.find((r:Resource) => {return r.name === name});
+  }
 }
 
 export interface Element {
