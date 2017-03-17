@@ -1,5 +1,30 @@
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/wzr1337/viwiServer/compare/0.0.2...v0.0.3) (2017-03-17)
+
+
+### Bug Fixes
+
+* **main:** port respect ([8bf14ce](https://github.com/wzr1337/viwiServer/commit/8bf14ce))
+* **package:** add missing dependencies ([12c296b](https://github.com/wzr1337/viwiServer/commit/12c296b))
+* **test:** use the new options object to spin up a server (no port collision with a running server) ([76fc722](https://github.com/wzr1337/viwiServer/commit/76fc722))
+* send initial data message on new subscription to resources ([52c2c5b](https://github.com/wzr1337/viwiServer/commit/52c2c5b))
+
+
+### Features
+
+* **cli:** move cli stuff to cli ([3c60840](https://github.com/wzr1337/viwiServer/commit/3c60840))
+* **docker:** add a Dockerfile and nam build task ([1324214](https://github.com/wzr1337/viwiServer/commit/1324214))
+* **general:** options can be given with the run() command ([0928644](https://github.com/wzr1337/viwiServer/commit/0928644))
+* **helpers:** move reusable code to helpers ([dbd9644](https://github.com/wzr1337/viwiServer/commit/dbd9644))
+* **port:** port argument used ([5b418c1](https://github.com/wzr1337/viwiServer/commit/5b418c1))
+* **server:** return Location header on creation of new elements ([a18800c](https://github.com/wzr1337/viwiServer/commit/a18800c))
+* **types:** add xObject ([da57537](https://github.com/wzr1337/viwiServer/commit/da57537))
+* **viwiWebSocket:** report event name on errors on the WebSocket channel ([6421064](https://github.com/wzr1337/viwiServer/commit/6421064))
+
+
+
 <a name="0.0.2"></a>
-## 0.0.2 (2017-03-04)
+## [0.0.2](https://github.com/wzr1337/viwiServer/compare/1ede568...0.0.2) (2017-03-04)
 
 
 ### Bug Fixes
