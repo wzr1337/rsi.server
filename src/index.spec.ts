@@ -9,7 +9,6 @@ function parseBody(body:string):any {
     return JSON.parse(body);
   }
   catch(err) {
-    //console.error(err);
     return {error: err};
   }
 }
