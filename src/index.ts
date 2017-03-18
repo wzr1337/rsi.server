@@ -89,6 +89,12 @@ var run = (options?:runOptions):Promise<void> => {
 
       server.ws.on('connection', (ws:any) => {                                //subscribe|unsubscribe
         var _viwiWebSocket = new viwiWebSocket(ws);
+        ws.on("close", () => {
+          for (let prop in wsMapping) {
+            wsMapping[prop].unsubscribeWebSocket(_viwiWebSocket);
+          }
+        });
+
         ws.on("message", (message:string) => {
           let msg:viwiClientWebSocketMessage;
           // make sure we actually parse the incomming message
@@ -135,6 +141,21 @@ class wsHandler {
     let partials = splitEvent(event);
     return (this.service.name.toLowerCase() === partials.service) && (this.resource.name.toLowerCase() === partials.resource);
   }
+
+  /**
+   * unsubscribe a given websocket from all it's subscriptions
+   * 
+   * @param _viwiWebSocket  The WebSocket to be unsubscribed.
+   */
+  unsubscribeWebSocket = (_viwiWebSocket:viwiWebSocket) => {
+    if (this._subscriptions[_viwiWebSocket.id]) {
+      let subscriptions:any = this._subscriptions[_viwiWebSocket.id];
+      for (let prop in subscriptions) {
+        subscriptions[prop].unsubscribe();
+      }
+      delete this._subscriptions[_viwiWebSocket.id];
+    }
+  };
 
   /**
    * handling incoming websocket messages
