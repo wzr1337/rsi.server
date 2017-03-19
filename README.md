@@ -5,7 +5,7 @@
 This project implements the Volkswagen Infotainment Web Interface as published under [https://www.w3.org/Submission/2016/01/](https://www.w3.org/Submission/2016/01/).
 
 
-### Prerequisits
+### Prerequisites
 
 This project uses Gulp and TypeScript which needs to be available globally, so please make them available via
 
@@ -22,7 +22,7 @@ $ npm install
 
 ## Build it
 
-To nuild the server, use
+To build the server, use
 
 ```sh
 $ gulp build
@@ -55,7 +55,7 @@ To run the server separately, use the cli
   $ node ./bin/cli.js -p 9999 -v 'error'
 ```
 
-### Available comman line arguments
+### Available command line arguments
 
 | long parameter | short parameter | type   | description                                    |
 |----------------|-----------------|--------|------------------------------------------------|
@@ -79,7 +79,7 @@ ws.onopen = () => {
 
 
 ## Contribution
-I welcome everyone to contribute to this repo. Let us build awesome software - togehter. In order to streamline contribution to this repo, some guidelines are described below.
+I welcome everyone to contribute to this repo. Let us build awesome software - together. In order to streamline contribution to this repo, some guidelines are described below.
 
 ### Tests
 In order to maintain a maximum of software quality, **tests** are needed. Whenever you contribute, please make sure that appropriate tests are in place. Also contributing tests only is highly valuable for the project.
