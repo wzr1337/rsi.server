@@ -35,6 +35,8 @@ class Renderers implements Resource {
         id: rendererId,
         name: "Netflux",
         state: "idle",
+        shuffle: "off",
+        repeat: "off",
         offset: 0,
         media: "initialCollection"
       }
@@ -78,32 +80,43 @@ class Renderers implements Resource {
   updateElement(elementId:string, difference:any):Boolean {
     let element = this.getElement(elementId);
     let renderer:RendererObject = element.getValue().data;
-      if (difference.hasOwnProperty("state")) {
-        renderer.state = difference.state;
-        if (difference.state === "play") {
-          const speed = 1000;
-          this._interval = setInterval(() => {
-            renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
-            element.next(
-              {
-                lastUpdate: Date.now(),
-                propertiesChanged: ["offset"],
-                data: renderer
-              });
-          }, speed);
-        }
-        else {
-          clearInterval(this._interval);
-        }
-        element.next({
-                lastUpdate: Date.now(),
-                propertiesChanged: ["state"],
-                data: renderer
-              }); // @TODO: check diffs bevor updating without a need
+    let propertiesChanged:string[]=[];
+    if (difference.hasOwnProperty("state")) {
+      renderer.state = difference.state;
+      if (difference.state === "play") {
+        const speed = 1000;
+        this._interval = setInterval(() => {
+          renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
+          element.next(
+            {
+              lastUpdate: Date.now(),
+              propertiesChanged: ["offset"],
+              data: renderer
+            });
+        }, speed);
       }
       else {
-        return false;
+        clearInterval(this._interval);
       }
+      propertiesChanged.push("state");
+    }
+    if (difference.hasOwnProperty("shuffle")) { //@TODO: needs a test
+      if (-1 !== ["off", "on"].indexOf(difference.shuffle)) {
+        renderer.shuffle = difference.shuffle;
+        propertiesChanged.push("shuffle");
+      }
+    }
+    if (difference.hasOwnProperty("repeat")) { //@TODO: needs a test
+      if (-1 !== ["off", "one", "all"].indexOf(difference.repeat)) {
+        renderer.repeat = difference.repeat;
+        propertiesChanged.push("repeat");
+      }
+    }
+    element.next({
+      lastUpdate: Date.now(),
+      propertiesChanged: propertiesChanged,
+      data: renderer
+    }); // @TODO: check diffs bevor updating without a need
     return true;
   }
 }
