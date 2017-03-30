@@ -100,13 +100,13 @@ class Renderers implements Resource {
       }
       propertiesChanged.push("state");
     }
-    if (difference.hasOwnProperty("shuffle")) { //@TODO: needs a test
+    if (difference.hasOwnProperty("shuffle")) {
       if (-1 !== ["off", "on"].indexOf(difference.shuffle)) {
         renderer.shuffle = difference.shuffle;
         propertiesChanged.push("shuffle");
       }
     }
-    if (difference.hasOwnProperty("repeat")) { //@TODO: needs a test
+    if (difference.hasOwnProperty("repeat")) {
       if (-1 !== ["off", "one", "all"].indexOf(difference.repeat)) {
         renderer.repeat = difference.repeat;
         propertiesChanged.push("repeat");
