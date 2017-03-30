@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 
-import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media extends Service {
@@ -172,8 +172,8 @@ class Collections implements Resource {
     });
   };
 
-  createElement(state:{name:string}):Element|Status {
-    if (!state.name) return Status.INTERNAL_SERVER_ERROR;
+  createElement(state:{name:string}):Element|StatusCode {
+    if (!state.name) return StatusCode.INTERNAL_SERVER_ERROR;
     const collectionId = uuid.v1();
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
