@@ -63,7 +63,7 @@ export interface Resource {
   createElement?(state:{}):responseObject;                                              //POST /<service>/<resource>/
   getElement(elementId:string):responseObject;                                          //GET /<service>/<resource>/<element>
   updateElement?(elementId:string, difference:any):Boolean;                             //POST /<service>/<resource>/<element>
-  deleteElement?(elementId:string):Boolean;                                             //DELETE /<service>/<resource>/<element>
+  deleteElement?(elementId:string):responseObject;                                      //DELETE /<service>/<resource>/<element>
 
   resourceSubscribable?:Boolean;                                                        //subscribe /<service>/<resource>/
   elementSubscribable?:Boolean;                                                         //subscribe /<service>/<resource>/<element>

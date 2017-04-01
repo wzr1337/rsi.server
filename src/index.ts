@@ -397,15 +397,12 @@ const elementDELETE = (service:Service, resource:Resource) => {
       return;
     }
     // proprietary element deletion
-    let succeeded = resource.deleteElement(req.params.id);
+    let deletionResponse = resource.deleteElement(req.params.id);
 
     // respond
-    if(succeeded){
-      res.status(200);
-      res.json({
-        status: "ok"
-      });
-      return;
+    if(deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
+      res.status(deletionResponse.code || (deletionResponse.status === "ok") ? 200: 500);
+      res.json(deletionResponse);
     }
     else {
       res.status(500).send("Internal Server Error");

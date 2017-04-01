@@ -200,15 +200,15 @@ class Collections implements Resource {
   };
 
 
-  deleteElement(elementId:string):boolean {
+  deleteElement(elementId:string):responseObject {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
       return  (<{id:string}>element.getValue().data).id === elementId;
     });
     if (-1 !== idx) {
       this._collections.splice(idx, 1); //remove one item from the collections array
-      return true;
+      return {status: "ok"};
     }
-    return false;
+    return {status: "error", code: 404, message: "Element can not be found"};
   } 
 
   getResource(offset?:string|number, limit?:string|number):BehaviorSubject<CollectionElement>[]{
