@@ -6,7 +6,7 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource, Element, ResourceUpdate, Status } from "./plugins/viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
 import { splitEvent } from "./helpers";
 
@@ -180,20 +180,21 @@ class wsHandler {
           if (eventObj.element && this.resource.elementSubscribable) {
               // this is an element subscription
               let element = this.resource.getElement(eventObj.element);
+              let subject:BehaviorSubject<Element> = <BehaviorSubject<Element>>element.data;
               if (element) {
                 logger.debug("New element level subscription:", msg.event);
                 _viwiWebSocket.acknowledgeSubscription(msg.event);
 
-                this._subscriptions[_viwiWebSocket.id][msg.event] = element
+                this._subscriptions[_viwiWebSocket.id][msg.event] = subject
                   .subscribe((data:Element) => {
-                    if (! _viwiWebSocket.sendData(msg.event, data.data)) element.complete();
+                    if (! _viwiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
-                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) element.complete();
+                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) subject.complete();
                     });
               }
               else {
-                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) element.complete();
+                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) subject.complete();
               }
           }
           else if (eventObj.element && !this.resource.elementSubscribable)
@@ -291,7 +292,7 @@ const elementGET = (service:Service, resource:Resource) => {
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
     if(element){
-      let data = element.getValue().data;
+      let data = (<BehaviorSubject<Element>>element.data).getValue().data;
       // filter the result before responding if needed
       if (req.query.hasOwnProperty("$fields")) {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
@@ -359,7 +360,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
   if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
-      res.status(Status.NOT_IMPLEMENTED).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
       return;
     }
     let newElement = resource.createElement(req.body);
@@ -376,7 +377,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
       }
     }
     else {
-      res.status(Status.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
   };
 };

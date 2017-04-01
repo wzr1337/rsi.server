@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, responseObject } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media extends Service {
@@ -57,11 +57,14 @@ class Renderers implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<RendererElement> {
+  getElement(elementId:string):responseObject {
     // find the element requested by the client
-    return this._renderers.find((element:BehaviorSubject<RendererElement>) => {
+    return {
+      status: "ok",
+      data: this._renderers.find((element:BehaviorSubject<RendererElement>) => {
       return (<{id:string}>element.getValue().data).id === elementId;
-    });
+    })
+    };
   };
 
   getResource(offset?:string|number, limit?:string|number):BehaviorSubject<RendererElement>[]{
@@ -78,7 +81,7 @@ class Renderers implements Resource {
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
   updateElement(elementId:string, difference:any):Boolean {
-    let element = this.getElement(elementId);
+    let element = (<BehaviorSubject<RendererElement>> this.getElement(elementId).data);
     let renderer:RendererObject = element.getValue().data;
     let propertiesChanged:string[]=[];
     if (difference.hasOwnProperty("state")) {
@@ -165,11 +168,13 @@ class Collections implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<CollectionElement> {
+  getElement(elementId:string):responseObject {
     // find the element requested by the client
-    return this._collections.find((element:BehaviorSubject<CollectionElement>) => {
+    return {
+      status: "ok",
+      data: this._collections.find((element:BehaviorSubject<CollectionElement>) => {
       return (<{id:string}>element.getValue().data).id === elementId;
-    });
+    })};
   };
 
   createElement(state:{name:string}):Element|StatusCode {

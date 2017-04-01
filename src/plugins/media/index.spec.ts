@@ -1,4 +1,6 @@
 import * as Media from "./index";
+import { BehaviorSubject } from "@reactivex/rxjs";
+import { Element, responseObject } from "../viwiPlugin";
 
 
 describe("Service", () => {
@@ -33,12 +35,12 @@ describe("Renderers resource", () => {
   });
 
   it("should not find an arbitrary element", (done:DoneFn) => {
-    expect(r.getElement('123')).toBeUndefined();
+    expect(r.getElement('123').data).toBeUndefined();
     done();
   });
 
   it("should hold a renderer", (done:DoneFn) => {
-    r.getElement(RENDERERID).subscribe((element) => {
+    (<BehaviorSubject<Element>> r.getElement(RENDERERID).data).subscribe((element) => {
       expect(element).toBeDefined();
     });
     done();
@@ -49,17 +51,17 @@ describe("Renderers resource", () => {
     for (var index = 0; index < values.length; index++) {
       let value = values[index];
       r.updateElement(RENDERERID,{shuffle:value});
-      expect(r.getElement(RENDERERID).getValue().data.shuffle).toEqual(value);
+      expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.shuffle).toEqual(value);
     }
     done();
   });
 
   it("should NOT change the shuffle state for invalid values", (done:DoneFn) => {
     r.updateElement(RENDERERID,{shuffle:'off'});
-    expect(r.getElement(RENDERERID).getValue().data.shuffle).toEqual('off');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.shuffle).toEqual('off');
     r.updateElement(RENDERERID,{shuffle:'someInvalidValue'});
-    expect(r.getElement(RENDERERID).getValue().data.shuffle).not.toEqual('someInvalidValue');
-    expect(r.getElement(RENDERERID).getValue().data.shuffle).toEqual('off');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.shuffle).not.toEqual('someInvalidValue');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.shuffle).toEqual('off');
     done();
   });
 
@@ -68,17 +70,17 @@ describe("Renderers resource", () => {
     for (var index = 0; index < values.length; index++) {
       let value = values[index];
       r.updateElement(RENDERERID,{repeat:value});
-      expect(r.getElement(RENDERERID).getValue().data.repeat).toEqual(value);
+      expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.repeat).toEqual(value);
     }
     done();
   });
 
   it("should NOT change the repeat state for invalid values", (done:DoneFn) => {
     r.updateElement(RENDERERID,{repeat:'off'});
-    expect(r.getElement(RENDERERID).getValue().data.repeat).toEqual('off');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.repeat).toEqual('off');
     r.updateElement(RENDERERID,{repeat:'someInvalidValue'});
-    expect(r.getElement(RENDERERID).getValue().data.repeat).not.toEqual('someInvalidValue');
-    expect(r.getElement(RENDERERID).getValue().data.repeat).toEqual('off');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.repeat).not.toEqual('someInvalidValue');
+    expect((<BehaviorSubject<Element>> r.getElement(RENDERERID).data).getValue().data.repeat).toEqual('off');
     done();
   });
 })
