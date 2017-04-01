@@ -60,7 +60,7 @@ export interface Resource {
   change:BehaviorSubject<ResourceUpdate>;
 
   getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<Element>[]; //GET /<service>/<resource>/
-  createElement?(state:{}):Element|StatusCode;                                          //POST /<service>/<resource>/
+  createElement?(state:{}):responseObject;                                              //POST /<service>/<resource>/
   getElement(elementId:string):responseObject;                                          //GET /<service>/<resource>/<element>
   updateElement?(elementId:string, difference:any):Boolean;                             //POST /<service>/<resource>/<element>
   deleteElement?(elementId:string):Boolean;                                             //DELETE /<service>/<resource>/<element>

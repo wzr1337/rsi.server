@@ -177,8 +177,11 @@ class Collections implements Resource {
     })};
   };
 
-  createElement(state:{name:string}):Element|StatusCode {
-    if (!state.name) return StatusCode.INTERNAL_SERVER_ERROR;
+  createElement(state:{name:string}):responseObject{
+    if (!state.name) return {
+      status: "error",
+      code: StatusCode.INTERNAL_SERVER_ERROR
+    };
     const collectionId = uuid.v1();
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
@@ -193,7 +196,7 @@ class Collections implements Resource {
     });
     this._collections.push(initialCollection);
     this._change.next({lastUpdate: Date.now(), action: "add"});
-    return initialCollection.getValue();
+    return {status:"ok", data: initialCollection};
   };
 
 

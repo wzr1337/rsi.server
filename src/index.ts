@@ -364,18 +364,17 @@ const resourcePOST = (service:Service, resource:Resource) => {
       return;
     }
     let newElement = resource.createElement(req.body);
-    if(newElement) {
-      if(typeof(newElement) !== "number") {
-        res.status(201);
-        res.header({"Location": newElement.data.uri});
-        res.json({
-          status: "ok"
-        });
-      }
-      else {
-        res.status(newElement).send();
-      }
+    console.log(newElement)
+    if(newElement.status === "ok") {
+      res.status(201);
+      res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
+      res.json({
+        status: "ok"
+      });
     }
+    else if (newElement.status) {
+        res.json(newElement);
+      }
     else {
       res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
