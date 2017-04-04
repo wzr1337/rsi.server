@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 
-import { Service, Resource, Element, ResourceUpdate, Status } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media extends Service {
@@ -35,6 +35,8 @@ class Renderers implements Resource {
         id: rendererId,
         name: "Netflux",
         state: "idle",
+        shuffle: "off",
+        repeat: "off",
         offset: 0,
         media: "initialCollection"
       }
@@ -55,14 +57,17 @@ class Renderers implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<RendererElement> {
+  getElement(elementId:string):ElementResponse {
     // find the element requested by the client
-    return this._renderers.find((element:BehaviorSubject<RendererElement>) => {
+    return {
+      status: "ok",
+      data: this._renderers.find((element:BehaviorSubject<RendererElement>) => {
       return (<{id:string}>element.getValue().data).id === elementId;
-    });
+    })
+    };
   };
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<RendererElement>[]{
+  getResource(offset?:string|number, limit?:string|number):CollectionResponse{
     // retriev all element
     let resp:BehaviorSubject<RendererElement>[];
 
@@ -70,41 +75,53 @@ class Renderers implements Resource {
       resp = this._renderers.slice(<number>offset, <number>limit);
     }
 
-    return resp;
+    return {status: "ok", data: resp};
   };
 
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
-  updateElement(elementId:string, difference:any):Boolean {
-    let element = this.getElement(elementId);
+  updateElement(elementId:string, difference:any):ElementResponse {
+    let element = (<BehaviorSubject<RendererElement>> this.getElement(elementId).data);
     let renderer:RendererObject = element.getValue().data;
-      if (difference.hasOwnProperty("state")) {
-        renderer.state = difference.state;
-        if (difference.state === "play") {
-          const speed = 1000;
-          this._interval = setInterval(() => {
-            renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
-            element.next(
-              {
-                lastUpdate: Date.now(),
-                propertiesChanged: ["offset"],
-                data: renderer
-              });
-          }, speed);
-        }
-        else {
-          clearInterval(this._interval);
-        }
-        element.next({
-                lastUpdate: Date.now(),
-                propertiesChanged: ["state"],
-                data: renderer
-              }); // @TODO: check diffs bevor updating without a need
+    let propertiesChanged:string[]=[];
+    if (difference.hasOwnProperty("state")) {
+      renderer.state = difference.state;
+      if (difference.state === "play") {
+        const speed = 1000;
+        this._interval = setInterval(() => {
+          renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
+          element.next(
+            {
+              lastUpdate: Date.now(),
+              propertiesChanged: ["offset"],
+              data: renderer
+            });
+        }, speed);
       }
       else {
-        return false;
+        clearInterval(this._interval);
       }
-    return true;
+      propertiesChanged.push("state");
+    }
+    if (difference.hasOwnProperty("shuffle")) {
+      if (-1 !== ["off", "on"].indexOf(difference.shuffle)) {
+        renderer.shuffle = difference.shuffle;
+        propertiesChanged.push("shuffle");
+      }
+    }
+    if (difference.hasOwnProperty("repeat")) {
+      if (-1 !== ["off", "one", "all"].indexOf(difference.repeat)) {
+        renderer.repeat = difference.repeat;
+        propertiesChanged.push("repeat");
+      }
+    }
+    let resp = {
+      lastUpdate: Date.now(),
+      propertiesChanged: propertiesChanged,
+      data: renderer
+    };
+    element.next(resp); // @TODO: check diffs bevor updating without a need
+    return {status: "ok"};
   }
 }
 
@@ -152,15 +169,20 @@ class Collections implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):BehaviorSubject<CollectionElement> {
+  getElement(elementId:string):ElementResponse {
     // find the element requested by the client
-    return this._collections.find((element:BehaviorSubject<CollectionElement>) => {
+    return {
+      status: "ok",
+      data: this._collections.find((element:BehaviorSubject<CollectionElement>) => {
       return (<{id:string}>element.getValue().data).id === elementId;
-    });
+    })};
   };
 
-  createElement(state:{name:string}):Element|Status {
-    if (!state.name) return Status.INTERNAL_SERVER_ERROR;
+  createElement(state:{name:string}):ElementResponse{
+    if (!state.name) return {
+      status: "error",
+      code: StatusCode.INTERNAL_SERVER_ERROR
+    };
     const collectionId = uuid.v1();
     let initialCollection = new BehaviorSubject<CollectionElement>(
       {
@@ -175,22 +197,22 @@ class Collections implements Resource {
     });
     this._collections.push(initialCollection);
     this._change.next({lastUpdate: Date.now(), action: "add"});
-    return initialCollection.getValue();
+    return {status:"ok", data: initialCollection};
   };
 
 
-  deleteElement(elementId:string):boolean {
+  deleteElement(elementId:string):ElementResponse {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
       return  (<{id:string}>element.getValue().data).id === elementId;
     });
     if (-1 !== idx) {
       this._collections.splice(idx, 1); //remove one item from the collections array
-      return true;
+      return {status: "ok"};
     }
-    return false;
+    return {status: "error", code: 404, message: "Element can not be found"};
   } 
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<CollectionElement>[]{
+  getResource(offset?:string|number, limit?:string|number):CollectionResponse {
     // retriev all element
     let resp:BehaviorSubject<CollectionElement>[];
 
@@ -198,7 +220,7 @@ class Collections implements Resource {
       resp = this._collections.slice(<number>offset, <number>limit);
     }
 
-    return resp;
+    return {status: "ok", data: resp};
   };
 }
 
