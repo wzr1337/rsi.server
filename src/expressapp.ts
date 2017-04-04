@@ -22,6 +22,7 @@ class WebServer {
     var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts:cors.CorsOptions = {
       origin: function (origin, callback) {
+        // subdomains and tlds need to be whitelisted explicitly
         let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
         let result = hostRegex.exec(origin);
         let host = result.length >= 2 ? result[2] : undefined;
