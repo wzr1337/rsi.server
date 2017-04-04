@@ -11,12 +11,20 @@ export enum StatusCode {
   "NOT_IMPLEMENTED" = 501
 }
 
-export class responseObject {
+
+class Response {
   status: "ok" | "error";
-  data?: BehaviorSubject<Element> | BehaviorSubject<Element>[];
   error?: Error;
   code?: StatusCode;
   message?: string;
+}
+
+export class ElementResponse extends Response {
+  data?: BehaviorSubject<Element>;
+}
+
+export class CollectionResponse extends Response {
+  data?: BehaviorSubject<Element>[];
 }
 
 export class Service {
@@ -60,10 +68,10 @@ export interface Resource {
   change:BehaviorSubject<ResourceUpdate>;
 
   getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<Element>[]; //GET /<service>/<resource>/
-  createElement?(state:{}):responseObject;                                              //POST /<service>/<resource>/
-  getElement(elementId:string):responseObject;                                          //GET /<service>/<resource>/<element>
+  createElement?(state:{}):ElementResponse;                                              //POST /<service>/<resource>/
+  getElement(elementId:string):ElementResponse;                                          //GET /<service>/<resource>/<element>
   updateElement?(elementId:string, difference:any):Boolean;                             //POST /<service>/<resource>/<element>
-  deleteElement?(elementId:string):responseObject;                                      //DELETE /<service>/<resource>/<element>
+  deleteElement?(elementId:string):ElementResponse;                                      //DELETE /<service>/<resource>/<element>
 
   resourceSubscribable?:Boolean;                                                        //subscribe /<service>/<resource>/
   elementSubscribable?:Boolean;                                                         //subscribe /<service>/<resource>/<element>

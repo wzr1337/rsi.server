@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode, responseObject } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media extends Service {
@@ -57,7 +57,7 @@ class Renderers implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):responseObject {
+  getElement(elementId:string):ElementResponse {
     // find the element requested by the client
     return {
       status: "ok",
@@ -168,7 +168,7 @@ class Collections implements Resource {
     return this._change;
   }
 
-  getElement(elementId:string):responseObject {
+  getElement(elementId:string):ElementResponse {
     // find the element requested by the client
     return {
       status: "ok",
@@ -177,7 +177,7 @@ class Collections implements Resource {
     })};
   };
 
-  createElement(state:{name:string}):responseObject{
+  createElement(state:{name:string}):ElementResponse{
     if (!state.name) return {
       status: "error",
       code: StatusCode.INTERNAL_SERVER_ERROR
@@ -200,7 +200,7 @@ class Collections implements Resource {
   };
 
 
-  deleteElement(elementId:string):responseObject {
+  deleteElement(elementId:string):ElementResponse {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
       return  (<{id:string}>element.getValue().data).id === elementId;
     });
