@@ -5,7 +5,7 @@ import * as cors from 'cors';
 import * as compression from 'compression';
 import http = require('http');
 import { viwiLogger, viwiLoggerInstance } from "./log";
-import { BehaviorSubject, Subject} from '@reactivex/rxjs';
+import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 
 // create server and listen on provided port (on all network interfaces).
 class WebServer {
@@ -19,16 +19,19 @@ class WebServer {
     this._logger = viwiLogger.getInstance().getLogger("general");
     this.app = express();
     
-    var whitelist = ['127.0.0.1'];
+    var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts:cors.CorsOptions = {
       origin: function (origin, callback) {
-        let originIsWhitelisted = whitelist.indexOf(origin) !== -1
+        let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
+        let result = hostRegex.exec(origin);
+        let host = result.length >= 2 ? result[2] : undefined;
+        let originIsWhitelisted = whitelist.indexOf(host) !== -1
         callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted)
       },
       exposedHeaders: 'Location'
     }
     
-    this.app.use(cors());
+    this.app.use(cors(corsOpts));
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use((req:express.Request, res:express.Response, next:express.NextFunction) => {
