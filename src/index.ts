@@ -6,7 +6,7 @@ import { viwiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource, Element, ResourceUpdate, Status } from "./plugins/viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/viwiPlugin";
 import { viwiLogger } from "./log";
 import { splitEvent } from "./helpers";
 
@@ -180,20 +180,21 @@ class wsHandler {
           if (eventObj.element && this.resource.elementSubscribable) {
               // this is an element subscription
               let element = this.resource.getElement(eventObj.element);
+              let subject:BehaviorSubject<Element> = <BehaviorSubject<Element>>element.data;
               if (element) {
                 logger.debug("New element level subscription:", msg.event);
                 _viwiWebSocket.acknowledgeSubscription(msg.event);
 
-                this._subscriptions[_viwiWebSocket.id][msg.event] = element
+                this._subscriptions[_viwiWebSocket.id][msg.event] = subject
                   .subscribe((data:Element) => {
-                    if (! _viwiWebSocket.sendData(msg.event, data.data)) element.complete();
+                    if (! _viwiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
-                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) element.complete();
+                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) subject.complete();
                     });
               }
               else {
-                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) element.complete();
+                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) subject.complete();
               }
           }
           else if (eventObj.element && !this.resource.elementSubscribable)
@@ -211,7 +212,7 @@ class wsHandler {
                 logger.info("New resource data:", change);
                 let elements = this.resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
                 if(elements) {
-                  let resp = elements.map((value:BehaviorSubject<Element>) => {
+                  let resp = elements.data.map((value:BehaviorSubject<Element>) => {
                     return value.getValue().data;
                   });
                   if(! _viwiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
@@ -291,7 +292,7 @@ const elementGET = (service:Service, resource:Resource) => {
     // proprietary element fetching
     let element = resource.getElement(req.params.id);
     if(element){
-      let data = element.getValue().data;
+      let data = (<BehaviorSubject<Element>>element.data).getValue().data;
       // filter the result before responding if needed
       if (req.query.hasOwnProperty("$fields")) {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
@@ -332,7 +333,7 @@ const resourceGET = (service:Service, resource:Resource) => {
     let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
 
     if(elements) {
-      let resp = elements.map((value:BehaviorSubject<Element>) => {
+      let resp = elements.data.map((value:BehaviorSubject<Element>) => {
         return value.getValue().data;
       });
       res.status(200);
@@ -359,24 +360,23 @@ const resourcePOST = (service:Service, resource:Resource) => {
   if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
-      res.status(Status.NOT_IMPLEMENTED).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
       return;
     }
     let newElement = resource.createElement(req.body);
-    if(newElement) {
-      if(typeof(newElement) !== "number") {
-        res.status(201);
-        res.header({"Location": newElement.data.uri});
-        res.json({
-          status: "ok"
-        });
-      }
-      else {
-        res.status(newElement).send();
-      }
+    console.log(newElement)
+    if(newElement.status === "ok") {
+      res.status(201);
+      res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
+      res.json({
+        status: "ok"
+      });
     }
+    else if (newElement.status) {
+        res.json(newElement);
+      }
     else {
-      res.status(Status.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
   };
 };
@@ -397,15 +397,12 @@ const elementDELETE = (service:Service, resource:Resource) => {
       return;
     }
     // proprietary element deletion
-    let succeeded = resource.deleteElement(req.params.id);
+    let deletionResponse = resource.deleteElement(req.params.id);
 
     // respond
-    if(succeeded){
-      res.status(200);
-      res.json({
-        status: "ok"
-      });
-      return;
+    if(deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
+      res.status(deletionResponse.code || (deletionResponse.status === "ok") ? 200: 500);
+      res.json(deletionResponse);
     }
     else {
       res.status(500).send("Internal Server Error");
