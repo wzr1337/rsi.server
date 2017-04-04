@@ -67,11 +67,11 @@ export interface Resource {
   name:string;
   change:BehaviorSubject<ResourceUpdate>;
 
-  getResource?(offset?:string|number, limit?:string|number):BehaviorSubject<Element>[]; //GET /<service>/<resource>/
-  createElement?(state:{}):ElementResponse;                                              //POST /<service>/<resource>/
-  getElement(elementId:string):ElementResponse;                                          //GET /<service>/<resource>/<element>
+  getResource?(offset?:string|number, limit?:string|number):CollectionResponse;         //GET /<service>/<resource>/
+  createElement?(state:{}):ElementResponse;                                             //POST /<service>/<resource>/
+  getElement(elementId:string):ElementResponse;                                         //GET /<service>/<resource>/<element>
   updateElement?(elementId:string, difference:any):Boolean;                             //POST /<service>/<resource>/<element>
-  deleteElement?(elementId:string):ElementResponse;                                      //DELETE /<service>/<resource>/<element>
+  deleteElement?(elementId:string):ElementResponse;                                     //DELETE /<service>/<resource>/<element>
 
   resourceSubscribable?:Boolean;                                                        //subscribe /<service>/<resource>/
   elementSubscribable?:Boolean;                                                         //subscribe /<service>/<resource>/<element>

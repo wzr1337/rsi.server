@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 
 class Media extends Service {
@@ -67,7 +67,7 @@ class Renderers implements Resource {
     };
   };
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<RendererElement>[]{
+  getResource(offset?:string|number, limit?:string|number):CollectionResponse{
     // retriev all element
     let resp:BehaviorSubject<RendererElement>[];
 
@@ -75,7 +75,7 @@ class Renderers implements Resource {
       resp = this._renderers.slice(<number>offset, <number>limit);
     }
 
-    return resp;
+    return {status: "ok", data: resp};
   };
 
 
@@ -211,7 +211,7 @@ class Collections implements Resource {
     return {status: "error", code: 404, message: "Element can not be found"};
   } 
 
-  getResource(offset?:string|number, limit?:string|number):BehaviorSubject<CollectionElement>[]{
+  getResource(offset?:string|number, limit?:string|number):CollectionResponse {
     // retriev all element
     let resp:BehaviorSubject<CollectionElement>[];
 
@@ -219,7 +219,7 @@ class Collections implements Resource {
       resp = this._collections.slice(<number>offset, <number>limit);
     }
 
-    return resp;
+    return {status: "ok", data: resp};
   };
 }
 

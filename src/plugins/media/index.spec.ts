@@ -1,6 +1,6 @@
 import * as Media from "./index";
 import { BehaviorSubject } from "@reactivex/rxjs";
-import { Element, ElementResponse } from "../viwiPlugin";
+import { Element, ElementResponse, CollectionResponse} from "../viwiPlugin";
 
 
 describe("Service", () => {

@@ -212,7 +212,7 @@ class wsHandler {
                 logger.info("New resource data:", change);
                 let elements = this.resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
                 if(elements) {
-                  let resp = elements.map((value:BehaviorSubject<Element>) => {
+                  let resp = elements.data.map((value:BehaviorSubject<Element>) => {
                     return value.getValue().data;
                   });
                   if(! _viwiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
@@ -333,7 +333,7 @@ const resourceGET = (service:Service, resource:Resource) => {
     let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
 
     if(elements) {
-      let resp = elements.map((value:BehaviorSubject<Element>) => {
+      let resp = elements.data.map((value:BehaviorSubject<Element>) => {
         return value.getValue().data;
       });
       res.status(200);
