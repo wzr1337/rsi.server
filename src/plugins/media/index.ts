@@ -80,7 +80,7 @@ class Renderers implements Resource {
 
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
-  updateElement(elementId:string, difference:any):Boolean {
+  updateElement(elementId:string, difference:any):ElementResponse {
     let element = (<BehaviorSubject<RendererElement>> this.getElement(elementId).data);
     let renderer:RendererObject = element.getValue().data;
     let propertiesChanged:string[]=[];
@@ -115,12 +115,13 @@ class Renderers implements Resource {
         propertiesChanged.push("repeat");
       }
     }
-    element.next({
+    let resp = {
       lastUpdate: Date.now(),
       propertiesChanged: propertiesChanged,
       data: renderer
-    }); // @TODO: check diffs bevor updating without a need
-    return true;
+    };
+    element.next(resp); // @TODO: check diffs bevor updating without a need
+    return {status: "ok"};
   }
 }
 
