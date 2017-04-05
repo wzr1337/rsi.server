@@ -364,7 +364,6 @@ const resourcePOST = (service:Service, resource:Resource) => {
       return;
     }
     let newElement = resource.createElement(req.body);
-    console.log(newElement)
     if(newElement.status === "ok") {
       res.status(201);
       res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
