@@ -36,6 +36,7 @@ To run the server and test it, use
 $ gulp test
 ```
 
+Please ensure http_proxy or https_proxy are unset in the shell environment.
 Test specifications will always follow the `+.spec`form, i.e. source file named `myfile.ts` => test file named `myfile.spec.ts`.
 
 
