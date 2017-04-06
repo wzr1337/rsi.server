@@ -1,8 +1,10 @@
 import { server, run, pathof} from ".";
 import * as request from "request";
 
+const PROTO = "http://";
+const ADDRESS = "127.0.0.1";
 const PORT = 9999;
-const BASEURI = "http://127.0.0.1:" + PORT;
+const BASEURI = PROTO + ADDRESS + ":" + PORT;
 
 function parseBody(body:string):any {
   try {
