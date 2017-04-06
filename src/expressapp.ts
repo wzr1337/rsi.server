@@ -25,7 +25,7 @@ class WebServer {
         // subdomains and tlds need to be whitelisted explicitly
         let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
         let result = hostRegex.exec(origin);
-        let host = result.length >= 2 ? result[2] : undefined;
+        let host = (result && result.length >= 2) ? result[2] : undefined;
         let originIsWhitelisted = whitelist.indexOf(host) !== -1
         callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted)
       },
