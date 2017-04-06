@@ -37,7 +37,7 @@ describe("operate on /", () => {
       if (error) {
         console.log(error, response, body);
       }
-      var payload = JSON.parse(body);
+      var payload = parseBody(body);
 
       expect(response.statusCode).toBe(200);
       expect(payload.status).toEqual("ok");
