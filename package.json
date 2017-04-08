@@ -8,6 +8,7 @@
     "watch": "node ./node_modules/nodemon/bin/nodemon.js cli.js",
     "debug": "node --inspect --debug-brk ./bin/cli.js",
     "serve": "node ./bin/cli.js",
+    "start": "npm run serve",
     "build:docker": "docker build -t viwi-server ."
   },
   "author": "Dr. Patrick Bartsch",
@@ -17,7 +18,7 @@
     "body-parser": "^1.15.2",
     "command-line-args": "^3.0.5",
     "compression": "^1.6.2",
-    "cors": "^2.8.1",
+    "cors": "^2.8.3",
     "express": "^4.14.0",
     "http": "0.0.0",
     "uuid": "^3.0.1",
