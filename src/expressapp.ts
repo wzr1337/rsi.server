@@ -22,16 +22,31 @@ class WebServer {
     var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts:cors.CorsOptions = {
       origin: function (origin, callback) {
-        // subdomains and tlds need to be whitelisted explicitly
-        let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
-        let result = hostRegex.exec(origin);
-        let host = (result && result.length >= 2) ? result[2] : undefined;
-        let originIsWhitelisted = whitelist.indexOf(host) !== -1
-        callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted)
+        if (typeof(origin) === "undefined") {
+          /**
+           * The origin may be hidden if the user comes from an ssl encrypted website.
+           * 
+           * Also: Some browser extensions remove origin and referer from the http-request headers, and therefore the origin property will be empty.
+           */
+          callback(null, true)
+        }
+        else {
+         // subdomains and tlds need to be whitelisted explicitly
+          let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
+          let result = hostRegex.exec(origin);
+          let host = (result && result.length >= 2) ? result[2] : undefined;
+          let originIsWhitelisted = whitelist.indexOf(host) !== -1;
+          callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted);
+        }
       },
       exposedHeaders: 'Location'
     }
     
+this.app.use((req,res,next) => {
+   console.log(req.headers.origin) // undefined
+   next()
+})
+
     this.app.use(cors(corsOpts));
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: false }));

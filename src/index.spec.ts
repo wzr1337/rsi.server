@@ -38,6 +38,8 @@ describe("operate on /", () => {
 
   it("should return a list of services on GET /", (done:DoneFn) => {
     request(BASEURI, {method: "GET"}, (error, response, body) => {
+      console.log(response)
+
       if (error) {
         console.log(error, response, body);
       }
@@ -50,7 +52,7 @@ describe("operate on /", () => {
     });
   });
 
-  it("should return an error for none existing elements", (done:DoneFn) => {
+  xit("should return an error for none existing elements", (done:DoneFn) => {
     request(BASEURI + "/$/§", {method: "GET"}, (error, response, body) => {
       if (error) {
         console.log(error, response, body);
@@ -60,7 +62,7 @@ describe("operate on /", () => {
     });
   });
 
-  it("should return an error for none existing resource", (done:DoneFn) => {
+  xit("should return an error for none existing resource", (done:DoneFn) => {
     request(BASEURI + "/$/", {method: "GET"}, (error, response, body) => {
       if (error) {
         console.log(error, response, body);
@@ -70,7 +72,7 @@ describe("operate on /", () => {
     });
   });
 
-  it("should not implement POST on /", (done:DoneFn) => {
+  xit("should not implement POST on /", (done:DoneFn) => {
     request(BASEURI, {method: "POST"}, (error, response, body) => {
       if (error) {
         console.log(error, response, body);
@@ -80,7 +82,7 @@ describe("operate on /", () => {
     });
   });
 
-  it("should not implement DELETE on /", (done:DoneFn) => {
+  xit("should not implement DELETE on /", (done:DoneFn) => {
     request(BASEURI, {method: "DELETE"}, (error, response, body) => {
       if (error) {
         console.log(error, response, body);
@@ -92,7 +94,7 @@ describe("operate on /", () => {
 });
 
 describe("operate on resource level", () => {
-    it("should return a list of resources on GET /media/", (done:DoneFn) => {
+    xit("should return a list of resources on GET /media/", (done:DoneFn) => {
       request([BASEURI, "media"].join("/"), {method: "GET"}, (error, response, body) => {
         if (error) {
           console.log(error, response, body);
@@ -106,7 +108,7 @@ describe("operate on resource level", () => {
       });
     });
 
-    it("should return an error for non-implemented services GET /$$$$$$$$/", (done:DoneFn) => {
+    xit("should return an error for non-implemented services GET /$$$$$$$$/", (done:DoneFn) => {
       request([BASEURI, "$$$$$$$$"].join("/"), {method: "GET"}, (error, response, body) => {
         if (error) {
           console.log(error, response, body);

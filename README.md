@@ -56,6 +56,14 @@ To run the server separately, use the cli
   $ node ./bin/cli.js -p 9999 -v 'error'
 ```
 
+alternatively you can use
+
+```
+  $ npm start
+```
+
+after you `gulp build` it
+
 ### Available command line arguments
 
 | long parameter | short parameter | type   | description                                    |
