@@ -3,10 +3,8 @@ import * as request from "request";
 
 const PORT = 9999;
 const PROTO = "http";
-const PATHSEP = "/";
-const DELIM = ":";
 const ADDRESS = "127.0.0.1";
-const BASEURI = PROTO + DELIM + PATHSEP + PATHSEP + ADDRESS + DELIM + PORT;
+const BASEURI = PROTO + "://" + ADDRESS + ":" + PORT;
 
 function parseBody(body:string):any {
   try {

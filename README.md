@@ -33,10 +33,10 @@ $ gulp build
 To run the server and test it, use
 
 ```sh
-$ gulp test
+$ export no_proxy=localhost;127.0.0.1; gulp test
 ```
 
-Please ensure http_proxy or https_proxy are unset in the shell environment.
+Please ensure that proxy is appropriately set in the shell environment for your operating system.
 Test specifications will always follow the `+.spec`form, i.e. source file named `myfile.ts` => test file named `myfile.spec.ts`.
 
 
