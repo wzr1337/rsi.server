@@ -41,11 +41,6 @@ class WebServer {
       },
       exposedHeaders: 'Location'
     }
-    
-this.app.use((req,res,next) => {
-   console.log(req.headers.origin) // undefined
-   next()
-})
 
     this.app.use(cors(corsOpts));
     this.app.use(bodyParser.json());
