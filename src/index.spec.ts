@@ -2,7 +2,9 @@ import { server, run, pathof} from ".";
 import * as request from "request";
 
 const PORT = 9999;
-const BASEURI = "http://127.0.0.1:" + PORT;
+const PROTO = "http";
+const ADDRESS = "127.0.0.1";
+const BASEURI = PROTO + "://" + ADDRESS + ":" + PORT;
 
 function parseBody(body:string):any {
   try {
@@ -39,7 +41,7 @@ describe("operate on /", () => {
       if (error) {
         console.log(error, response, body);
       }
-      var payload = JSON.parse(body);
+      var payload = parseBody(body);
 
       expect(response.statusCode).toBe(200);
       expect(payload.status).toEqual("ok");

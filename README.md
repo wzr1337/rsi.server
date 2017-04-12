@@ -33,9 +33,10 @@ $ gulp build
 To run the server and test it, use
 
 ```sh
-$ gulp test
+$ http_proxy='' gulp test
 ```
 
+Please ensure that proxy settings are set appropriately for your environment.
 Test specifications will always follow the `+.spec`form, i.e. source file named `myfile.ts` => test file named `myfile.spec.ts`.
 
 
