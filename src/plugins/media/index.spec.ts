@@ -46,6 +46,28 @@ describe("Renderers resource", () => {
     done();
   });
 
+  it("should hold a renderer called Netflux", (done:DoneFn) => {
+    let renderers = r.getResource().data;
+    expect(renderers).toBeDefined;
+    expect(renderers.length).not.toEqual(0);
+    let stpd = renderers.filter((el) => {
+      return (el.getValue().data.name === "Netflux") ? el : undefined;
+    });
+    expect(stpd[0]).toBeDefined();
+    done();
+  });
+
+  it("should hold a renderer called stpd", (done:DoneFn) => {
+    let renderers = r.getResource().data;
+    expect(renderers).toBeDefined;
+    expect(renderers.length).not.toEqual(0);
+    let stpd = renderers.filter((el) => {
+      return (el.getValue().data.name === "stpd") ? el : undefined;
+    });
+    expect(stpd[0]).toBeDefined();
+    done();
+  });
+
   it("should change the shuffle state", (done:DoneFn) => {
     let values = ['off', 'on'];
     for (var index = 0; index < values.length; index++) {

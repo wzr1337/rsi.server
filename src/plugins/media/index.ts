@@ -24,15 +24,15 @@ class Renderers implements Resource {
 
   constructor(private service:Service) {
 
-    const rendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
+    const netfluxRendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
     //const collections = service.resources.map<Collections>(resource => resource.name === "collections");
     //const initialCollection = collections.map( element => element.name === "default");
     let netfluxRenderer = new BehaviorSubject<RendererElement>({
       lastUpdate: Date.now(),
       propertiesChanged: [],
       data: {
-        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + rendererId,
-        id: rendererId,
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + netfluxRendererId,
+        id: netfluxRendererId,
         name: "Netflux",
         state: "idle",
         shuffle: "off",
@@ -42,6 +42,25 @@ class Renderers implements Resource {
       }
     });
     this._renderers.push(netfluxRenderer);
+
+    ///add an actual renderer for playback
+    let stpdId = uuid.v1();
+    let stpdRenderer = new BehaviorSubject<RendererElement>({
+      lastUpdate: Date.now(),
+      propertiesChanged: [],
+      data: {
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + stpdId,
+        id: stpdId,
+        name: "stpd",
+        state: "idle",
+        shuffle: "off",
+        repeat: "off",
+        offset: 0,
+        media: []
+      }
+    });
+    this._renderers.push(stpdRenderer);
+    
     this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
   }
 
