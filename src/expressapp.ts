@@ -16,19 +16,20 @@ class WebServer {
   private _logger:viwiLoggerInstance;
   
   constructor (_port?:number) {
-    this._logger = viwiLogger.getInstance().getLogger("general");
+    var _logger = this._logger = viwiLogger.getInstance().getLogger("general");
     this.app = express();
     
     var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts:cors.CorsOptions = {
       origin: function (origin, callback) {
-        if (typeof(origin) === "undefined") {
+
+        if (1 || typeof(origin) === "undefined") { //@TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
           /**
            * The origin may be hidden if the user comes from an ssl encrypted website.
            * 
            * Also: Some browser extensions remove origin and referer from the http-request headers, and therefore the origin property will be empty.
            */
-          callback(null, true)
+          callback(null, true);
         }
         else {
          // subdomains and tlds need to be whitelisted explicitly
