@@ -425,18 +425,20 @@ const elementPOST = (service:Service, resource:Resource) => {
     // find the element requested by the client
     let element = resource.getElement(req.params.id);
     if (element){
-      if(resource.updateElement(req.params.id, req.body)) {
-        res.status(200);
-        res.json({
-          status: "ok"
-        });
-      }
-      else {
-        res.status(500).send();
-      }
+      let resp = resource.updateElement(req.params.id, req.body);
+      res.status(resp.code || 200);
+      res.json({
+        code: resp.code || undefined,
+        status: resp.status,
+        message: resp.error.message || undefined
+      });
     }
     else {
-      res.status(404).send("Not Found");
+      res.status(404).json({
+        code: 404,
+        status: "error",
+        message: "Not Found"
+      });
     }
   };
 };
