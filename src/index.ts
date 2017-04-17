@@ -430,7 +430,7 @@ const elementPOST = (service:Service, resource:Resource) => {
       res.json({
         code: resp.code || undefined,
         status: resp.status,
-        message: resp.error.message || undefined
+        message: (resp.error) ? resp.error.message : undefined
       });
     }
     else {
