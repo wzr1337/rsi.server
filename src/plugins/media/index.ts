@@ -189,6 +189,7 @@ class Renderers implements Resource {
                 } else {
                   return {status: "error", error: new Error("Renderer not playing"), code: 500};
                 }
+                break;
               default:
                 return {status: "error", error: new Error("Renderer state not supported"), code: 400};
             }
