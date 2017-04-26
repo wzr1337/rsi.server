@@ -181,7 +181,7 @@ class wsHandler {
               // this is an element subscription
               let element = this.resource.getElement(eventObj.element);
               let subject:BehaviorSubject<Element> = <BehaviorSubject<Element>>element.data;
-              if (element) {
+              if (element && subject) {
                 logger.debug("New element level subscription:", msg.event);
                 _viwiWebSocket.acknowledgeSubscription(msg.event);
 
@@ -233,8 +233,11 @@ class wsHandler {
 
         case "unsubscribe":
           logger.info("Unsubscription:", msg.event);
-          this._subscriptions[_viwiWebSocket.id][msg.event].unsubscribe();
-          _viwiWebSocket.acknowledgeUnsubscription(msg.event); //might fail, but not important at this point
+          let subscription = this._subscriptions[_viwiWebSocket.id][msg.event];
+          if (subscription) {
+            subscription.unsubscribe();
+            _viwiWebSocket.acknowledgeUnsubscription(msg.event); //might fail, but not important at this point
+          }
         break;
         case "reauthorize":
         default:
@@ -424,20 +427,20 @@ const elementPOST = (service:Service, resource:Resource) => {
 
     // find the element requested by the client
     let element = resource.getElement(req.params.id);
-    if (element){
+    if (element && element.status === "ok"){
       let resp = resource.updateElement(req.params.id, req.body);
       res.status(resp.code || 200);
       res.json({
         code: resp.code || undefined,
         status: resp.status,
-        message: resp.error.message || undefined
+        message: resp.error ? (resp.error.message || undefined) : undefined
       });
     }
     else {
-      res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Not Found"
+      res.status(element ? element.code : StatusCode.NOT_FOUND).json({
+        code: element ? element.code : StatusCode.NOT_FOUND,
+        status: element ? element.status : "error",
+        message: element ? element.message : "Not found."
       });
     }
   };
