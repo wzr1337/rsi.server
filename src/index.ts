@@ -44,7 +44,7 @@ var run = (options?:runOptions):Promise<void> => {
 
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
       // respond
-      res.status(200);
+      res.status(StatusCode.OK);
       res.json({
         status: "ok",
         data: availableServices
@@ -102,7 +102,7 @@ var run = (options?:runOptions):Promise<void> => {
             msg = JSON.parse(message);
           }
           catch(err) {
-            _viwiWebSocket.sendError(msg.event, 400, new Error(err));
+            _viwiWebSocket.sendError(msg ? msg.event : '', StatusCode.BAD_REQUEST, new Error(err));
             return;
           }
           let event = splitEvent(msg.event);
@@ -112,7 +112,7 @@ var run = (options?:runOptions):Promise<void> => {
             wsMapping[basePath].handleWebSocketMessages(msg, _viwiWebSocket);
           }
           else {
-            _viwiWebSocket.sendError(msg.event, 403, new Error("Not Found"));
+            _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"));
           }
         });
       });
@@ -170,7 +170,7 @@ class wsHandler {
       this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {}; // init if not yet initialized
 
       if (!eventObj.service || !eventObj.resource) {
-        _viwiWebSocket.sendError(msg.event, 400, new Error("event url malformed"));
+        _viwiWebSocket.sendError(msg.event, StatusCode.BAD_REQUEST, new Error("event url malformed"));
         return;
       }
 
@@ -190,16 +190,16 @@ class wsHandler {
                     if (! _viwiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
-                      if (! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) subject.complete();
+                      if (! _viwiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) subject.complete();
                     });
               }
               else {
-                if (! _viwiWebSocket.sendError(msg.event, 404, new Error("Not Found"))) subject.complete();
+                if (! _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"))) subject.complete();
               }
           }
           else if (eventObj.element && !this.resource.elementSubscribable)
           {
-            _viwiWebSocket.sendError(msg.event, 503, new Error("Not Implemented"));
+            _viwiWebSocket.sendError(msg.event, StatusCode.SERVICE_UNAVAILABLE, new Error("Service unavailable"));
           }
           if (!eventObj.element && this.resource.resourceSubscribable) {
             // resource subscription
@@ -218,16 +218,16 @@ class wsHandler {
                   if(! _viwiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                 }
                 else {;
-                  if(! _viwiWebSocket.sendError(msg.event, 404, new Error("Not found"))) this.resource.change.complete();
+                  if(! _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not found"))) this.resource.change.complete();
                 }
             },
             (err:any) => {
-              if(! _viwiWebSocket.sendError(msg.event, 500, new Error(err))) this.resource.change.complete();
+              if(! _viwiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) this.resource.change.complete();
             });
           }
           else if (!eventObj.element && !this.resource.resourceSubscribable)
           {
-            _viwiWebSocket.sendError(msg.event, 501, new Error("Not Implemented"));
+            _viwiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
           }
         break;
 
@@ -242,7 +242,7 @@ class wsHandler {
         case "reauthorize":
         default:
           logger.error("Unsupported command on ws://:", msg.event);
-          _viwiWebSocket.sendError(msg.event, 501, new Error("Not Implemented"));
+          _viwiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
         break;
       }
 
@@ -268,7 +268,7 @@ const serviceGET = (service:Service) => {
   });
 
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.status(200);
+    res.status(StatusCode.OK);
     res.json({
       status: "ok",
       data: resources
@@ -288,7 +288,7 @@ const elementGET = (service:Service, resource:Resource) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.getElement) {
-      res.status(501).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
       return;
     }
 
@@ -301,7 +301,7 @@ const elementGET = (service:Service, resource:Resource) => {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
       }
       //respond
-      res.status(200);
+      res.status(StatusCode.OK);
       res.json({
         status: "ok",
         data: data
@@ -325,7 +325,7 @@ const resourceGET = (service:Service, resource:Resource) => {
   if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
-      res.status(501).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
       return;
     }
     // get all available renderes and map their representation to JSON compatible values
@@ -339,7 +339,7 @@ const resourceGET = (service:Service, resource:Resource) => {
       let resp = elements.data.map((value:BehaviorSubject<Element>) => {
         return value.getValue().data;
       });
-      res.status(200);
+      res.status(StatusCode.OK);
       res.json({
         status: "ok",
         data: resp
@@ -347,7 +347,7 @@ const resourceGET = (service:Service, resource:Resource) => {
       return;
     }
     else {
-      res.status(404).send("Not found");
+      res.status(StatusCode.NOT_FOUND).send("Not found");
     }
   };
 };
@@ -368,7 +368,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
     }
     let newElement = resource.createElement(req.body);
     if(newElement.status === "ok") {
-      res.status(201);
+      res.status(StatusCode.CREATED);
       res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
       res.json({
         status: "ok"
@@ -403,11 +403,11 @@ const elementDELETE = (service:Service, resource:Resource) => {
 
     // respond
     if(deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
-      res.status(deletionResponse.code || (deletionResponse.status === "ok") ? 200: 500);
+      res.status(deletionResponse.code || (deletionResponse.status === "ok") ? StatusCode.OK : StatusCode.INTERNAL_SERVER_ERROR);
       res.json(deletionResponse);
     }
     else {
-      res.status(500).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
       return;
     }
   };
@@ -429,7 +429,7 @@ const elementPOST = (service:Service, resource:Resource) => {
     let element = resource.getElement(req.params.id);
     if (element && element.status === "ok"){
       let resp = resource.updateElement(req.params.id, req.body);
-      res.status(resp.code || 200);
+      res.status(resp.code || StatusCode.OK);
       res.json({
         code: resp.code || undefined,
         status: resp.status,
