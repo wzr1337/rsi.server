@@ -26,7 +26,7 @@ gulp.task("typescript", ["clean"], () => {
     .js.pipe(gulp.dest(paths.bin));
 });
 
-gulp.task('watch', ['typescript'], () => {
+gulp.task('watch', ['build'], () => {
   nodemon({
     script: path.join(paths.bin, 'cli.js'),
     ext: 'ts js',
@@ -35,8 +35,8 @@ gulp.task('watch', ['typescript'], () => {
       var tasks = []
       changedFiles.forEach((file) => {
         // add typescript compilation if a *-ts file was changed
-        if (path.extname(file) === '.ts' && !~tasks.indexOf('typescript')) { 
-          tasks.push('typescript');
+        if (path.extname(file) === '.ts' && !~tasks.indexOf('build')) { 
+          tasks.push('build');
         } 
       })
       return tasks
@@ -45,6 +45,11 @@ gulp.task('watch', ['typescript'], () => {
       'NODE_ENV': 'development'
     }
   })
+});
+
+gulp.task('copycdn', () => {
+   gulp.src('./src/cdn/**/**.*')
+   .pipe(gulp.dest('./bin/cdn'));
 });
 
 gulp.task('changelog', function () {
@@ -58,7 +63,7 @@ gulp.task('changelog', function () {
   .pipe(gulp.dest("./")); // or any writable stream
 });
 
-gulp.task("build", ["typescript"], () => {
+gulp.task("build", ["typescript", "copycdn"], () => {
   return;
 });
 
