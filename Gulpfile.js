@@ -52,6 +52,11 @@ gulp.task('copycdn', () => {
    .pipe(gulp.dest('./bin/cdn'));
 });
 
+gulp.task('copyjson', () => {
+   gulp.src('./src/plugins/**/*.json')
+   .pipe(gulp.dest('./bin/plugins'));
+});
+
 gulp.task('changelog', function () {
   return file("CHANGELOG.md", "", { src: true })
   .pipe(conventionalChangelog({
@@ -63,7 +68,7 @@ gulp.task('changelog', function () {
   .pipe(gulp.dest("./")); // or any writable stream
 });
 
-gulp.task("build", ["typescript", "copycdn"], () => {
+gulp.task("build", ["typescript", "copycdn", "copyjson"], () => {
   return;
 });
 
