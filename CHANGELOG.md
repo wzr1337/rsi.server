@@ -1,5 +1,27 @@
+<a name="0.0.4-pre1"></a>
+## [0.0.4-pre1](https://github.com/wzr1337/viwiServer/compare/0.0.3...v0.0.4-pre1) (2017-04-28)
+
+
+### Bug Fixes
+
+* **cors:** answer if origin is undefined (cars disabled in this case) ([747fc2f](https://github.com/wzr1337/viwiServer/commit/747fc2f))
+* fix the POST element response to reflect actual outcome of operation ([192a5a1](https://github.com/wzr1337/viwiServer/commit/192a5a1))
+* **main:** fix server crashing on subscribe/unsubscribe or POST on non-existent elements (#32) ([9b3c337](https://github.com/wzr1337/viwiServer/commit/9b3c337)), closes [#32](https://github.com/wzr1337/viwiServer/issues/32)
+
+
+### Features
+
+* **general:** getResource now returns a CollectionResponse ([5425423](https://github.com/wzr1337/viwiServer/commit/5425423))
+* updateElement returns an Elementresponse ([6e12452](https://github.com/wzr1337/viwiServer/commit/6e12452))
+* **media:** add a second renderer in preparation for actual playback ([d18d2ac](https://github.com/wzr1337/viwiServer/commit/d18d2ac))
+* **media:** add shuffle and repeat simulation ([8d552fa](https://github.com/wzr1337/viwiServer/commit/8d552fa))
+* **server:** unsubscribe and delete subscriptions for a given websocket on client disconnect ([03cf3a6](https://github.com/wzr1337/viwiServer/commit/03cf3a6))
+* **viwiPlugin:** separate ElementResponse and ListResponse for better readability and coding convinience ([c3f4059](https://github.com/wzr1337/viwiServer/commit/c3f4059))
+
+
+
 <a name="0.0.3"></a>
-## [0.0.3](https://github.com/wzr1337/viwiServer/compare/0.0.2...v0.0.3) (2017-03-17)
+## [0.0.3](https://github.com/wzr1337/viwiServer/compare/0.0.2...0.0.3) (2017-03-17)
 
 
 ### Bug Fixes

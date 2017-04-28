@@ -1,6 +1,6 @@
 {
   "name": "viwiserver",
-  "version": "0.0.3",
+  "version": "0.0.4-pre1",
   "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as public in 2016 by W3C",
   "main": "index.ts",
   "scripts": {
