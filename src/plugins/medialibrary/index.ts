@@ -30,7 +30,7 @@ class Tracks implements Resource {
   private _logger = viwiLogger.getInstance().getLogger("media");
 
   constructor(private service:Service) {
-    let mocksPath = path.join(__dirname, "data.mocks.json");
+    let mocksPath = path.join(__dirname, "data", "mocks.json");
 
     let mocks = JSON.parse(fs.readFileSync(mocksPath).toString());
     for (var idx in mocks.tracks) {
