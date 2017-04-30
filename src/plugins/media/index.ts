@@ -5,6 +5,7 @@ import * as stupid from 'stupid-player'; // a cross platform media player
 
 import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
+import { Service as Medialibrary, Tracks} from "../medialibrary";
 
 class Media extends Service {
   constructor() {
@@ -29,7 +30,7 @@ class Renderers implements Resource {
   private _renderers:BehaviorSubject<RendererElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
 
-  private _logger = viwiLogger.getInstance().getLogger("media");
+  private _logger = viwiLogger.getInstance().getLogger("media.Renderers");
 
   constructor(private service:Service) {
 
@@ -230,6 +231,10 @@ interface CollectionElement extends Element {
 class Collections implements Resource {
   private _collections:BehaviorSubject<CollectionElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
+  private _medialibrary:Medialibrary;
+  private _tracks:Tracks;
+
+  private _logger = viwiLogger.getInstance().getLogger("media.Collections");
 
   constructor(private service:Service) {
 
@@ -247,7 +252,8 @@ class Collections implements Resource {
     });
     this._collections.push(initialCollection);
     this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
-
+    this._medialibrary = new Medialibrary();
+    this._tracks = <Tracks>this._medialibrary.getResource("Tracks");
   }
 
   get name():string {
@@ -266,6 +272,27 @@ class Collections implements Resource {
     return this._change;
   }
 
+  private _addItems(itemuris:string[]):Element[] | ElementResponse {
+    let _items:Element[] = [];
+    let regex = /[\w\/\:]*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
+    if(this._tracks) {
+      for (var index in itemuris) {
+        let uri = itemuris[index];
+        let id = uri.match(regex)[1]; //get actual id from uri here
+        if (!id) {
+          return {status: "error", error: new Error("Id " + id + "not valid from uri: " + uri), code: 400};
+        }
+        let track = this._tracks.getElement(id);
+        if (track && track.data) {
+          _items.push(track.data.getValue());
+        }
+      }
+    } else {
+      return {status: "error", error: new Error("No tracks loaded..."), code: 500};
+    }
+    return _items;
+  }
+
   getElement(elementId:string):ElementResponse {
     // find the element requested by the client
     return {
@@ -280,8 +307,9 @@ class Collections implements Resource {
       status: "error",
       code: StatusCode.INTERNAL_SERVER_ERROR
     };
+    //@TODO: allow adding items on element creation 
     const collectionId = uuid.v1();
-    let initialCollection = new BehaviorSubject<CollectionElement>(
+    let newCollection = new BehaviorSubject<CollectionElement>(
       {
         lastUpdate: Date.now(),
         propertiesChanged: [],
@@ -292,11 +320,27 @@ class Collections implements Resource {
         items: []
       }
     });
-    this._collections.push(initialCollection);
+    this._collections.push(newCollection);
     this._change.next({lastUpdate: Date.now(), action: "add"});
-    return {status:"ok", data: initialCollection};
+    return {status:"ok", data: newCollection};
   };
 
+  updateElement(elementId:string, difference:any):ElementResponse {
+    let element = this.getElement(elementId).data;
+    var collection:CollectionElement = element.getValue();
+    let propertiesChanged:string[]=[];
+
+    if(difference.hasOwnProperty('items')) {
+      let newItems = this._addItems(difference.items);
+      if (typeof(newItems) === "ResponseElement")
+      collection.data.items = this._addItems(difference.items);
+      collection.lastUpdate = Date.now();
+      collection.propertiesChanged = ['items'];
+      element.next(collection);
+      return {status: "ok"};
+    }
+    return {status: "error", code: 400, message: "No actions to take.."};
+  }
 
   deleteElement(elementId:string):ElementResponse {
     let idx = this._collections.findIndex((element:BehaviorSubject<CollectionElement>, index:number) => {
