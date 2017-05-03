@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser';
 import * as WebSocketServer from 'ws';
 import * as cors from 'cors';
 import * as compression from 'compression';
+import * as path from "path";
 import http = require('http');
 import { viwiLogger, viwiLoggerInstance } from "./log";
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
@@ -51,13 +52,16 @@ class WebServer {
       next();
     });
     this.app.use(compression());
-    
+
+    //serve static content for cdn
+    this.app.use('/cdn/images', express.static(path.join(__dirname, 'cdn', 'images')));
+
     // Get port from environment and store in Express.
     this._port = this.normalizePort(process.env.PORT || _port || '3000');
     this.app.set('port', this._port);
-    
+
     this._server = http.createServer(this.app);
-    
+
     this.ws = new WebSocketServer.Server({ server: this._server });
   }
   

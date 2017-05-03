@@ -1,5 +1,5 @@
 <a name="0.0.4-pre1"></a>
-## [0.0.4-pre1](https://github.com/wzr1337/viwiServer/compare/0.0.3...v0.0.4-pre1) (2017-04-28)
+## [0.0.4-pre1](https://github.com/wzr1337/viwiServer/compare/0.0.3...v0.0.4-pre1) (2017-05-03)
 
 
 ### Bug Fixes
@@ -7,16 +7,24 @@
 * **cors:** answer if origin is undefined (cars disabled in this case) ([747fc2f](https://github.com/wzr1337/viwiServer/commit/747fc2f))
 * fix the POST element response to reflect actual outcome of operation ([192a5a1](https://github.com/wzr1337/viwiServer/commit/192a5a1))
 * **main:** fix server crashing on subscribe/unsubscribe or POST on non-existent elements (#32) ([9b3c337](https://github.com/wzr1337/viwiServer/commit/9b3c337)), closes [#32](https://github.com/wzr1337/viwiServer/issues/32)
+* **media:** add missing break statement ([fb8429c](https://github.com/wzr1337/viwiServer/commit/fb8429c))
+* **package:** add stupid player deps ([6a3cbec](https://github.com/wzr1337/viwiServer/commit/6a3cbec))
 
 
 ### Features
 
+* **cdn:** add cdn service to acces images ([05c679b](https://github.com/wzr1337/viwiServer/commit/05c679b))
 * **general:** getResource now returns a CollectionResponse ([5425423](https://github.com/wzr1337/viwiServer/commit/5425423))
-* updateElement returns an Elementresponse ([6e12452](https://github.com/wzr1337/viwiServer/commit/6e12452))
 * **media:** add a second renderer in preparation for actual playback ([d18d2ac](https://github.com/wzr1337/viwiServer/commit/d18d2ac))
 * **media:** add shuffle and repeat simulation ([8d552fa](https://github.com/wzr1337/viwiServer/commit/8d552fa))
+* **media:** initial audio player integration ([04721b0](https://github.com/wzr1337/viwiServer/commit/04721b0))
+* **media:** tracks can be added and deleted from a media.collection ([b5aed24](https://github.com/wzr1337/viwiServer/commit/b5aed24))
+* **medialibrary:** add initial version of medialibrary plugin ([9b6d6bc](https://github.com/wzr1337/viwiServer/commit/9b6d6bc))
+* **medialibrary:** allow adding items with collection creation ([688e5f2](https://github.com/wzr1337/viwiServer/commit/688e5f2))
+* **mocks:** add more mock data ([f422e7d](https://github.com/wzr1337/viwiServer/commit/f422e7d))
 * **server:** unsubscribe and delete subscriptions for a given websocket on client disconnect ([03cf3a6](https://github.com/wzr1337/viwiServer/commit/03cf3a6))
 * **viwiPlugin:** separate ElementResponse and ListResponse for better readability and coding convinience ([c3f4059](https://github.com/wzr1337/viwiServer/commit/c3f4059))
+* updateElement returns an Elementresponse ([6e12452](https://github.com/wzr1337/viwiServer/commit/6e12452))
 
 
 

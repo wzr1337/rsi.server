@@ -1,0 +1,60 @@
+{
+  "tracks": [
+    {
+      "id": "4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2",
+      "name": "Me and my empty wallet",
+      "image": "/cdn/images/hills.jpg",
+      "genres": [],
+      "folders": [],
+      "rating": 5,
+      "albums": [],
+      "artists": [],
+      "date": "",
+      "disc": 0,
+      "duration": 240,
+      "source": {}
+    },
+    {
+      "id": "976a2844-862e-48f8-bc68-8f2f86613228",
+      "name": "The louder, the better",
+      "image": "/cdn/images/loud.jpg",
+      "genres": [],
+      "folders": [],
+      "rating": 3,
+      "albums": [],
+      "artists": [],
+      "date": "",
+      "disc": 0,
+      "duration": 175,
+      "source": {}
+    },
+    {
+      "id": "adbb974c-bfb3-43d7-a873-546b10ab95b9",
+      "name": "Eat, sleep, code, repeat",
+      "image": "/cdn/images/eat.jpg",
+      "genres": [],
+      "folders": [],
+      "rating": 2,
+      "albums": [],
+      "artists": [],
+      "date": "",
+      "disc": 0,
+      "duration": 196,
+      "source": {}
+    },
+    {
+      "id": "c5c20560-acc8-46d8-88ce-e4d39530752b",
+      "name": "Only the brave",
+      "image": "/cdn/images/brave.jpg",
+      "genres": [],
+      "folders": [],
+      "rating": 4,
+      "albums": [],
+      "artists": [],
+      "date": "",
+      "disc": 0,
+      "duration": 188,
+      "source": {}
+    }
+  ]
+}
