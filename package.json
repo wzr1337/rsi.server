@@ -4,7 +4,7 @@
   "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as public in 2016 by W3C",
   "main": "index.ts",
   "scripts": {
-    "test": "node ./node_modules/jasmine/bin/jasmine.js jasmine.json",
+    "test": "gulp test",
     "watch": "node ./node_modules/nodemon/bin/nodemon.js cli.js",
     "debug": "node --inspect --debug-brk ./bin/cli.js",
     "serve": "node ./bin/cli.js",
@@ -13,6 +13,9 @@
   },
   "author": "Dr. Patrick Bartsch",
   "license": "MIT",
+  "engines" : {
+    "node" : ">=6.7.0"
+  },
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
     "body-parser": "^1.15.2",
