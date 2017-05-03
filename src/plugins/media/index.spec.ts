@@ -106,4 +106,82 @@ describe("Renderers resource", () => {
     done();
   });
 })
+describe("Collections resource", () => {
+  var collections:Media.Collections;
+  var COLLECTIONID:string = 'deadbeef-d2c1-11e6-9376-df943f51f0d8';
+
+  beforeAll((done:DoneFn) => {
+    var s = new Media.Service();
+    collections = new Media.Collections(s);
+    done();
+  });
+
+  it("should allow setting a collection item list", (done:DoneFn) => {
+    let result = collections.updateElement(COLLECTIONID, {
+      items: ["/medialibrary/tracks/4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2"]
+    });
+    expect(result.status).toEqual("ok");
+    expect(result.error).toBeUndefined();
+    /** check actual existence */
+    result = collections.getElement(COLLECTIONID);
+    expect(result.status).toEqual("ok");
+    expect(result.error).toBeUndefined();
+    expect(result.data).toBeDefined();
+    let data = result.data.getValue().data;
+    expect(data).toBeDefined();
+    expect(data.items).toBeDefined();
+    expect(data.items[0].uri).toEqual("/medialibrary/tracks/4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2");
+    done();
+  });
+
+  it("should reject setting erroneous collection item list", (done:DoneFn) => {
+    let result = collections.updateElement(COLLECTIONID, {
+      items: ["/medialibrary/tracks/4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2","/medialibrary/tracks/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"]
+    });
+    expect(result.status).toEqual("error");
+    expect(result.error).toBeDefined();
+    done();
+  });
+
+  it("should allow creating a collection", (done:DoneFn) => {
+    let result = collections.createElement({name:"foo"});
+    expect(result.status).toEqual("ok");
+    expect(result.error).toBeUndefined();
+    done();
+  });
+
+  it("should NOT allow creating a collection without a name", (done:DoneFn) => {
+    let result = collections.createElement({});
+    expect(result.status).toEqual("error");
+    expect(result.error).toBeDefined();
+    done();
+  });
+
+  it("should allow creating a collection with an array of items", (done:DoneFn) => {
+    let result = collections.createElement({name:"foo", items: ["/medialibrary/tracks/4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2"]});
+    expect(result.status).toEqual("ok");
+    expect(result.error).toBeUndefined();
+
+    /** check actual existence */
+    result = collections.getElement(COLLECTIONID);
+    expect(result.status).toEqual("ok");
+    expect(result.error).toBeUndefined();
+    expect(result.data).toBeDefined();
+    let data = result.data.getValue().data;
+    expect(data).toBeDefined();
+    expect(data.items).toBeDefined();
+    expect(data.items[0].uri).toEqual("/medialibrary/tracks/4b247930-a2ab-49bf-b8f4-9ae3b01b3cf2");
+    done();
+  });
+
+  it("should reject creating a collection with an array of items that point to a non existing file", (done:DoneFn) => {
+    let result = collections.createElement({name:"foo", items: ["/medialibrary/tracks/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"]});
+    expect(result.status).toEqual("error");
+    expect(result.error).toBeDefined();
+    done();
+  });
+})
+
+
+
 

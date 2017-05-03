@@ -25,6 +25,7 @@ jspm_packages
 # unlreleased plugins
 src/plugins/*/
 !src/plugins/media
+!src/plugins/medialibrary
 
 
 # Mac stuff
