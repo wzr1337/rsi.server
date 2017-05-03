@@ -272,21 +272,33 @@ class Collections implements Resource {
     return this._change;
   }
 
-  private _addItems(itemuris:string[]):Element[] | ElementResponse {
-    let _items:Element[] = [];
+  private _setItems(itemuris:string[]):ItemObject[] | ElementResponse {
+    let _items:ItemObject[] = [];
     let regex = /[\w\/\:]*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
+    let errors:string[] = [];
     if(this._tracks) {
       for (var index in itemuris) {
         let uri = itemuris[index];
-        let id = uri.match(regex)[1]; //get actual id from uri here
-        if (!id) {
-          return {status: "error", error: new Error("Id " + id + "not valid from uri: " + uri), code: 400};
-        }
-        let track = this._tracks.getElement(id);
-        if (track && track.data) {
-          _items.push(track.data.getValue());
+        let match = uri.match(regex);
+        if (match !== null) {
+          let id = match[1];
+          if (!id) {
+            errors.push("Id " + id + "not valid from uri: " + uri);
+            console.log(errors)
+          } else {
+            let track = this._tracks.getElement(id);
+            if (track && track.data) {
+              _items.push(track.data.getValue().data);
+            }
+            else {
+              errors.push("Track " + id + " can not be found");
+            }
+          }
         }
       }
+      if (errors.length != 0) {
+        return {status: "error", error: new Error(errors.join(",")), code: 400};
+      } 
     } else {
       return {status: "error", error: new Error("No tracks loaded..."), code: 500};
     }
@@ -302,13 +314,22 @@ class Collections implements Resource {
     })};
   };
 
-  createElement(state:{name:string}):ElementResponse{
+  createElement(state:any):ElementResponse{
     if (!state.name) return {
       status: "error",
+      error: new Error('providing a name is mandatory'),
       code: StatusCode.INTERNAL_SERVER_ERROR
     };
-    //@TODO: allow adding items on element creation 
     const collectionId = uuid.v1();
+    let items:any = [];
+
+    /** add items given with the query */
+    if(state.hasOwnProperty('items')) {
+      items = this._setItems(state.items);
+      if (!Array.isArray(items)) return items;
+    }
+
+    /** build the actual media collection and add it to the collections*/
     let newCollection = new BehaviorSubject<CollectionElement>(
       {
         lastUpdate: Date.now(),
@@ -317,11 +338,15 @@ class Collections implements Resource {
         uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + collectionId,
         id: collectionId,
         name: state.name,
-        items: []
+        items: items
       }
     });
     this._collections.push(newCollection);
+
+    /** publish a resource change */
     this._change.next({lastUpdate: Date.now(), action: "add"});
+
+    /** return success */
     return {status:"ok", data: newCollection};
   };
 
@@ -331,9 +356,9 @@ class Collections implements Resource {
     let propertiesChanged:string[]=[];
 
     if(difference.hasOwnProperty('items')) {
-      let newItems = this._addItems(difference.items);
-      if (typeof(newItems) === "ResponseElement")
-      collection.data.items = this._addItems(difference.items);
+      let newItems = this._setItems(difference.items);
+      if (!Array.isArray(newItems)) return newItems;
+      collection.data.items = newItems;
       collection.lastUpdate = Date.now();
       collection.propertiesChanged = ['items'];
       element.next(collection);
