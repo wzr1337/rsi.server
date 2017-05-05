@@ -18,7 +18,6 @@ class Media extends Service {
 
 interface RendererElement extends Element {
   data: RendererObject;
-  player?: any
 }
 
 class Renderers implements Resource {
@@ -29,6 +28,8 @@ class Renderers implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<RendererElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
+
+  private _stupidPlayer:any;
 
   private _logger = viwiLogger.getInstance().getLogger("media.Renderers");
 
@@ -57,7 +58,6 @@ class Renderers implements Resource {
     let stpdRenderer = new BehaviorSubject<RendererElement>({
       lastUpdate: Date.now(),
       propertiesChanged: [],
-      player: new stupid(),
       data: {
         uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + stpdId,
         id: stpdId,
@@ -70,6 +70,7 @@ class Renderers implements Resource {
       }
     });
     this._renderers.push(stpdRenderer);
+    this._stupidPlayer = new stupid();
     
     this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
   }
@@ -131,20 +132,17 @@ class Renderers implements Resource {
                 data: renderer
               });
           }, speed);
-        } else if(renderer.name === "stpd" && element.getValue().player) {
+        } else if(renderer.name === "stpd" && this._stupidPlayer) {
           let path = require("path");
-          let player = element.getValue().player; //might be undefinied, be aware
-
 
           var onPlay = ()=> {
             this._playerInterval = setInterval(() => { //@TODO: rather listen to player events..
-              renderer.offset = player.getOffset();
-              if(player.state) {
+              renderer.offset = this._stupidPlayer.getOffset();
+              if(this._stupidPlayer.state) {
                 element.next({
                   lastUpdate: Date.now(),
                   propertiesChanged: ["offset"],
-                  data: renderer,
-                  player: player
+                  data: renderer
                 });
               }
             }, 250);
@@ -154,12 +152,12 @@ class Renderers implements Resource {
             this._logger.log("DEBUG", "Player.play():", err.message);
           };
 
-          switch (player.state) {
-            case "paus":
-              player.resume().then(onPlay, onPlayError);
+          switch (this._stupidPlayer.state) {
+            case "pause":
+              this._stupidPlayer.resume().then(onPlay, onPlayError);
               break;
             case "stop":
-              player.play(path.join(__dirname, '../../../samples/dimitriVegas.mp3')).then(onPlay, onPlayError);
+              this._stupidPlayer.play(path.join(__dirname, './data/dimitriVegas.mp3')).then(onPlay, onPlayError);
               break;
             default:
               return {status: "error", code: 500, error: new Error("unknown player state:" + player.state)}
@@ -172,19 +170,18 @@ class Renderers implements Resource {
              clearInterval(this._interval);
             break;
           case Renderers.stdpRendererId:
-            let player = element.getValue().player; //might be undefinied, be aware
             switch (difference.state) {
               case "pause":
-                if(player.state === "play") {
-                  player.pause();
+                if(this._stupidPlayer && this._stupidPlayer.state === "play") {
+                  this._stupidPlayer.pause();
                   clearInterval(this._playerInterval); //@TODO: rather listen to player events..
                 } else {
                   return {status: "error", error: new Error("Renderer not playing"), code: 500};
                 }
                 break;
               case "stop":
-                if(player.state === "play") {
-                  player.stop();
+                if(this._stupidPlayer && this._stupidPlayer.state === "play") {
+                  this._stupidPlayer.stop();
                   clearInterval(this._playerInterval); //@TODO: rather listen to player events..
                 } else {
                   return {status: "error", error: new Error("Renderer not playing"), code: 500};
