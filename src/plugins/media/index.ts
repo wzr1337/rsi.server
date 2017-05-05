@@ -151,7 +151,7 @@ class Renderers implements Resource {
           };
 
           var onPlayError = (err:Error)=>{
-            console.log("Player.play():", err.message);
+            this._logger.log("DEBUG", "Player.play():", err.message);
           };
 
           switch (player.state) {
@@ -173,7 +173,6 @@ class Renderers implements Resource {
             break;
           case Renderers.stdpRendererId:
             let player = element.getValue().player; //might be undefinied, be aware
-            console.log(player);
             switch (difference.state) {
               case "pause":
                 if(player.state === "play") {
@@ -284,7 +283,6 @@ class Collections implements Resource {
           let id = match[1];
           if (!id) {
             errors.push("Id " + id + "not valid from uri: " + uri);
-            console.log(errors)
           } else {
             let track = this._tracks.getElement(id);
             if (track && track.data) {
