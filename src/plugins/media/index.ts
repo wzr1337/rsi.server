@@ -35,7 +35,7 @@ class Renderers implements Resource {
 
   constructor(private service:Service) {
 
-    //const collections = service.resources.map<Collections>(resource => resource.name === "collections");
+    //let collections = service.resources.filter<Collections>(resource => resource.name === "collections");
     //const initialCollection = collections.map( element => element.name === "default");
     let netfluxRenderer = new BehaviorSubject<RendererElement>({
       lastUpdate: Date.now(),
@@ -160,7 +160,7 @@ class Renderers implements Resource {
               this._stupidPlayer.play(path.join(__dirname, './data/dimitriVegas.mp3')).then(onPlay, onPlayError);
               break;
             default:
-              return {status: "error", code: 500, error: new Error("unknown player state:" + player.state)}
+              return {status: "error", code: 500, error: new Error("unknown player state:" + this._stupidPlayer.state)}
           }
         }
       }
