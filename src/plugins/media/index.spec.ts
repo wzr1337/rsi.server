@@ -57,12 +57,12 @@ describe("Renderers resource", () => {
     done();
   });
 
-  it("should hold a renderer called stpd", (done:DoneFn) => {
+  it("should hold a renderer called StpdPlayer", (done:DoneFn) => {
     let renderers = r.getResource().data;
     expect(renderers).toBeDefined;
     expect(renderers.length).not.toEqual(0);
     let stpd = renderers.filter((el) => {
-      return (el.getValue().data.name === "stpd") ? el : undefined;
+      return (el.getValue().data.name === "StpdPlayer") ? el : undefined;
     });
     expect(stpd[0]).toBeDefined();
     done();
