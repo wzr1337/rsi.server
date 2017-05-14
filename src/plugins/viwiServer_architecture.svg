@@ -15,7 +15,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="viwiServer_architecture.svg">
+   sodipodi:docname="viwiServer_architecture.svg"
+   inkscape:export-filename="/Users/gxc9gk6/source/viwiServer/src/plugins/viwiServer_architecture.png"
+   inkscape:export-xdpi="70.970001"
+   inkscape:export-ydpi="70.970001">
   <defs
      id="defs4">
     <marker
@@ -149,7 +152,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.0470813"
-     inkscape:cx="263.57625"
+     inkscape:cx="97.400042"
      inkscape:cy="113.69086"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -177,7 +180,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

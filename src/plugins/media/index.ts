@@ -28,8 +28,13 @@ class Renderers implements Resource {
   private _name:string;
   private _renderers:BehaviorSubject<RendererElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
-
+  
+  private _stupidPlayerQueue:{file:string}[]= [{
+    file: './data/dimitriVegas.mp3'}
+  ];
+  private _stupidPlayerIndex:number= 0;
   private _stupidPlayer:any;
+
 
   private _logger = viwiLogger.getInstance().getLogger("media.Renderers");
 
@@ -157,7 +162,8 @@ class Renderers implements Resource {
               this._stupidPlayer.resume().then(onPlay, onPlayError);
               break;
             case "stop":
-              this._stupidPlayer.play(path.join(__dirname, './data/dimitriVegas.mp3')).then(onPlay, onPlayError);
+              let filepath = this._stupidPlayerQueue[this._stupidPlayerIndex].file;
+              this._stupidPlayer.play(path.join(__dirname, filepath)).then(onPlay, onPlayError);
               break;
             default:
               return {status: "error", code: 500, error: new Error("unknown player state:" + this._stupidPlayer.state)}
