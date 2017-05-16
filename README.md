@@ -13,12 +13,25 @@ This project uses Gulp and TypeScript which needs to be available globally, so p
 $ npm install gulp typescript -g
 ```
 
+#### Install local dependencies
 To install the server's dependencies, run the following command
 
 ```sh
 $ npm install
 ```
 
+##### known issues
+
+If you are developing on Windows or Linux, you might experience issue when using above command, because the lame dependency has to compile per platform.
+
+**Linux**
+On some Linux (e.g. Ubuntu 16.04) distros the libasound2 libs are missing, so please install it via
+```
+$ sudo apt-get install libasound2-dev
+```
+
+**Windows**
+On Windows you will need a visual studio installation to have a working compiler at hand.
 
 ## Build it
 
