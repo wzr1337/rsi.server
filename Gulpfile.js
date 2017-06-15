@@ -58,7 +58,7 @@ gulp.task('copyjson', () => {
 });
 
 gulp.task('copyPluginData', () => {
-   gulp.src('./src/plugins/**/data/*.json')
+   gulp.src('./src/plugins/**/data/**/*')
    .pipe(gulp.dest('./bin/plugins/'));
 });
 

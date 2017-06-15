@@ -1,11 +1,13 @@
-import { BehaviorSubject, Subject } from '@reactivex/rxjs';
+import { BehaviorSubject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
-import { viwiLogger } from "../../log";
-import * as stupid from 'stupid-player'; // a cross platform media player
+import { rsiLogger } from "../../log";
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
+import { Player as StupidPlayer} from './stupid.player';
+
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../rsiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 import { Service as Medialibrary, Tracks} from "../medialibrary";
+
 
 class Media extends Service {
   constructor() {
@@ -18,23 +20,25 @@ class Media extends Service {
 
 interface RendererElement extends Element {
   data: RendererObject;
-  player?: any
 }
 
 class Renderers implements Resource {
 
   static netfluxRendererId = "d6ebfd90-d2c1-11e6-9376-df943f51f0d8";//uuid.v1();  // FIXED for now
-  static stdpRendererId = "deadbeef-d2c1-11e6-9376-beefdead";//uuid.v1();  // FIXED for now
 
   private _name:string;
   private _renderers:BehaviorSubject<RendererElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
+  
 
-  private _logger = viwiLogger.getInstance().getLogger("media.Renderers");
+  private _stupidPlayer:StupidPlayer;
+
+
+  private _logger = rsiLogger.getInstance().getLogger("media.Renderers");
 
   constructor(private service:Service) {
 
-    //const collections = service.resources.map<Collections>(resource => resource.name === "collections");
+    //let collections = service.resources.filter<Collections>(resource => resource.name === "collections");
     //const initialCollection = collections.map( element => element.name === "default");
     let netfluxRenderer = new BehaviorSubject<RendererElement>({
       lastUpdate: Date.now(),
@@ -53,24 +57,40 @@ class Renderers implements Resource {
     this._renderers.push(netfluxRenderer);
 
     ///add an actual renderer for playback
-    let stpdId = Renderers.stdpRendererId;
+    this._stupidPlayer = new StupidPlayer();     //@TODO should support multiple renderers
+    let playerState = this._stupidPlayer.state.getValue();
     let stpdRenderer = new BehaviorSubject<RendererElement>({
       lastUpdate: Date.now(),
       propertiesChanged: [],
-      player: new stupid(),
       data: {
-        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + stpdId,
-        id: stpdId,
-        name: "stpd",
-        state: "idle",
-        shuffle: "off",
-        repeat: "off",
-        offset: 0,
+        uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + this._stupidPlayer.id,
+        id: this._stupidPlayer.id,
+        name: this._stupidPlayer.name,
+        state: playerState.state,
+        shuffle: playerState.shuffle,
+        repeat: playerState.repeat,
+        offset: playerState.offset,
         media: []
       }
     });
+    this._stupidPlayer.state.subscribe((data) => {
+      stpdRenderer.next({
+        lastUpdate: Date.now(),
+        propertiesChanged: [],
+        data: {
+          uri: "/" + this.service.name.toLowerCase() + "/" + this.name.toLowerCase() + "/" + this._stupidPlayer.id,
+          id: this._stupidPlayer.id,
+          name: this._stupidPlayer.name,
+          state: data.state,
+          shuffle: data.shuffle,
+          repeat: data.repeat,
+          offset: data.offset,
+          media: []
+        }
+      });
+    });
     this._renderers.push(stpdRenderer);
-    
+
     this._change = new BehaviorSubject(<ResourceUpdate>{lastUpdate: Date.now(), action: 'init'});
   }
 
@@ -91,8 +111,8 @@ class Renderers implements Resource {
     return {
       status: "ok",
       data: this._renderers.find((element:BehaviorSubject<RendererElement>) => {
-      return (<{id:string}>element.getValue().data).id === elementId;
-    })
+        return (<{id:string}>element.getValue().data).id === elementId;
+      })
     };
   };
 
@@ -109,7 +129,6 @@ class Renderers implements Resource {
 
 
   private _interval:NodeJS.Timer; //@TODO has to become per-renderer
-  private _playerInterval:NodeJS.Timer;//@TODO has to become per-renderer
 
   updateElement(elementId:string, difference:any):ElementResponse {
     let element = (<BehaviorSubject<RendererElement>> this.getElement(elementId).data);
@@ -118,75 +137,60 @@ class Renderers implements Resource {
 
     if (difference.hasOwnProperty("state")) {
       renderer.state = difference.state;
-      if (difference.state === "play") {
-        if (renderer.id === Renderers.netfluxRendererId)
-        {
-          const speed = 1000;
-          this._interval = setInterval(() => {
-            renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
-            element.next(
-              {
-                lastUpdate: Date.now(),
-                propertiesChanged: ["offset"],
-                data: renderer
-              });
-          }, speed);
-        } else if(renderer.name === "stpd" && element.getValue().player) {
-          let path = require("path");
-          let player = element.getValue().player; //might be undefinied, be aware
 
 
-          var onPlay = ()=> {
-            this._playerInterval = setInterval(() => { //@TODO: rather listen to player events..
-              renderer.offset = player.getOffset();
-              if(player.state) {
-                element.next({
+      switch (difference.state) {
+        case "play":
+          if (renderer.id === Renderers.netfluxRendererId)
+          {
+            const speed = 1000;
+            this._interval = setInterval(() => {
+              renderer.offset = renderer.hasOwnProperty("offset") ? renderer.offset + speed : 0;
+              element.next(
+                {
                   lastUpdate: Date.now(),
                   propertiesChanged: ["offset"],
-                  data: renderer,
-                  player: player
+                  data: renderer
                 });
-              }
-            }, 250);
-          };
-
-          var onPlayError = (err:Error)=>{
-            console.log("Player.play():", err.message);
-          };
-
-          switch (player.state) {
-            case "paus":
-              player.resume().then(onPlay, onPlayError);
-              break;
-            case "stop":
-              player.play(path.join(__dirname, '../../../samples/dimitriVegas.mp3')).then(onPlay, onPlayError);
-              break;
-            default:
-              return {status: "error", code: 500, error: new Error("unknown player state:" + player.state)}
+            }, speed);
+          } else if(renderer.id === this._stupidPlayer.id) {
+            let currentState = this._stupidPlayer.state.getValue();
+            switch (currentState.state) {
+              case "pause":
+                this._stupidPlayer.resume();
+                break;
+              case "stop":
+              case "idle":
+                this._stupidPlayer.play(0);
+                break;
+              default:
+                return {status: "error", code: 500, error: new Error("unknown player state:" + currentState.state)}
+            }
           }
-        }
-      }
-      else {
-        switch (renderer.id) {
+          break;
+        default:
+          switch (renderer.id) {
+
+          // mock player requested
           case Renderers.netfluxRendererId:
              clearInterval(this._interval);
             break;
-          case Renderers.stdpRendererId:
-            let player = element.getValue().player; //might be undefinied, be aware
-            console.log(player);
+
+          // stupid player requested
+          case this._stupidPlayer.id:
+            let currentState = this._stupidPlayer.state.getValue();
+            console.log(currentState.state);
             switch (difference.state) {
               case "pause":
-                if(player.state === "play") {
-                  player.pause();
-                  clearInterval(this._playerInterval); //@TODO: rather listen to player events..
+                if(this._stupidPlayer && currentState.state === "play") {
+                  this._stupidPlayer.pause();
                 } else {
                   return {status: "error", error: new Error("Renderer not playing"), code: 500};
                 }
                 break;
               case "stop":
-                if(player.state === "play") {
-                  player.stop();
-                  clearInterval(this._playerInterval); //@TODO: rather listen to player events..
+                if(this._stupidPlayer && currentState.state === "play") {
+                  this._stupidPlayer.stop();
                 } else {
                   return {status: "error", error: new Error("Renderer not playing"), code: 500};
                 }
@@ -198,6 +202,7 @@ class Renderers implements Resource {
           default:
             return {status: "error", error: new Error("Renderer not found"), code: 404};
         }
+        break;
       }
       propertiesChanged.push("state");
     }
@@ -234,7 +239,7 @@ class Collections implements Resource {
   private _medialibrary:Medialibrary;
   private _tracks:Tracks;
 
-  private _logger = viwiLogger.getInstance().getLogger("media.Collections");
+  private _logger = rsiLogger.getInstance().getLogger("media.Collections");
 
   constructor(private service:Service) {
 
@@ -284,7 +289,6 @@ class Collections implements Resource {
           let id = match[1];
           if (!id) {
             errors.push("Id " + id + "not valid from uri: " + uri);
-            console.log(errors)
           } else {
             let track = this._tracks.getElement(id);
             if (track && track.data) {

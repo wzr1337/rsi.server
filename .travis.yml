@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- '6'
+env:
+  - http_proxy=''
+  - HTTP_PROXY=''
+before_install:
+- npm install -g gulp@3.9.1
+install:
+- npm install
+script:
+- npm test
