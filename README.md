@@ -1,6 +1,6 @@
-[![Join the chat at https://gitter.im/viwiServer/viwiServer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/viwiServer/viwiServer)
+[![Join the chat at https://gitter.im/rsiServer/rsiServer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rsiServer/rsiServer)
 
-# Viwi Server
+# RSI Server
 
 This project implements the Volkswagen Infotainment Web Interface as published under [https://www.w3.org/Submission/2016/01/](https://www.w3.org/Submission/2016/01/).
 
