@@ -4,9 +4,9 @@ import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
 import * as path from "path";
 import * as fs from "fs";
-import { viwiLogger } from "../../log";
+import { rsiLogger } from "../../log";
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../rsiPlugin";
 import { trackObject } from "./schema";
 
 class Medialibrary extends Service {
@@ -27,7 +27,7 @@ class Tracks implements Resource {
   private _tracks:BehaviorSubject<TracksElement>[] = [];
   private _change:BehaviorSubject<ResourceUpdate>;
 
-  private _logger = viwiLogger.getInstance().getLogger("media");
+  private _logger = rsiLogger.getInstance().getLogger("media");
 
   constructor(private service:Service) {
     let mocksPath = path.join(__dirname, "data", "mocks.json");
