@@ -1,10 +1,10 @@
 import { BehaviorSubject } from '@reactivex/rxjs';
 import * as uuid from "uuid";
-import { viwiLogger } from "../../log";
+import { rsiLogger } from "../../log";
 
 import { Player as StupidPlayer} from './stupid.player';
 
-import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../viwiPlugin";
+import { Service, Resource, Element, ResourceUpdate, StatusCode, ElementResponse, CollectionResponse } from "../rsiPlugin";
 import { RendererObject, CollectionObject, ItemObject } from "./schema";
 import { Service as Medialibrary, Tracks} from "../medialibrary";
 
@@ -34,7 +34,7 @@ class Renderers implements Resource {
   private _stupidPlayer:StupidPlayer;
 
 
-  private _logger = viwiLogger.getInstance().getLogger("media.Renderers");
+  private _logger = rsiLogger.getInstance().getLogger("media.Renderers");
 
   constructor(private service:Service) {
 
@@ -239,7 +239,7 @@ class Collections implements Resource {
   private _medialibrary:Medialibrary;
   private _tracks:Tracks;
 
-  private _logger = viwiLogger.getInstance().getLogger("media.Collections");
+  private _logger = rsiLogger.getInstance().getLogger("media.Collections");
 
   constructor(private service:Service) {
 

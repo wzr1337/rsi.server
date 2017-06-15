@@ -15,8 +15,6 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="viwiServer_architecture.svg"
-   inkscape:export-filename="/Users/gxc9gk6/source/viwiServer/src/plugins/viwiServer_architecture.png"
    inkscape:export-xdpi="70.970001"
    inkscape:export-ydpi="70.970001">
   <defs
@@ -208,7 +206,7 @@
          id="tspan3342"
          x="518.97906"
          y="710.70123"
-         style="font-size:35px">viwiServer</tspan></text>
+         style="font-size:35px">rsiServer</tspan></text>
     <rect
        style="fill:#999999;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3344"

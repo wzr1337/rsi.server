@@ -1,13 +1,13 @@
 import { BehaviorSubject, Subject} from '@reactivex/rxjs';
 import * as express from 'express';
 import { WebServer } from "./expressapp";
-import { viwiWebSocket } from './viwiWebSocket';
-import { viwiClientWebSocketMessage } from "./types";
+import { rsiWebSocket } from './rsiWebSocket';
+import { rsiClientWebSocketMessage } from "./types";
 import * as uuid from "uuid";
 import * as fs from "fs";
 import * as path from "path";
-import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/viwiPlugin";
-import { viwiLogger } from "./log";
+import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/rsiPlugin";
+import { rsiLogger } from "./log";
 import { splitEvent } from "./helpers";
 
 declare function require(moduleName: string): any;
@@ -19,7 +19,7 @@ const BASEURI = "/";
 // globals
 var availableServices:{id:string;name:string;uri:string}[] = [];
 var server:WebServer;
-const logger = viwiLogger.getInstance().getLogger("general");
+const logger = rsiLogger.getInstance().getLogger("general");
 
 /**
  * options to run the server
@@ -30,7 +30,7 @@ export interface runOptions {
 }
 
 /**
- * runs a viwi server 
+ * runs a server 
  * 
  * @param options the instance options
  * 
@@ -56,7 +56,7 @@ var run = (options?:runOptions):Promise<void> => {
     /**
      * Plugin loader
      * 
-     * browses the PLUGINDIR for available plugins and registers them with the viwi sevrer 
+     * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer 
      */
     fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
       if(err) {
@@ -88,31 +88,31 @@ var run = (options?:runOptions):Promise<void> => {
       });
 
       server.ws.on('connection', (ws:any) => {                                //subscribe|unsubscribe
-        var _viwiWebSocket = new viwiWebSocket(ws);
+        var _rsiWebSocket = new rsiWebSocket(ws);
         ws.on("close", () => {
           for (let prop in wsMapping) {
-            wsMapping[prop].unsubscribeWebSocket(_viwiWebSocket);
+            wsMapping[prop].unsubscribeWebSocket(_rsiWebSocket);
           }
         });
 
         ws.on("message", (message:string) => {
-          let msg:viwiClientWebSocketMessage;
+          let msg:rsiClientWebSocketMessage;
           // make sure we actually parse the incomming message
           try {
             msg = JSON.parse(message);
           }
           catch(err) {
-            _viwiWebSocket.sendError(msg ? msg.event : '', StatusCode.BAD_REQUEST, new Error(err));
+            _rsiWebSocket.sendError(msg ? msg.event : '', StatusCode.BAD_REQUEST, new Error(err));
             return;
           }
           let event = splitEvent(msg.event);
           let basePath = BASEURI + event.service + "/" + event.resource + "/";
           if(wsMapping[basePath] && wsMapping[basePath].isHandlingEvent(msg.event))
           {
-            wsMapping[basePath].handleWebSocketMessages(msg, _viwiWebSocket);
+            wsMapping[basePath].handleWebSocketMessages(msg, _rsiWebSocket);
           }
           else {
-            _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"));
+            _rsiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"));
           }
         });
       });
@@ -145,15 +145,15 @@ class wsHandler {
   /**
    * unsubscribe a given websocket from all it's subscriptions
    * 
-   * @param _viwiWebSocket  The WebSocket to be unsubscribed.
+   * @param _rsiWebSocket  The WebSocket to be unsubscribed.
    */
-  unsubscribeWebSocket = (_viwiWebSocket:viwiWebSocket) => {
-    if (this._subscriptions[_viwiWebSocket.id]) {
-      let subscriptions:any = this._subscriptions[_viwiWebSocket.id];
+  unsubscribeWebSocket = (_rsiWebSocket:rsiWebSocket) => {
+    if (this._subscriptions[_rsiWebSocket.id]) {
+      let subscriptions:any = this._subscriptions[_rsiWebSocket.id];
       for (let prop in subscriptions) {
         subscriptions[prop].unsubscribe();
       }
-      delete this._subscriptions[_viwiWebSocket.id];
+      delete this._subscriptions[_rsiWebSocket.id];
     }
   };
 
@@ -164,13 +164,13 @@ class wsHandler {
    * @param resource  The resource name.
    * @param ws        The WebSocket the client is sending data on.
    */
-  handleWebSocketMessages = (msg:viwiClientWebSocketMessage, _viwiWebSocket:viwiWebSocket) => {
+  handleWebSocketMessages = (msg:rsiClientWebSocketMessage, _rsiWebSocket:rsiWebSocket) => {
       var eventObj = splitEvent(msg.event);
 
-      this._subscriptions[_viwiWebSocket.id] = this._subscriptions[_viwiWebSocket.id] || {}; // init if not yet initialized
+      this._subscriptions[_rsiWebSocket.id] = this._subscriptions[_rsiWebSocket.id] || {}; // init if not yet initialized
 
       if (!eventObj.service || !eventObj.resource) {
-        _viwiWebSocket.sendError(msg.event, StatusCode.BAD_REQUEST, new Error("event url malformed"));
+        _rsiWebSocket.sendError(msg.event, StatusCode.BAD_REQUEST, new Error("event url malformed"));
         return;
       }
 
@@ -183,30 +183,30 @@ class wsHandler {
               let subject:BehaviorSubject<Element> = <BehaviorSubject<Element>>element.data;
               if (element && subject) {
                 logger.debug("New element level subscription:", msg.event);
-                _viwiWebSocket.acknowledgeSubscription(msg.event);
+                _rsiWebSocket.acknowledgeSubscription(msg.event);
 
-                this._subscriptions[_viwiWebSocket.id][msg.event] = subject
+                this._subscriptions[_rsiWebSocket.id][msg.event] = subject
                   .subscribe((data:Element) => {
-                    if (! _viwiWebSocket.sendData(msg.event, data.data)) subject.complete();
+                    if (! _rsiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
-                      if (! _viwiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) subject.complete();
+                      if (! _rsiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) subject.complete();
                     });
               }
               else {
-                if (! _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"))) subject.complete();
+                if (! _rsiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"))) subject.complete();
               }
           }
           else if (eventObj.element && !this.resource.elementSubscribable)
           {
-            _viwiWebSocket.sendError(msg.event, StatusCode.SERVICE_UNAVAILABLE, new Error("Service unavailable"));
+            _rsiWebSocket.sendError(msg.event, StatusCode.SERVICE_UNAVAILABLE, new Error("Service unavailable"));
           }
           if (!eventObj.element && this.resource.resourceSubscribable) {
             // resource subscription
             logger.info("New resource level subscription:", msg.event);
-            _viwiWebSocket.acknowledgeSubscription(msg.event);
+            _rsiWebSocket.acknowledgeSubscription(msg.event);
 
-            this._subscriptions[_viwiWebSocket.id][msg.event] = this.resource.change
+            this._subscriptions[_rsiWebSocket.id][msg.event] = this.resource.change
               .subscribe((change:ResourceUpdate) => {
                 //@TODO: needs rate limit by comparing last update timestamp with last update
                 logger.info("New resource data:", change);
@@ -215,34 +215,34 @@ class wsHandler {
                   let resp = elements.data.map((value:BehaviorSubject<Element>) => {
                     return value.getValue().data;
                   });
-                  if(! _viwiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
+                  if(! _rsiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                 }
                 else {;
-                  if(! _viwiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not found"))) this.resource.change.complete();
+                  if(! _rsiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not found"))) this.resource.change.complete();
                 }
             },
             (err:any) => {
-              if(! _viwiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) this.resource.change.complete();
+              if(! _rsiWebSocket.sendError(msg.event, StatusCode.INTERNAL_SERVER_ERROR, new Error(err))) this.resource.change.complete();
             });
           }
           else if (!eventObj.element && !this.resource.resourceSubscribable)
           {
-            _viwiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
+            _rsiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
           }
         break;
 
         case "unsubscribe":
           logger.info("Unsubscription:", msg.event);
-          let subscription = this._subscriptions[_viwiWebSocket.id][msg.event];
+          let subscription = this._subscriptions[_rsiWebSocket.id][msg.event];
           if (subscription) {
             subscription.unsubscribe();
-            _viwiWebSocket.acknowledgeUnsubscription(msg.event); //might fail, but not important at this point
+            _rsiWebSocket.acknowledgeUnsubscription(msg.event); //might fail, but not important at this point
           }
         break;
         case "reauthorize":
         default:
           logger.error("Unsupported command on ws://:", msg.event);
-          _viwiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
+          _rsiWebSocket.sendError(msg.event, StatusCode.NOT_IMPLEMENTED, new Error("Not Implemented"));
         break;
       }
 

@@ -1,28 +1,28 @@
 import * as winston from "winston";
 
-interface viwiLoggerInstance extends winston.LoggerInstance {};
+interface rsiLoggerInstance extends winston.LoggerInstance {};
 
-const LOGFILE = 'viwiServer.log';
+const LOGFILE = 'rsiServer.log';
 
 
-class viwiLogger {
+class rsiLogger {
 
-  private static _instance:viwiLogger = new viwiLogger();
-  private _loggers:{[name: string]:viwiLoggerInstance} = {};
+  private static _instance:rsiLogger = new rsiLogger();
+  private _loggers:{[name: string]:rsiLoggerInstance} = {};
 
   constructor() {
-    if(viwiLogger._instance){
+    if(rsiLogger._instance){
       throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
     }
-    viwiLogger._instance = this;
+    rsiLogger._instance = this;
   }
 
-  public static getInstance():viwiLogger
+  public static getInstance():rsiLogger
   {
-    return viwiLogger._instance;
+    return rsiLogger._instance;
   }
 
-  getLogger(name:string):viwiLoggerInstance {
+  getLogger(name:string):rsiLoggerInstance {
     if (! this._loggers.hasOwnProperty(name)) {
       this._loggers[name] = new (winston.Logger)({
         transports: [
@@ -44,4 +44,4 @@ class viwiLogger {
   }
 }
 
-export {viwiLogger, viwiLoggerInstance}
+export {rsiLogger, rsiLoggerInstance}

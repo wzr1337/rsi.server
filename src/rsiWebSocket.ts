@@ -1,21 +1,21 @@
-import { viwiLogger, viwiLoggerInstance } from "./log";
+import { rsiLogger, rsiLoggerInstance } from "./log";
 import * as uuid from "uuid";
 
 
-class viwiWebSocket {
+class rsiWebSocket {
   private _id:string;
-  private _logger:viwiLoggerInstance;
+  private _logger:rsiLoggerInstance;
   
   constructor(private ws: WebSocket) {
-    this._logger = viwiLogger.getInstance().getLogger("viwiWebSocket");
+    this._logger = rsiLogger.getInstance().getLogger("rsiWebSocket");
     this._logger.transports["console"].level = 'silly'; // for debug
     this._id = uuid.v4();
   }
 
-  private _send(viwiMessageObject:Object):boolean {
+  private _send(rsiMessageObject:Object):boolean {
     if (this.ws.readyState === this.ws.OPEN) {
-      this._logger.debug(this.constructor.name + "._send():", viwiMessageObject);
-      this.ws.send(JSON.stringify(viwiMessageObject));
+      this._logger.debug(this.constructor.name + "._send():", rsiMessageObject);
+      this.ws.send(JSON.stringify(rsiMessageObject));
       return true;
     }
     this._logger.error(this.constructor.name + "._send(): WebSocket readyState is ", this.ws.readyState);
@@ -27,8 +27,8 @@ class viwiWebSocket {
   }
 
   /**
-  * send viwi formatted data via WebSocket
-  * @param event the event name (uri) to emitted viwi formatted
+  * send rsi formatted data via WebSocket
+  * @param event the event name (uri) to emitted rsi formatted
   * @param payloadthe payload to be emitted for the event
   *
   * @returns true on successful send
@@ -39,7 +39,7 @@ class viwiWebSocket {
   }
   
   /**
-  * send viwi formatted error message via WebSocket
+  * send rsi formatted error message via WebSocket
   * @param code error code
   * @param err the actual Error containing the message
   *
@@ -73,4 +73,4 @@ class viwiWebSocket {
   }
 }
 
-export { viwiWebSocket };
+export { rsiWebSocket };

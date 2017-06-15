@@ -1,5 +1,5 @@
 
-export interface viwiClientWebSocketMessage {
+export interface rsiClientWebSocketMessage {
   type:string,
   event:string,
   interval?:number,

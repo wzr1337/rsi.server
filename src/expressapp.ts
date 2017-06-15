@@ -5,7 +5,7 @@ import * as cors from 'cors';
 import * as compression from 'compression';
 import * as path from "path";
 import http = require('http');
-import { viwiLogger, viwiLoggerInstance } from "./log";
+import { rsiLogger, rsiLoggerInstance } from "./log";
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
 
 // create server and listen on provided port (on all network interfaces).
@@ -14,17 +14,17 @@ class WebServer {
   public ws: WebSocketServer.Server;
   private _server:any;
   private _port:number|string|boolean;
-  private _logger:viwiLoggerInstance;
+  private _logger:rsiLoggerInstance;
   
   constructor (_port?:number) {
-    var _logger = this._logger = viwiLogger.getInstance().getLogger("general");
+    var _logger = this._logger = rsiLogger.getInstance().getLogger("general");
     this.app = express();
     
     var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts:cors.CorsOptions = {
       origin: function (origin, callback) {
 
-        if (1 || typeof(origin) === "undefined") { //@TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
+        if (1 || typeof(origin) === "undefined") { //@TODO: find an actual solution for https://github.com/wzr1337/rsiServer/issues/31
           /**
            * The origin may be hidden if the user comes from an ssl encrypted website.
            * 
