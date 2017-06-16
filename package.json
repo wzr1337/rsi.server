@@ -13,8 +13,8 @@
   },
   "author": "Dr. Patrick Bartsch",
   "license": "MIT",
-  "engines" : {
-    "node" : ">=6.7.0"
+  "engines": {
+    "node": ">=6.7.0"
   },
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
@@ -25,7 +25,7 @@
     "express": "^4.14.0",
     "glob": "^7.1.1",
     "http": "0.0.0",
-    "stupid-player": "git+https://github.com/wzr1337/stupid-player.git#develop",
+    "stupid-player": "^0.3.1",
     "uuid": "^3.0.1",
     "winston": "^2.3.1",
     "ws": "^1.1.1"

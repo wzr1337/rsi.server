@@ -6,7 +6,11 @@
     "noImplicitAny": true,
     "sourceMap": true,
     "target": "es6",
-    "module": "commonjs"
+    "module": "commonjs",
+    "baseUrl": ".", // This must be specified if "paths" is.
+    "paths": {
+      "stupid-player": ["src/plugins/media/stupidPlayer.d.ts"] // This mapping is relative to "baseUrl"
+    }
   },
   "types": [
     "node",

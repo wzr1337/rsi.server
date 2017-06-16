@@ -1,7 +1,5 @@
-///<reference path="./stupid-player.d.ts" />
 
-import * as stupid from 'stupid-player'; // a cross platform media player
-//import * as player from './stupid-player';
+var StupidPlayer =require('stupid-player'); // a cross platform media player
 import { BehaviorSubject } from '@reactivex/rxjs';
 import * as path from 'path';
 
@@ -15,7 +13,7 @@ interface StupidPlayerState {
 }
 
 
-class StupidPlayer {
+class Player {
   private _id:string;
   private _stupidPlayer:any;//player.StupidPlayer;
   private _state:BehaviorSubject<StupidPlayerState>;
@@ -27,7 +25,7 @@ class StupidPlayer {
 
   constructor() {
     this._id = "deadbeef-d2c1-11e6-9376-beefdead";//uuid.v1();  // FIXED for now
-    this._stupidPlayer = new stupid();
+    this._stupidPlayer = new StupidPlayer();
 
         //initial state
     this._state = new BehaviorSubject(<StupidPlayerState>{
@@ -139,4 +137,4 @@ class StupidPlayer {
 
 }
 
-export {StupidPlayer as Player}
+export {Player as Player}
