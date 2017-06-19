@@ -23,7 +23,7 @@ jspm_packages
 .node_repl_history
 
 # plugins
-src/plugins/**/*
+
 
 # Mac stuff
 .DS_Store
