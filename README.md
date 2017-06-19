@@ -4,8 +4,15 @@
 
 This project implements the Volkswagen Infotainment Web Interface as published under [https://www.w3.org/Submission/2016/01/](https://www.w3.org/Submission/2016/01/).
 
+## Clone the repo
+This sofwtare uses git submodules, so please clone recursively via
 
-### Prerequisites
+```
+$ git clone https://github.com/wz1337/rsiServer.git --recursive
+```
+
+
+## Prerequisites
 
 This project uses Gulp and TypeScript which needs to be available globally, so please make them available via
 
@@ -13,14 +20,14 @@ This project uses Gulp and TypeScript which needs to be available globally, so p
 $ npm install gulp typescript -g
 ```
 
-#### Install local dependencies
+### Install local dependencies
 To install the server's dependencies, run the following command
 
 ```sh
 $ npm install
 ```
 
-##### known issues
+#### known issues
 
 If you are developing on Windows or Linux, you might experience issue when using above command, because the lame dependency has to compile per platform.
 
@@ -83,6 +90,19 @@ after you `gulp build` it
 |----------------|-----------------|--------|------------------------------------------------|
 | --port         | -p              | number | the port number to listen on                   |
 | --verbosity    | -v              | string | the winston log level to plot into the console |
+
+## Plugins
+The server uses so called plugins to provide service logic and its interfaces. The plugins can be found as `rsp.*` repositories on https://github.com.
+
+Known and officially supported plugins as of today are:
+
+| service      | repositry url                                   |
+|--------------|-------------------------------------------------|
+| media        | https://github.com/wzr1337/rsp.media.git        |
+| medialibrary | https://github.com/wzr1337/rsp.medialibrary.git |
+
+### Install plugins
+To install a plugin, you need to clone the corresponding repository into the `src/plugins` folder. Further down the road, there might an installer, so far plugins a handled as git submodules.
 
 
 ## Examples
