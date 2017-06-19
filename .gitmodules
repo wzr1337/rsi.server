@@ -2,5 +2,5 @@
         path = src/plugins/rsp.media
         url = https://github.com/wzr1337/rsp.media.git
 [submodule "src/plugins/rsp.medialibrary"]
-        path = src/plugins/rsp.medialibrary
-        url = https://github.com/wzr1337/rsp.medialibrary.git
+	path = src/plugins/rsp.medialibrary
+	url = https://github.com/wzr1337/rsp.medialibrary.git
