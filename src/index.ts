@@ -20,6 +20,7 @@ const BASEURI = "/";
 var availableServices:{id:string;name:string;uri:string}[] = [];
 var server:WebServer;
 const logger = rsiLogger.getInstance().getLogger("general");
+var serviceMap:any = {};
 
 /**
  * options to run the server
@@ -73,6 +74,7 @@ var run = (options?:runOptions):Promise<void> => {
             name: service.name,
             uri: BASEURI + service.name.toLowerCase() + "/"
           });
+          serviceMap[service.name] = service;
           server.app.get(BASEURI + service.name.toLowerCase() + "/", serviceGET(service));
           logger.info("Loading Plugin:", service.name);
           service.resources.map((resource:Resource) => {
@@ -477,5 +479,26 @@ function filterByKeys(inputObject:any, keep:string[]):Object {
   }
   return result;
 };
+
+
+/**
+ * Globally retrieves an element by it`s id across all services and resources
+ *
+ * @param {string} id the id of the object to get
+ * @returns {any} the raw data of the object
+ */
+function getElementById(id: string): any {
+    let el: any;
+    availableServices.forEach((s: any) => {
+        serviceMap[s.name].resources.forEach((r: Resource) => {
+            let element: any = r.getElement(id);
+            if (element && element.data) {
+                let data = (<BehaviorSubject<Element>>element.data).getValue().data;
+                el = data;
+            }
+        });
+    });
+    return el;
+}
 
 export {server, run, pathof}
