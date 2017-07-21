@@ -368,6 +368,63 @@ const resourceGET = (service:Service, resource:Resource) => {
           return x;
       });
 
+      // Object ref search
+      for (var propName in req.query) {
+        if (req.query.hasOwnProperty(propName)) {
+          if (propName.charAt(0) != '$') {
+            resp = resp.filter((item) => {
+              if (!item.hasOwnProperty(propName)) {
+                return false;
+              }
+              if (typeof item[propName] === 'object') {
+                if (item[propName].id === req.query[propName]) {
+                  return true;
+                }
+              } else if (item[propName] === req.query[propName]) {
+                return true;
+              }
+            });
+          }
+        }
+      }
+
+      // $q Freesearch
+      if (req.query.hasOwnProperty('$q')) {
+        resp = resp.filter((item: any) => {
+          let stringValue: string = JSON.stringify(item);
+          if (stringValue.indexOf(req.query['$q']) != -1) {
+            return item;
+          }
+        });
+      }
+
+      // $fields filtering
+      if (req.query.hasOwnProperty('$fields')) {
+        const fieldsList: Array<string> = req.query['$fields'];
+        const medatoryFields: Array<string> = ['name', 'id', 'uri'];
+        resp = resp.map((item: any) => {
+          let newItem: any = {};
+          for (var i in item) {
+            if (fieldsList.indexOf(i) != -1 || medatoryFields.indexOf(i) != -1) {
+              newItem[i] = item[i];
+            }
+          }
+          return newItem;
+        });
+      }
+
+      // $sorting
+      if (req.query.hasOwnProperty('$sorting')) {
+        const sort: string = req.query['$sorting'];
+        resp = resp.sort((a: any, b: any) => {
+          if (sort.indexOf('-') === 0) {
+            return b[sort] - a[sort];
+          } else {
+            return a[sort] - b[sort];
+          }
+        });
+      }
+
       res.status(StatusCode.OK);
       res.json({
         status: "ok",
