@@ -31,10 +31,10 @@ export interface runOptions {
 }
 
 /**
- * runs a server 
- * 
+ * runs a server
+ *
  * @param options the instance options
- * 
+ *
  * @returns a Promise that resolve on succesful startup of the server
  */
 var run = (options?:runOptions):Promise<void> => {
@@ -56,8 +56,8 @@ var run = (options?:runOptions):Promise<void> => {
 
     /**
      * Plugin loader
-     * 
-     * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer 
+     *
+     * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer
      */
     fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
       if(err) {
@@ -136,7 +136,7 @@ class wsHandler {
   /**
    * check if the Handler is actually handling the event
    * @param event the event url in question
-   * 
+   *
    * return true if instance handles event
    */
   isHandlingEvent(event:string):boolean {
@@ -146,7 +146,7 @@ class wsHandler {
 
   /**
    * unsubscribe a given websocket from all it's subscriptions
-   * 
+   *
    * @param _rsiWebSocket  The WebSocket to be unsubscribed.
    */
   unsubscribeWebSocket = (_rsiWebSocket:rsiWebSocket) => {
@@ -161,7 +161,7 @@ class wsHandler {
 
   /**
    * handling incoming websocket messages
-   * 
+   *
    * @param service   The service name.
    * @param resource  The resource name.
    * @param ws        The WebSocket the client is sending data on.
@@ -255,9 +255,9 @@ class wsHandler {
 
 /**
  * retrieve all resources of a service
- * 
+ *
  * @param service the service to discover
- * 
+ *
  * returns an express route callback
  */
 const serviceGET = (service:Service) => {
@@ -280,7 +280,7 @@ const serviceGET = (service:Service) => {
 
 /**
  * handling GET requests on element level (retrieve element details).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -318,7 +318,7 @@ const elementGET = (service:Service, resource:Resource) => {
 
 /**
  * handling GET requests on resource level (element listing).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -356,7 +356,7 @@ const resourceGET = (service:Service, resource:Resource) => {
 
 /**
  * handling POST requests on resource level (elment creation).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -387,7 +387,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
 
 /**
  * handling DELETE requests on element level (element removal or property reset).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -418,7 +418,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
 
 /**
  * handling POST requests on element level (modify an existing element).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -451,7 +451,7 @@ const elementPOST = (service:Service, resource:Resource) => {
 
 /**
  * helper for generating a route string
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  * @returns         The combined path use as a route.
@@ -463,7 +463,7 @@ function pathof(baseUri: string, service:Service, resource:Resource) {
 
 /**
  * filters an object by keys
- * 
+ *
  * @param inputObject   the input object
  * @param keep          an array of strings (keys) to keep
  * @returns             the filtered object
@@ -500,5 +500,61 @@ function getElementById(id: string): any {
     });
     return el;
 }
+
+/**
+ * Traverses an element object and resolves all object references and optionally expands them.
+ * @param obj the object to traverse
+ * @param maxLevel maximum expand level (this can be a number for level expansion or field string for field expansion)
+ * @param {number} level the current level of expansion
+ */
+function traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
+    const byLevel: boolean = /^\d+$/.test(maxLevel);
+    let keywords: Array<string>;
+    if (!byLevel) {
+        keywords = maxLevel.split(',');
+    }
+    for (var property in obj) {
+        if (obj.hasOwnProperty(property)) {
+            if (typeof obj[property] == 'object' && !Array.isArray(obj[property])) {
+                let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                let fullObj: any = getElementById(obj[property].id);
+
+                if (expandNode) {
+                    if (fullObj) {
+                        obj[property] = fullObj;
+                    }
+                } else {
+                    if (fullObj) {
+                        obj[property] = {
+                            id: obj[property].id,
+                            uri: obj[property].uri
+                        };
+                    }
+
+                }
+                traverse(obj[property], maxLevel, level + 1);
+            } else if (Array.isArray(obj[property])) {
+                for (let i = 0; i < obj[property].length; i++) {
+                    if (typeof obj[property][i] == 'object') {
+                        let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                        if (expandNode) {
+                            let fullObj: any = getElementById(obj[property][i].id);
+                            if (fullObj) {
+                                obj[property][i] = fullObj;
+                            }
+                        } else {
+                            obj[property][i] = {
+                                id: obj[property][i].id,
+                                uri: obj[property][i].uri
+                            };
+                        }
+                        traverse(obj[property][i], maxLevel, level + 1);
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 export {server, run, pathof}
