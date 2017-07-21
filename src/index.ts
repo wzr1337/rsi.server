@@ -9,6 +9,8 @@ import * as path from "path";
 import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/rsiPlugin";
 import { rsiLogger } from "./log";
 import { splitEvent } from "./helpers";
+import * as queryString from "query-string";
+
 
 declare function require(moduleName: string): any;
 
@@ -189,6 +191,11 @@ class wsHandler {
 
                 this._subscriptions[_rsiWebSocket.id][msg.event] = subject
                   .subscribe((data:Element) => {
+                    const params = getEventParams(msg.event);
+                    let d:any = data.data;
+                    const expandLevel: any = params.$expand ? params.$expand : 0;
+                    traverse(d, expandLevel, 0);
+
                     if (! _rsiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
@@ -217,6 +224,15 @@ class wsHandler {
                   let resp = elements.data.map((value:BehaviorSubject<Element>) => {
                     return value.getValue().data;
                   });
+
+                  const params = getEventParams(msg.event);
+                  const expandLevel: any = params.$expand ? params.$expand : 0;
+
+                  resp = resp.map((x: any) =>{
+                      traverse(x, expandLevel, 0);
+                      return x;
+                  });
+
                   if(! _rsiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                 }
                 else {;
@@ -302,6 +318,10 @@ const elementGET = (service:Service, resource:Resource) => {
       if (req.query.hasOwnProperty("$fields")) {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
       }
+
+      const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+      traverse(data, expandLevel, 0);
+
       //respond
       res.status(StatusCode.OK);
       res.json({
@@ -341,6 +361,13 @@ const resourceGET = (service:Service, resource:Resource) => {
       let resp = elements.data.map((value:BehaviorSubject<Element>) => {
         return value.getValue().data;
       });
+
+      const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+      resp = resp.map((x: any) => {
+          traverse(x, expandLevel, 0);
+          return x;
+      });
+
       res.status(StatusCode.OK);
       res.json({
         status: "ok",
@@ -554,6 +581,12 @@ function traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: num
             }
         }
     }
+}
+
+const getEventParams = (value:string)=> {
+    value = value.substring(value.lastIndexOf('?'));
+    const parsed = queryString.parse(value);
+    return parsed;
 }
 
 
