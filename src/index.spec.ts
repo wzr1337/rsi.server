@@ -88,7 +88,7 @@ describe("operate on /", () => {
 });
 
 describe("operate on resource level", () => {
-    it("should return a list of resources on GET /media/", (done:DoneFn) => {
+    xit("should return a list of resources on GET /media/", (done:DoneFn) => {
       request([BASEURI, "media"].join("/"), {method: "GET"}, (error, response, body) => {
         if (error) {
           console.log(error, response, body);
