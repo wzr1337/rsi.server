@@ -33,6 +33,9 @@ before_install:
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
 
+  #prepare for node-gyp
+  - sudo apt-get install build-essential node-gyp
+
   # Run actual build commands next
   - npm install -g gulp@3.9.1
 install:
