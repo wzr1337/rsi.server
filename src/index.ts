@@ -9,6 +9,8 @@ import * as path from "path";
 import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugins/rsiPlugin";
 import { rsiLogger } from "./log";
 import { splitEvent } from "./helpers";
+import * as queryString from "query-string";
+
 
 declare function require(moduleName: string): any;
 
@@ -20,6 +22,7 @@ const BASEURI = "/";
 var availableServices:{id:string;name:string;uri:string}[] = [];
 var server:WebServer;
 const logger = rsiLogger.getInstance().getLogger("general");
+var serviceMap:any = {};
 
 /**
  * options to run the server
@@ -30,10 +33,10 @@ export interface runOptions {
 }
 
 /**
- * runs a server 
- * 
+ * runs a server
+ *
  * @param options the instance options
- * 
+ *
  * @returns a Promise that resolve on succesful startup of the server
  */
 var run = (options?:runOptions):Promise<void> => {
@@ -55,8 +58,8 @@ var run = (options?:runOptions):Promise<void> => {
 
     /**
      * Plugin loader
-     * 
-     * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer 
+     *
+     * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer
      */
     fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
       if(err) {
@@ -73,6 +76,7 @@ var run = (options?:runOptions):Promise<void> => {
             name: service.name,
             uri: BASEURI + service.name.toLowerCase() + "/"
           });
+          serviceMap[service.name] = service;
           server.app.get(BASEURI + service.name.toLowerCase() + "/", serviceGET(service));
           logger.info("Loading Plugin:", service.name);
           service.resources.map((resource:Resource) => {
@@ -134,7 +138,7 @@ class wsHandler {
   /**
    * check if the Handler is actually handling the event
    * @param event the event url in question
-   * 
+   *
    * return true if instance handles event
    */
   isHandlingEvent(event:string):boolean {
@@ -144,7 +148,7 @@ class wsHandler {
 
   /**
    * unsubscribe a given websocket from all it's subscriptions
-   * 
+   *
    * @param _rsiWebSocket  The WebSocket to be unsubscribed.
    */
   unsubscribeWebSocket = (_rsiWebSocket:rsiWebSocket) => {
@@ -159,7 +163,7 @@ class wsHandler {
 
   /**
    * handling incoming websocket messages
-   * 
+   *
    * @param service   The service name.
    * @param resource  The resource name.
    * @param ws        The WebSocket the client is sending data on.
@@ -187,6 +191,11 @@ class wsHandler {
 
                 this._subscriptions[_rsiWebSocket.id][msg.event] = subject
                   .subscribe((data:Element) => {
+                    const params = getEventParams(msg.event);
+                    let d:any = data.data;
+                    const expandLevel: any = params.$expand ? params.$expand : 0;
+                    traverse(d, expandLevel, 0);
+
                     if (! _rsiWebSocket.sendData(msg.event, data.data)) subject.complete();
                     },
                     (err:any) => {
@@ -215,6 +224,15 @@ class wsHandler {
                   let resp = elements.data.map((value:BehaviorSubject<Element>) => {
                     return value.getValue().data;
                   });
+
+                  const params = getEventParams(msg.event);
+                  const expandLevel: any = params.$expand ? params.$expand : 0;
+
+                  resp = resp.map((x: any) =>{
+                      traverse(x, expandLevel, 0);
+                      return x;
+                  });
+
                   if(! _rsiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                 }
                 else {;
@@ -253,9 +271,9 @@ class wsHandler {
 
 /**
  * retrieve all resources of a service
- * 
+ *
  * @param service the service to discover
- * 
+ *
  * returns an express route callback
  */
 const serviceGET = (service:Service) => {
@@ -278,7 +296,7 @@ const serviceGET = (service:Service) => {
 
 /**
  * handling GET requests on element level (retrieve element details).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -300,6 +318,10 @@ const elementGET = (service:Service, resource:Resource) => {
       if (req.query.hasOwnProperty("$fields")) {
         data = filterByKeys(data ,["id", "name", "uri"].concat(req.query["$fields"].split(",")));
       }
+
+      const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+      traverse(data, expandLevel, 0);
+
       //respond
       res.status(StatusCode.OK);
       res.json({
@@ -316,7 +338,7 @@ const elementGET = (service:Service, resource:Resource) => {
 
 /**
  * handling GET requests on resource level (element listing).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -339,6 +361,13 @@ const resourceGET = (service:Service, resource:Resource) => {
       let resp = elements.data.map((value:BehaviorSubject<Element>) => {
         return value.getValue().data;
       });
+
+      const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+      resp = resp.map((x: any) => {
+          traverse(x, expandLevel, 0);
+          return x;
+      });
+
       res.status(StatusCode.OK);
       res.json({
         status: "ok",
@@ -354,7 +383,7 @@ const resourceGET = (service:Service, resource:Resource) => {
 
 /**
  * handling POST requests on resource level (elment creation).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -385,7 +414,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
 
 /**
  * handling DELETE requests on element level (element removal or property reset).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -416,7 +445,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
 
 /**
  * handling POST requests on element level (modify an existing element).
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  */
@@ -449,7 +478,7 @@ const elementPOST = (service:Service, resource:Resource) => {
 
 /**
  * helper for generating a route string
- * 
+ *
  * @param service   The service name.
  * @param resource  The resource name.
  * @returns         The combined path use as a route.
@@ -461,7 +490,7 @@ function pathof(baseUri: string, service:Service, resource:Resource) {
 
 /**
  * filters an object by keys
- * 
+ *
  * @param inputObject   the input object
  * @param keep          an array of strings (keys) to keep
  * @returns             the filtered object
@@ -477,5 +506,88 @@ function filterByKeys(inputObject:any, keep:string[]):Object {
   }
   return result;
 };
+
+
+/**
+ * Globally retrieves an element by it`s id across all services and resources
+ *
+ * @param {string} id the id of the object to get
+ * @returns {any} the raw data of the object
+ */
+function getElementById(id: string): any {
+    let el: any;
+    availableServices.forEach((s: any) => {
+        serviceMap[s.name].resources.forEach((r: Resource) => {
+            let element: any = r.getElement(id);
+            if (element && element.data) {
+                let data = (<BehaviorSubject<Element>>element.data).getValue().data;
+                el = data;
+            }
+        });
+    });
+    return el;
+}
+
+/**
+ * Traverses an element object and resolves all object references and optionally expands them.
+ * @param obj the object to traverse
+ * @param maxLevel maximum expand level (this can be a number for level expansion or field string for field expansion)
+ * @param {number} level the current level of expansion
+ */
+function traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
+    const byLevel: boolean = /^\d+$/.test(maxLevel);
+    let keywords: Array<string>;
+    if (!byLevel) {
+        keywords = maxLevel.split(',');
+    }
+    for (var property in obj) {
+        if (obj.hasOwnProperty(property)) {
+            if (typeof obj[property] == 'object' && !Array.isArray(obj[property])) {
+                let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                let fullObj: any = getElementById(obj[property].id);
+
+                if (expandNode) {
+                    if (fullObj) {
+                        obj[property] = fullObj;
+                    }
+                } else {
+                    if (fullObj) {
+                        obj[property] = {
+                            id: obj[property].id,
+                            uri: obj[property].uri
+                        };
+                    }
+
+                }
+                traverse(obj[property], maxLevel, level + 1);
+            } else if (Array.isArray(obj[property])) {
+                for (let i = 0; i < obj[property].length; i++) {
+                    if (typeof obj[property][i] == 'object') {
+                        let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                        if (expandNode) {
+                            let fullObj: any = getElementById(obj[property][i].id);
+                            if (fullObj) {
+                                obj[property][i] = fullObj;
+                            }
+                        } else {
+                            obj[property][i] = {
+                                id: obj[property][i].id,
+                                uri: obj[property][i].uri
+                            };
+                        }
+                        traverse(obj[property][i], maxLevel, level + 1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+const getEventParams = (value:string)=> {
+    value = value.substring(value.lastIndexOf('?'));
+    const parsed = queryString.parse(value);
+    return parsed;
+}
+
 
 export {server, run, pathof}
