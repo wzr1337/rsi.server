@@ -1,5 +1,5 @@
 {
-  "name": "viwiserver",
+  "name": "rsiserver",
   "version": "0.0.4-pre1",
   "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as public in 2016 by W3C",
   "main": "index.ts",
@@ -11,10 +11,11 @@
     "start": "npm run serve",
     "build:docker": "docker build -t viwi-server ."
   },
+  "repository": "https://github.com/wtr1337/rsiserver.git",
   "author": "Dr. Patrick Bartsch",
   "license": "MIT",
-  "engines" : {
-    "node" : ">=6.7.0"
+  "engines": {
+    "node": ">=6.7.0"
   },
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
@@ -25,7 +26,7 @@
     "express": "^4.14.0",
     "glob": "^7.1.1",
     "http": "0.0.0",
-    "stupid-player": "git+https://github.com/wzr1337/stupid-player.git#develop",
+    "stupid-player": "^0.3.1",
     "uuid": "^3.0.1",
     "winston": "^2.3.1",
     "ws": "^1.1.1"
@@ -37,7 +38,7 @@
     "@types/express": "^4.0.34",
     "@types/jasmine": "^2.5.43",
     "@types/node": "^6.0.65",
-    "@types/request": "0.0.39",
+    "@types/request": "^0.0.45",
     "@types/uuid": "^2.0.29",
     "@types/winston": "^2.2.0",
     "@types/ws": "0.0.37",

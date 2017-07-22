@@ -22,10 +22,7 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
-# unlreleased plugins
-src/plugins/*/
-!src/plugins/media
-!src/plugins/medialibrary
+# plugins
 
 
 # Mac stuff
