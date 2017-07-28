@@ -12,14 +12,10 @@ import { splitEvent } from "./helpers";
 import * as queryString from "query-string";
 import * as globby from 'globby';
 
-
-   // const globby = require('globby');
-
-
 declare function require(moduleName: string): any;
 
 // constants
-const PLUGINDIRS = ['./rsp/*/', './plugins/*/'].map(dir => { console.log(path.join(__dirname, dir)); return path.join(__dirname, dir); });
+const PLUGINDIRS = ['./rsp/*/', './plugins/*/'].map(dir => { return path.join(__dirname, dir); });
 const BASEURI = "/";
 
 // globals
