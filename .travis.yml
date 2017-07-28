@@ -23,6 +23,7 @@ addons:
 env:
   - http_proxy=''
   - HTTP_PROXY=''
+  - AUDIODEV=null
 
 git:
   submodules: false
