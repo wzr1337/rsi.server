@@ -49,4 +49,5 @@ before_install:
 install:
   - npm install
 script:
+  - export AUDIODEV=null
   - npm test
