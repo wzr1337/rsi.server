@@ -21,9 +21,8 @@ addons:
 
 # proxy reset for tests
 env:
-  - http_proxy=''
-  - HTTP_PROXY=''
-  - AUDIODEV=null
+  - http_proxy='' AUDIODEV=null
+  - HTTP_PROXY='' AUDIODEV=null
 
 git:
   submodules: false
