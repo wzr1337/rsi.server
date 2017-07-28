@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@reactivex/rxjs": "^5.0.2",
+    "@types/globby": "^0.6.0",
     "@types/query-string": "^4.3.1",
     "body-parser": "^1.15.2",
     "command-line-args": "^3.0.5",
@@ -26,6 +27,7 @@
     "cors": "^2.8.3",
     "express": "^4.14.0",
     "glob": "^7.1.1",
+    "globby": "^6.1.0",
     "http": "0.0.0",
     "query-string": "^4.3.4",
     "stupid-player": "^0.3.1",

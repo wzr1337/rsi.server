@@ -55,11 +55,15 @@ gulp.task('copycdn', () => {
 gulp.task('copyjson', () => {
    gulp.src('./src/plugins/**/*.json')
    .pipe(gulp.dest('./bin/plugins'));
+   gulp.src('./src/rsp/**/*.json')
+   .pipe(gulp.dest('./bin/rsp'));
 });
 
 gulp.task('copyPluginData', () => {
    gulp.src('./src/plugins/**/data/**/*')
    .pipe(gulp.dest('./bin/plugins/'));
+    gulp.src('./src/rsp/**/data/**/*')
+   .pipe(gulp.dest('./bin/rsp/'));
 });
 
 gulp.task('changelog', function () {

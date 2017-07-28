@@ -10,12 +10,16 @@ import { Service, Resource, Element, ResourceUpdate, StatusCode } from "./plugin
 import { rsiLogger } from "./log";
 import { splitEvent } from "./helpers";
 import * as queryString from "query-string";
+import * as globby from 'globby';
+
+
+   // const globby = require('globby');
 
 
 declare function require(moduleName: string): any;
 
 // constants
-const PLUGINDIR = path.join(__dirname, "plugins");
+const PLUGINDIRS = ['./rsp/*/', './plugins/*/'].map(dir => { console.log(path.join(__dirname, dir)); return path.join(__dirname, dir); });
 const BASEURI = "/";
 
 // globals
@@ -61,13 +65,9 @@ var run = (options?:runOptions):Promise<void> => {
      *
      * browses the PLUGINDIR for available plugins and registers them with the rsi sevrer
      */
-    fs.readdir(path.join(__dirname, "plugins"), (err:NodeJS.ErrnoException, files: string[]) => {
-      if(err) {
-        throw err;
-      }
+    globby(PLUGINDIRS).then((paths:string[]) => {
 
-      files.forEach(file => {
-        let plugin = path.join(PLUGINDIR, file);
+      paths.forEach((plugin:string) => {
         if(fs.lstatSync(plugin).isDirectory()) {
           let _plugin = require(plugin);
           let service:Service = new _plugin.Service();
@@ -121,6 +121,8 @@ var run = (options?:runOptions):Promise<void> => {
         });
       });
       resolve();
+    }, (err:any) => {
+      logger.log("error", err);
     });
   });
 };
