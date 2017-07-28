@@ -21,8 +21,11 @@ addons:
 
 # proxy reset for tests
 env:
-  - http_proxy='' AUDIODEV=null
-  - HTTP_PROXY='' AUDIODEV=null
+  global:
+      AUDIODEV=null
+  
+  - http_proxy=''
+  - HTTP_PROXY=''
 
 git:
   submodules: false
@@ -31,7 +34,9 @@ before_install:
   # init the plugins / submodules
   - git submodule update --init
   # install alsa stuff
-  - sudo apt-get install libasound2-dev
+  - sudo apt-get install libasound2-dev alsa-utils alsa-oss
+  # set dummy card for sound
+  - sudo modprobe snd-dummy
   # Link gcc-6 and g++-6 to their standard commands
   - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
   - sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
