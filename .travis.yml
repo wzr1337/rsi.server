@@ -22,7 +22,7 @@ addons:
 # proxy reset for tests
 env:
   global:
-      - AUDIODEV=null
+    - AUDIODEV=null
   matrix: 
     - http_proxy=''
     - HTTP_PROXY=''
@@ -49,6 +49,8 @@ before_install:
   - export CXX=/usr/bin/g++-6
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
+  # use dummy device for sound
+  - sudo modprobe snd-dummy
 
   #prepare for node-gyp
   - sudo apt-get install build-essential node-gyp
@@ -58,5 +60,4 @@ before_install:
 install:
   - npm install
 script:
-  - export AUDIODEV=null
   - npm test
