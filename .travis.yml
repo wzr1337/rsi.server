@@ -58,7 +58,7 @@ script:
   - sudo modprobe snd-dummy
   
   # add the current user to the audio group
-  echo "Adding $USER to audio group"
+  - echo "Adding $USER to audio group"
   - sudo usermod -aG audio "$USER"
 
   # run the tests
