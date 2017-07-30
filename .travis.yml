@@ -56,12 +56,12 @@ install:
 script:
   # use dummy device for sound
   - sudo modprobe snd-dummy
-
-  - sudo pactl list
   
   # add the current user to the audio group
   - echo "Adding $USER to audio group"
   - sudo usermod -aG audio "$USER"
+
+  - sudo pactl list
 
   # run the tests
   - npm test
