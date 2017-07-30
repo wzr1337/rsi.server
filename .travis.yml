@@ -35,7 +35,6 @@ before_install:
   # init the plugins / submodules
   - git submodule update --init
 
-  - sudo usermod -a -G audio travis
   # install alsa stuff
   - sudo apt-get install -y portaudio19-dev
   - sudo apt-get install -y libasound2-dev alsa-utils alsa-oss
@@ -58,6 +57,7 @@ before_install:
   # Run actual build commands next
   - npm install -g gulp@3.9.1
 install:
+  - sudo usermod -aG audio "$USER"
   - npm install
 script:
   - npm test
