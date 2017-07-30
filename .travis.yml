@@ -57,6 +57,8 @@ script:
   # use dummy device for sound
   - sudo modprobe snd-dummy
   - sudo export AUDIODEV=null
+
+  - pactl list
   
   # add the current user to the audio group
   - echo "Adding $USER to audio group"
