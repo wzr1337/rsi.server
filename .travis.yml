@@ -36,10 +36,7 @@ before_install:
   - git submodule update --init
 
   # install alsa stuff
-  - sudo apt-get install -y portaudio19-dev
   - sudo apt-get install -y libasound2-dev alsa-utils alsa-oss
-  # set dummy card for sound
-  - sudo modprobe snd-dummy
   # Link gcc-6 and g++-6 to their standard commands
   - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
   - sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
@@ -48,8 +45,6 @@ before_install:
   - export CXX=/usr/bin/g++-6
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
-  # use dummy device for sound
-  - sudo modprobe snd-dummy
 
   #prepare for node-gyp
   - sudo apt-get install build-essential node-gyp
@@ -57,7 +52,14 @@ before_install:
   # Run actual build commands next
   - npm install -g gulp@3.9.1
 install:
-  - sudo usermod -aG audio "$USER"
   - npm install
 script:
+  # use dummy device for sound
+  - sudo modprobe snd-dummy
+  
+  # add the current user to the audio group
+  echo "Adding $USER to audio group"
+  - sudo usermod -aG audio "$USER"
+
+  # run the tests
   - npm test
