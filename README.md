@@ -9,7 +9,7 @@ This project implements the Volkswagen Infotainment Web Interface as published u
 This software uses git submodules, so please clone recursively via
 
 ```
-$ git clone https://github.com/wz1337/rsiServer.git --recursive
+$ git clone https://github.com/wzr1337/rsiServer.git --recursive
 ```
 
 
