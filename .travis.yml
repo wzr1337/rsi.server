@@ -29,7 +29,7 @@ git:
 
 before_install:
   # init the plugins / submodules
-  - git submodule update --init
+  # - git submodule update --init
   # install alsa stuff
   - sudo apt-get install libasound2-dev
   # Link gcc-6 and g++-6 to their standard commands
