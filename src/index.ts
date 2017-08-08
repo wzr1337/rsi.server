@@ -15,7 +15,7 @@ import * as globby from 'globby';
 declare function require(moduleName: string): any;
 
 // constants
-const PLUGINDIRS = ['./rsp/*/', './plugins/*/'].map(dir => { return path.join(__dirname, dir); });
+const PLUGINDIRS = ['./rsp/rsp.*/', './plugins/*/'].map(dir => { return path.join(__dirname, dir); });
 const BASEURI = "/";
 
 // globals
