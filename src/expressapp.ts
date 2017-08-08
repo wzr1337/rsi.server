@@ -55,10 +55,7 @@ class WebServer {
     this.app.use(compression());
 
     //serve static content for cdn
-    this.app.use('/cdn/images', express.static(path.join(__dirname, 'cdn', 'images')));
-
-
-    this.app.use('/cdn2/images', Cdn.getInstance().process());
+    this.app.use('/cdn/images', Cdn.getInstance().process());
 
     // Get port from environment and store in Express.
     this._port = this.normalizePort(process.env.PORT || _port || '3000');
