@@ -44,7 +44,7 @@ class Cdn {
    * 
    * @return a function that takes a response, request and next argument
    */
-  public process():{(req:express.Request, res:express.Response, next:express.NextFunction)} {
+  public process():express.RequestHandler {
     const FILENAME_REGEX = /^.*\/([\w,\s-]+)\/([\w,\s-]+)\/([\w,\s-]+\.[A-Za-z]{3,4})(?:\?.*)?$/;
 
     return (req:express.Request, res:express.Response, next:express.NextFunction) => {
@@ -82,8 +82,9 @@ class Cdn {
     if(!lookup && typeof callback === "function") {
       //filename not yet registered
       this._fileRegistry[path] = callback;
+      return true
     }
-    return lookup;
+    return false;
   }
 }
 
