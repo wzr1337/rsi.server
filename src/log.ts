@@ -2,6 +2,7 @@ import * as winston from "winston";
 
 interface rsiLoggerInstance extends winston.LoggerInstance {};
 
+/** The default log file location */
 const LOGFILE = 'rsiServer.log';
 
 
