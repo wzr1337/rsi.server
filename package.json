@@ -9,7 +9,7 @@
     "debug": "node --inspect --debug-brk ./bin/cli.js",
     "serve": "node ./bin/cli.js",
     "start": "npm run serve",
-    "tsdoc": "./node_modules/.bin/typedoc --mode modules --out docs",
+    "typedoc": "./node_modules/.bin/typedoc --mode modules --out docs",
     "build:docker": "docker build -t viwi-server ."
   },
   "repository": "https://github.com/wtr1337/rsiserver.git",
