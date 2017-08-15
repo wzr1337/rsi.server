@@ -7,6 +7,7 @@ import * as path from "path";
 import http = require('http');
 import { rsiLogger, rsiLoggerInstance } from "./log";
 import { BehaviorSubject, Subject } from '@reactivex/rxjs';
+import { Cdn } from "./cdn";
 
 // create server and listen on provided port (on all network interfaces).
 class WebServer {
@@ -54,7 +55,7 @@ class WebServer {
     this.app.use(compression());
 
     //serve static content for cdn
-    this.app.use('/cdn/images', express.static(path.join(__dirname, 'cdn', 'images')));
+    this.app.use('/cdn/images', Cdn.getInstance().process());
 
     // Get port from environment and store in Express.
     this._port = this.normalizePort(process.env.PORT || _port || '3000');

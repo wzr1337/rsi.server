@@ -14,14 +14,19 @@ import * as globby from 'globby';
 
 declare function require(moduleName: string): any;
 
-// constants
-const PLUGINDIRS = ['./rsp/*/', './plugins/*/'].map(dir => { return path.join(__dirname, dir); });
+/** The directories to look for plugins in (glob support) */
+const PLUGINDIRS = ['./rsp/rsp.*/', './plugins/*/'].map(dir => { return path.join(__dirname, dir); });
+/** the API base Uri "/" by default, you might want to set it to "/API/V1/" or so. */
 const BASEURI = "/";
-
-// globals
-var availableServices:{id:string;name:string;uri:string}[] = [];
-var server:WebServer;
+/** a general logger */
 const logger = rsiLogger.getInstance().getLogger("general");
+
+
+/** a map of avaliable Services  */
+var availableServices:{id:string;name:string;uri:string}[] = [];
+/** the Webserver */
+var server:WebServer;
+/**  a map of registered services*/
 var serviceMap:any = {};
 
 /**
