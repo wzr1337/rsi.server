@@ -40,6 +40,7 @@ $ sudo apt-get install libasound2-dev
 
 **Windows**
 On Windows you will need a visual studio installation to have a working compiler at hand.
+Windows also does not ship with python 2, which is needed for the npm dependency node-gyp. Therefore it is important that python 2 is installed. You can download python 2 from the [official website](https://www.python.org/).
 
 ## Build it
 
