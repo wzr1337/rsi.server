@@ -60,7 +60,10 @@ script:
   #- sudo modprobe snd-pcm-oss
   #- sudo modprobe snd-mixer-oss
   #- sudo modprobe snd-seq-oss
-  - modinfo snd-dummy
+  - lsmod
+  - cat /proc/asound/cards
+  - ls /proc/asound
+  #- modinfo snd-dummy
   
   # add the current user to the audio group
   - echo "Adding $USER to audio group"
