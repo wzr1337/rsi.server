@@ -53,8 +53,6 @@ before_install:
   # Run actual build commands next
   - npm install -g gulp@3.9.1
 install:
-  - echo "boo"
-script:
   # use dummy device for sound and other modules
   - sudo modprobe snd-dummy
   #- sudo modprobe snd-pcm-oss
@@ -63,14 +61,12 @@ script:
   - lsmod
   - cat /proc/asound/cards
   - ls /proc/asound
-  #- modinfo snd-dummy
+  - modinfo snd-dummy
   
   # add the current user to the audio group
   - echo "Adding $USER to audio group"
   - sudo usermod -aG audio "$USER"
-
-  #- sudo pactl list
-
+script:
   # run the tests
   - npm install
   - npm test
