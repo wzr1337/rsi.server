@@ -20,6 +20,8 @@ const PLUGINDIRS = ['./rsp/rsp.*/', './plugins/*/'].map(dir => { return path.joi
 const BASEURI = "/";
 /** a general logger */
 const logger = rsiLogger.getInstance().getLogger("general");
+/** the servers id */
+const ID = '50182B97-1AE1-4701-A6CE-017648990969';
 
 
 /** a map of avaliable Services  */
@@ -50,6 +52,14 @@ var run = (options?:runOptions):Promise<void> => {
     server = new WebServer(options.port);
     server.init(); // need to init
 
+    // repsonse to /$id queries with the servers ID
+    server.app.get(BASEURI + '([\$])id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      // respond
+      res.status(StatusCode.OK);
+      res.send(ID);
+    });
+
+    // response on root level
     server.app.get(BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
       // respond
       res.status(StatusCode.OK);
@@ -80,6 +90,12 @@ var run = (options?:runOptions):Promise<void> => {
           serviceMap[service.name] = service;
           server.app.get(BASEURI + service.name.toLowerCase() + "/", serviceGET(service));
           logger.info("Loading Plugin:", service.name);
+          // repsonse to {{basePath}}/$id queries with the servers ID
+          server.app.get(BASEURI + service.name.toLowerCase() + '/([\$])id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            // respond
+            res.status(StatusCode.OK);
+            res.send(service.id);
+          });
           service.resources.map((resource:Resource) => {
             let basePath = BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
             server.app.get(basePath, resourceGET(service, resource));               //READ
