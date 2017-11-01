@@ -78,7 +78,8 @@ var run = (options?:runOptions):Promise<void> => {
      */
     globby(PLUGINDIRS).then((paths:string[]) => {
 
-      paths.forEach((plugin:string) => {
+      for (var index = 0; index < paths.length; index++) {
+        var plugin:string = paths[index];
         if(fs.lstatSync(plugin).isDirectory()) {
           let _plugin = require(plugin);
           let service:Service = new _plugin.Service();
@@ -105,8 +106,8 @@ var run = (options?:runOptions):Promise<void> => {
             server.app.delete(basePath + ':id', elementDELETE(service, resource));  //DELETE
             wsMapping[basePath] = new wsHandler(service, resource);
           });
-        }
-      });
+        };
+      }
 
       server.ws.on('connection', (ws:any) => {                                //subscribe|unsubscribe
         var _rsiWebSocket = new rsiWebSocket(ws);
@@ -137,10 +138,31 @@ var run = (options?:runOptions):Promise<void> => {
           }
         });
       });
+
+      /**
+       * general error handling
+       */
+      server.app.use((err:Error, req:express.Request, res:express.Response, next:express.NextFunction) => {
+        logger.log("error", err.stack);
+        res.status(500).json({ status: "error", code: 500, error: err.message });
+      });
+      logger.log('info', "registered general Errorhandler");
+
+      /**
+      * general handler no route applies to all routes, not registered
+      */
+      server.app.use((req:express.Request, res:express.Response, next:express.NextFunction) => {
+        res.status(404);
+        res.json({status: "error", code: 404, message: "Not found"});
+      });
+
+      // resolve promise
       resolve();
+
     }, (err:any) => {
       logger.log("error", err);
     });
+
   });
 };
 
