@@ -347,7 +347,7 @@ const elementGET = (service:Service, resource:Resource) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.getElement) {
-      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).json({status: "error", code:StatusCode.NOT_IMPLEMENTED, message: "Not Implemented"});
       return;
     }
 
@@ -371,7 +371,7 @@ const elementGET = (service:Service, resource:Resource) => {
       });
     }
     else {
-      res.status(404).send();
+      res.status(StatusCode.NOT_FOUND).json({status: "error", code:StatusCode.NOT_FOUND, message: "Not Found"});
     }
   };
 };
@@ -388,7 +388,7 @@ const resourceGET = (service:Service, resource:Resource) => {
   if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.getResource) {
-      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).json({status: "error", code:StatusCode.NOT_IMPLEMENTED, message: "Not Implemented"});
       return;
     }
     // get all available renderes and map their representation to JSON compatible values
@@ -474,7 +474,7 @@ const resourceGET = (service:Service, resource:Resource) => {
       return;
     }
     else {
-      res.status(StatusCode.NOT_FOUND).send("Not found");
+      res.status(StatusCode.NOT_FOUND).json({status: "error", code:StatusCode.NOT_FOUND, message: "Not Found"});
     }
   };
 };
@@ -490,7 +490,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
   if(resource.createElement) { logger.info("POST  ", resourcePath, "registered") };
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if(!resource.createElement) {
-      res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).json({status: "error", code:StatusCode.NOT_IMPLEMENTED, message: "Not Implemented"});
       return;
     }
     let newElement = resource.createElement(req.body);
@@ -505,7 +505,7 @@ const resourcePOST = (service:Service, resource:Resource) => {
         res.json(newElement);
       }
     else {
-      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({status: "error", code:StatusCode.INTERNAL_SERVER_ERROR, message: "Internal Server Error"});
     }
   };
 };
@@ -522,7 +522,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     if(!resource.deleteElement) {
-      res.status(501).send("Not Implemented");
+      res.status(StatusCode.NOT_IMPLEMENTED).json({status: "error", code:StatusCode.NOT_IMPLEMENTED, message: "Not Implemented"});
       return;
     }
     // proprietary element deletion
@@ -534,7 +534,7 @@ const elementDELETE = (service:Service, resource:Resource) => {
       res.json(deletionResponse);
     }
     else {
-      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({status: "error", code:StatusCode.INTERNAL_SERVER_ERROR, message: "Internal Server Error"});
       return;
     }
   };
