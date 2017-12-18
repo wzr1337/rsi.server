@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "gulp test",
-    "watch": "node ./node_modules/nodemon/bin/nodemon.js cli.js",
+    "watch": "gulp watch",
     "debug": "node --inspect --debug-brk ./bin/cli.js",
     "serve": "node ./bin/cli.js",
     "start": "npm run serve",
