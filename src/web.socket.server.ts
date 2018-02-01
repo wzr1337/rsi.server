@@ -1,4 +1,4 @@
-import { rsiLogger, rsiLoggerInstance } from './log';
+import { rsiLogger, rsiLoggerInstance } from '@rsi/core';
 import * as uuid from 'uuid';
 
 

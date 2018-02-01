@@ -5,7 +5,7 @@ import * as cors from 'cors';
 import * as compression from 'compression';
 import * as path from 'path';
 import http = require('http');
-import { rsiLogger, rsiLoggerInstance } from './log';
+import { rsiLogger, rsiLoggerInstance } from '@rsi/core';
 import { Cdn } from './cdn';
 
 // create server and listen on provided port (on all network interfaces).
@@ -17,7 +17,8 @@ export class WebServer {
   private _logger: rsiLoggerInstance;
   
   constructor(_port?: number, private _BASEURI: string = '/') {
-    var _logger = this._logger = rsiLogger.getInstance().getLogger('general');
+    
+    this._logger = rsiLogger.getInstance().getLogger('general');
     this.app = express();
     
     var whitelist = ['127.0.0.1', 'localhost'];

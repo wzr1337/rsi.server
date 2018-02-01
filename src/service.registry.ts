@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser';
 import * as WebSocketServer from 'ws';
 import * as cors from 'cors';
 import * as compression from 'compression';
-import { rsiLogger, rsiLoggerInstance } from './log';
+import { rsiLogger, rsiLoggerInstance } from '@rsi/core';
 import { splitEvent } from './helpers';
 import http = require('http');
 import * as uuid from 'uuid';

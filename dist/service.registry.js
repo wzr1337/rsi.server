@@ -4,7 +4,7 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var cors = require("cors");
 var compression = require("compression");
-var log_1 = require("./log");
+var core_1 = require("@rsi/core");
 var http = require("http");
 var uuid = require("uuid");
 // create server and listen on provided port (on all network interfaces).
@@ -34,7 +34,7 @@ var ServiceRegistry = /** @class */ (function () {
             _this.app = null;
         };
         this._port = _port;
-        var _logger = this._logger = log_1.rsiLogger.getInstance().getLogger('general');
+        var _logger = this._logger = core_1.rsiLogger.getInstance().getLogger('general');
         this.app = express();
         var whitelist = ['127.0.0.1', 'localhost'];
         var corsOpts = {

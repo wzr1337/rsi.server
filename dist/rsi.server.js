@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var log_1 = require("./log");
-var web_server_1 = require("./web.server");
 var core_1 = require("@rsi/core");
+var web_server_1 = require("./web.server");
+var core_2 = require("@rsi/core");
 var web_socket_handler_1 = require("./web.socket.handler");
 var web_socket_server_1 = require("./web.socket.server");
 var helpers_1 = require("./helpers");
@@ -10,7 +10,7 @@ var request = require("request");
 var RsiServer = /** @class */ (function () {
     function RsiServer() {
         var _this = this;
-        this.logger = log_1.rsiLogger.getInstance().getLogger('general');
+        this.logger = core_1.rsiLogger.getInstance().getLogger('general');
         this.BASEURI = '/';
         this.availableServices = [];
         this.wsMapping = {};
@@ -18,22 +18,24 @@ var RsiServer = /** @class */ (function () {
         this.serviceMap = {};
         this.port = 3000;
         this.serviceRegistry = '';
+        /** the servers id */
+        this.ID = '50182B97-1AE1-4701-A6CE-017648990969';
         /**
-         * handling POST requests on resource level (elment creation).
-         *
-         * @param service   The service name.
-         * @param resource  The resource name.
-         */
+        * handling POST requests on resource level (elment creation).
+        *
+        * @param service   The service name.
+        * @param resource  The resource name.
+        */
         this.resourcePOST = function (service, resource) {
             var resourcePath = helpers_1.pathof(_this.BASEURI, service, resource);
             return function (req, res, next) {
                 if (!resource.createElement) {
-                    res.status(core_1.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+                    res.status(core_2.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
                     return;
                 }
                 var newElement = resource.createElement(req.body);
                 if (newElement.status === 'ok') {
-                    res.status(core_1.StatusCode.CREATED);
+                    res.status(core_2.StatusCode.CREATED);
                     res.header({ 'Location': newElement.data.getValue().data.uri });
                     res.json({
                         status: 'ok'
@@ -43,30 +45,30 @@ var RsiServer = /** @class */ (function () {
                     res.json(newElement);
                 }
                 else {
-                    res.status(core_1.StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
+                    res.status(core_2.StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
                 }
             };
         };
         this.serviceGETSpec = function (service) {
             return function (req, res, next) {
                 if (service != null) {
-                    res.status(core_1.StatusCode.OK);
+                    res.status(core_2.StatusCode.OK);
                     res.json({
                         status: 'ok',
                         data: service.getSpecification()
                     });
                 }
                 else {
-                    res.status(core_1.StatusCode.NOT_FOUND).send('Internal Server Error');
+                    res.status(core_2.StatusCode.NOT_FOUND).send('Internal Server Error');
                 }
             };
         };
         /**
-         * handling DELETE requests on element level (element removal or property reset).
-         *
-         * @param service   The service name.
-         * @param resource  The resource name.
-         */
+        * handling DELETE requests on element level (element removal or property reset).
+        *
+        * @param service   The service name.
+        * @param resource  The resource name.
+        */
         this.elementDELETE = function (service, resource) {
             var elementPath = helpers_1.pathof(_this.BASEURI, service, resource) + '/:id';
             return function (req, res, next) {
@@ -78,11 +80,11 @@ var RsiServer = /** @class */ (function () {
                 var deletionResponse = resource.deleteElement(req.params.id);
                 // respond
                 if (deletionResponse.status && deletionResponse.status === 'ok' || deletionResponse.status === 'error') {
-                    res.status(deletionResponse.code || (deletionResponse.status === 'ok') ? core_1.StatusCode.OK : core_1.StatusCode.INTERNAL_SERVER_ERROR);
+                    res.status(deletionResponse.code || (deletionResponse.status === 'ok') ? core_2.StatusCode.OK : core_2.StatusCode.INTERNAL_SERVER_ERROR);
                     res.json(deletionResponse);
                 }
                 else {
-                    res.status(core_1.StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
+                    res.status(core_2.StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
                     return;
                 }
             };
@@ -108,9 +110,15 @@ var RsiServer = /** @class */ (function () {
             _this.shuttingDown = false;
             _this.server = new web_server_1.WebServer(options.port, _this.BASEURI);
             _this.server.init(); // need to init
+            // repsonse to /$id queries with the servers ID
+            _this.server.app.get(_this.BASEURI + '([\$])id', function (req, res, next) {
+                // respond
+                res.status(core_2.StatusCode.OK);
+                res.send(_this.ID);
+            });
             _this.server.app.get(_this.BASEURI, function (req, res, next) {
                 // respond
-                res.status(core_1.StatusCode.OK);
+                res.status(core_2.StatusCode.OK);
                 res.json({
                     status: 'ok',
                     data: _this.availableServices
@@ -133,7 +141,7 @@ var RsiServer = /** @class */ (function () {
                         msg = JSON.parse(message);
                     }
                     catch (err) {
-                        rsiWebSocket.sendError(msg ? msg.event : '', core_1.StatusCode.BAD_REQUEST, new Error(err));
+                        rsiWebSocket.sendError(msg ? msg.event : '', core_2.StatusCode.BAD_REQUEST, new Error(err));
                         return;
                     }
                     var event = helpers_1.splitEvent(msg.event);
@@ -142,7 +150,7 @@ var RsiServer = /** @class */ (function () {
                         _this.wsMapping[basePath].handleWebSocketMessages(msg, rsiWebSocket);
                     }
                     else {
-                        rsiWebSocket.sendError(msg.event, core_1.StatusCode.NOT_FOUND, new Error('Not Found'));
+                        rsiWebSocket.sendError(msg.event, core_2.StatusCode.NOT_FOUND, new Error('Not Found'));
                     }
                 });
             });
@@ -167,6 +175,12 @@ var RsiServer = /** @class */ (function () {
         this.serviceMap[service.name] = service;
         this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/', this.serviceGET(service));
         this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/spec', this.serviceGETSpec(service));
+        // repsonse to {{basePath}}/$id queries with the services ID
+        this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/([\$])id', function (req, res, next) {
+            // respond
+            res.status(core_2.StatusCode.OK);
+            res.send(service.id);
+        });
         if (this.serviceRegistry !== '') {
             this.announceService(service);
         }
@@ -212,12 +226,12 @@ var RsiServer = /** @class */ (function () {
         });
     };
     /**
-     * retrieve all resources of a service
-     *
-     * @param service the service to discover
-     *
-     * returns an express route callback
-     */
+    * retrieve all resources of a service
+    *
+    * @param service the service to discover
+    *
+    * returns an express route callback
+    */
     RsiServer.prototype.serviceGET = function (service) {
         var _this = this;
         var resources = service.resources.map(function (res) {
@@ -231,7 +245,7 @@ var RsiServer = /** @class */ (function () {
             if (req.query.hasOwnProperty('$spec') && service.getSpecification()) {
                 result = service.getSpecification();
             }
-            res.status(core_1.StatusCode.OK);
+            res.status(core_2.StatusCode.OK);
             res.json({
                 status: 'ok',
                 data: result
@@ -240,18 +254,18 @@ var RsiServer = /** @class */ (function () {
     };
     ;
     /**
-     * handling GET requests on element level (retrieve element details).
-     *
-     * @param service   The service name.
-     * @param resource  The resource name.
-     */
+    * handling GET requests on element level (retrieve element details).
+    *
+    * @param service   The service name.
+    * @param resource  The resource name.
+    */
     RsiServer.prototype.elementGET = function (service, resource) {
         var _this = this;
         var elementPath = helpers_1.pathof(this.BASEURI, service, resource) + '/:id';
         //if(resource.getElement) { logger.info("GET   ", elementPath, "registered") };
         return function (req, res, next) {
             if (!resource.getElement) {
-                res.status(core_1.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+                res.status(core_2.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
                 return;
             }
             // proprietary element fetching
@@ -266,7 +280,7 @@ var RsiServer = /** @class */ (function () {
                 var expandLevel = req.query['$expand'] ? req.query['$expand'] : 0;
                 _this.elementUtil.traverse(data, expandLevel, 0);
                 //respond
-                res.status(core_1.StatusCode.OK);
+                res.status(core_2.StatusCode.OK);
                 res.json({
                     status: 'ok',
                     data: data
@@ -279,18 +293,18 @@ var RsiServer = /** @class */ (function () {
     };
     ;
     /**
-     * handling GET requests on resource level (element listing).
-     *
-     * @param service   The service name.
-     * @param resource  The resource name.
-     */
+    * handling GET requests on resource level (element listing).
+    *
+    * @param service   The service name.
+    * @param resource  The resource name.
+    */
     RsiServer.prototype.resourceGET = function (service, resource) {
         var _this = this;
         var resourcePath = helpers_1.pathof(this.BASEURI, service, resource);
         //if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
         return function (req, res, next) {
             if (req.query.hasOwnProperty('$spec') && resource.getResourceSpec) {
-                res.status(core_1.StatusCode.OK);
+                res.status(core_2.StatusCode.OK);
                 res.json({
                     status: 'ok',
                     data: resource.getResourceSpec()
@@ -298,7 +312,7 @@ var RsiServer = /** @class */ (function () {
                 return;
             }
             if (!resource.getResource) {
-                res.status(core_1.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+                res.status(core_2.StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
                 return;
             }
             // get all available renderes and map their representation to JSON compatible values
@@ -392,7 +406,7 @@ var RsiServer = /** @class */ (function () {
                         return 0;
                     });
                 }
-                res.status(core_1.StatusCode.OK);
+                res.status(core_2.StatusCode.OK);
                 res.json({
                     status: 'ok',
                     data: resp
@@ -400,17 +414,17 @@ var RsiServer = /** @class */ (function () {
                 return;
             }
             else {
-                res.status(core_1.StatusCode.NOT_FOUND).send('Not found');
+                res.status(core_2.StatusCode.NOT_FOUND).send('Not found');
             }
         };
     };
     ;
     /**
-     * handling POST requests on element level (modify an existing element).
-     *
-     * @param service   The service name.
-     * @param resource  The resource name.
-     */
+    * handling POST requests on element level (modify an existing element).
+    *
+    * @param service   The service name.
+    * @param resource  The resource name.
+    */
     RsiServer.prototype.elementPOST = function (service, resource) {
         var elementPath = helpers_1.pathof(this.BASEURI, service, resource) + '/:id';
         //if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
@@ -419,7 +433,7 @@ var RsiServer = /** @class */ (function () {
             var element = resource.getElement(req.params.id);
             if (element && element.status === 'ok') {
                 var resp = resource.updateElement(req.params.id, req.body);
-                res.status(resp.code || core_1.StatusCode.OK);
+                res.status(resp.code || core_2.StatusCode.OK);
                 res.json({
                     code: resp.code || undefined,
                     status: resp.status,
@@ -427,8 +441,8 @@ var RsiServer = /** @class */ (function () {
                 });
             }
             else {
-                res.status(element ? element.code : core_1.StatusCode.NOT_FOUND).json({
-                    code: element ? element.code : core_1.StatusCode.NOT_FOUND,
+                res.status(element ? element.code : core_2.StatusCode.NOT_FOUND).json({
+                    code: element ? element.code : core_2.StatusCode.NOT_FOUND,
                     status: element ? element.status : 'error',
                     message: element ? element.message : 'Not found.'
                 });

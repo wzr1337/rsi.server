@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var filetype = require("file-type");
-var log_1 = require("../log");
+var core_1 = require("@rsi/core");
 ;
 /**
  * The cdn service provides access to binary data (e.g. images)
@@ -9,7 +9,7 @@ var log_1 = require("../log");
 var Cdn = /** @class */ (function () {
     function Cdn() {
         this._fileRegistry = {};
-        this._logger = log_1.rsiLogger.getInstance().getLogger("cdn2");
+        this._logger = core_1.rsiLogger.getInstance().getLogger("cdn");
         if (Cdn._instance) {
             throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
         }

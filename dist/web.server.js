@@ -6,7 +6,7 @@ var WebSocketServer = require("ws");
 var cors = require("cors");
 var compression = require("compression");
 var http = require("http");
-var log_1 = require("./log");
+var core_1 = require("@rsi/core");
 var cdn_1 = require("./cdn");
 // create server and listen on provided port (on all network interfaces).
 var WebServer = /** @class */ (function () {
@@ -34,7 +34,7 @@ var WebServer = /** @class */ (function () {
             _this._server.close();
             _this.app = null;
         };
-        var _logger = this._logger = log_1.rsiLogger.getInstance().getLogger('general');
+        this._logger = core_1.rsiLogger.getInstance().getLogger('general');
         this.app = express();
         var whitelist = ['127.0.0.1', 'localhost'];
         var corsOpts = {

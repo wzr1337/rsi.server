@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var log_1 = require("./log");
+var core_1 = require("@rsi/core");
 var uuid = require("uuid");
 var RsiWebSocket = /** @class */ (function () {
     function RsiWebSocket(ws) {
         this.ws = ws;
-        this._logger = log_1.rsiLogger.getInstance().getLogger('RsiWebSocket');
+        this._logger = core_1.rsiLogger.getInstance().getLogger('RsiWebSocket');
         this._logger.transports['console'].level = 'silly'; // for debug
         this._id = uuid.v4();
     }

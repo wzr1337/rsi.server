@@ -1,6 +1,6 @@
 import * as filetype from 'file-type';
 import * as fs from "fs";
-import { rsiLogger, rsiLoggerInstance } from "../log";
+import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
 import * as express from 'express';
 
 /**
@@ -23,7 +23,7 @@ class Cdn {
   } = {};
 
   private constructor() {
-    this._logger = rsiLogger.getInstance().getLogger("cdn2");
+    this._logger = rsiLogger.getInstance().getLogger("cdn");
     if (Cdn._instance) {
       throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
     }
