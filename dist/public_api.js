@@ -9,5 +9,7 @@ var PluginLoader_1 = require("./loaders/PluginLoader");
 exports.PluginLoader = PluginLoader_1.PluginLoader;
 var service_registry_1 = require("./service.registry");
 exports.ServiceRegistry = service_registry_1.ServiceRegistry;
+var cdn_1 = require("./cdn");
+exports.Cdn = cdn_1.Cdn;
 exports.pluginpath = path_1.resolve(path_1.join(__dirname, 'plugins'));
 //# sourceMappingURL=public_api.js.map

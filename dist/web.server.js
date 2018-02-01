@@ -5,9 +5,9 @@ var bodyParser = require("body-parser");
 var WebSocketServer = require("ws");
 var cors = require("cors");
 var compression = require("compression");
-var path = require("path");
 var http = require("http");
 var log_1 = require("./log");
+var cdn_1 = require("./cdn");
 // create server and listen on provided port (on all network interfaces).
 var WebServer = /** @class */ (function () {
     function WebServer(_port, _BASEURI) {
@@ -15,8 +15,8 @@ var WebServer = /** @class */ (function () {
         var _this = this;
         this._BASEURI = _BASEURI;
         /**
-         * Event listener for HTTP server "listening" event.
-         */
+        * Event listener for HTTP server "listening" event.
+        */
         this.onListening = function () {
             var addr = _this._server.address();
             var bind = typeof addr === 'string'
@@ -25,8 +25,8 @@ var WebServer = /** @class */ (function () {
             console.log('Listening on ' + bind);
         };
         /**
-         * Shutdown the server
-         */
+        * Shutdown the server
+        */
         this.close = function () {
             _this.ws.close(function () {
                 //console.log("Closed WS");
@@ -41,10 +41,10 @@ var WebServer = /** @class */ (function () {
             origin: function (origin, callback) {
                 if (1 || typeof (origin) === 'undefined') {
                     /**
-                     * The origin may be hidden if the user comes from an ssl encrypted website.
-                     *
-                     * Also: Some browser extensions remove origin and referer from the http-request headers, and therefore the origin property will be empty.
-                     */
+                    * The origin may be hidden if the user comes from an ssl encrypted website.
+                    *
+                    * Also: Some browser extensions remove origin and referer from the http-request headers, and therefore the origin property will be empty.
+                    */
                     callback(null, true);
                 }
                 else {
@@ -67,7 +67,7 @@ var WebServer = /** @class */ (function () {
         });
         this.app.use(compression());
         //serve static content for cdn
-        this.app.use(this._BASEURI + 'cdn/images', express.static(path.join(__dirname, 'cdn', 'images')));
+        this.app.use(this._BASEURI + 'cdn/images', cdn_1.Cdn.getInstance().process());
         // Get port from environment and store in Express.
         this._port = this.normalizePort(process.env.PORT || _port || '3000');
         this.app.set('port', this._port);
@@ -79,8 +79,8 @@ var WebServer = /** @class */ (function () {
         this._server.on('listening', this.onListening);
     };
     /**
-     * Normalize a port into a number, string, or false.
-     */
+    * Normalize a port into a number, string, or false.
+    */
     WebServer.prototype.normalizePort = function (val) {
         var port = parseInt(val, 10);
         if (isNaN(port)) {

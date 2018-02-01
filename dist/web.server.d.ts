@@ -12,15 +12,15 @@ export declare class WebServer {
     constructor(_port?: number, _BASEURI?: string);
     init(): void;
     /**
-     * Normalize a port into a number, string, or false.
-     */
+    * Normalize a port into a number, string, or false.
+    */
     normalizePort(val: any): number | string | boolean;
     /**
-     * Event listener for HTTP server "listening" event.
-     */
+    * Event listener for HTTP server "listening" event.
+    */
     onListening: () => void;
     /**
-     * Shutdown the server
-     */
+    * Shutdown the server
+    */
     close: () => void;
 }
