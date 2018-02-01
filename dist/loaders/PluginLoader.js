@@ -18,17 +18,13 @@ var PluginLoader = /** @class */ (function () {
     };
     PluginLoader.prototype.loadPlugin = function (directory) {
         var _this = this;
-        console.log('Load Plugin ', directory);
         var service;
         var services = [];
         if (fs_1.lstatSync(directory).isDirectory()) {
             var _plugin = require(directory);
-            console.log('Directory ', directory);
-            console.log("Plugin ", _plugin);
             if (_plugin.hasOwnProperty('getPlugins')) {
                 _plugin.getPlugins().forEach(function (serviceClass) {
-                    service = new serviceClass(); //new _plugin.Service();
-                    console.log("Service ", service);
+                    service = new serviceClass();
                     service.pluginDir = directory;
                     if (service.init) {
                         service.init();
@@ -37,14 +33,6 @@ var PluginLoader = /** @class */ (function () {
                     services.push(service);
                 });
             }
-            /*
-            service = _plugin.getPlugins();//new _plugin.Service();
-            service.pluginDir = directory;
-            if (service.init) {
-                service.init();
-            }
-            this.server.addService(service);
-            */
         }
         return services;
     };

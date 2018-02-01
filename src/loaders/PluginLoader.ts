@@ -22,17 +22,13 @@ export class PluginLoader {
     }
 
     public loadPlugin(directory: string): Array<Service> {
-        console.log('Load Plugin ', directory);
         let service: SchemaPlugin;
         const services: Array<Service> = [];
         if (lstatSync(directory).isDirectory()) {
             const _plugin = require(directory);
-            console.log('Directory ', directory);
-            console.log("Plugin ", _plugin);
             if (_plugin.hasOwnProperty('getPlugins')) {
                 _plugin.getPlugins().forEach((serviceClass) => {
-                    service = new serviceClass();//new _plugin.Service();
-                    console.log("Service ", service);
+                    service = new serviceClass();
                     service.pluginDir = directory;
                     if (service.init) {
                         service.init();
@@ -41,15 +37,6 @@ export class PluginLoader {
                     services.push(service);
                 });
             }
-
-            /*
-            service = _plugin.getPlugins();//new _plugin.Service();
-            service.pluginDir = directory;
-            if (service.init) {
-                service.init();
-            }
-            this.server.addService(service);
-            */
         }
         return services;
     }
