@@ -40,3 +40,4 @@ var rsiLogger = /** @class */ (function () {
     return rsiLogger;
 }());
 exports.rsiLogger = rsiLogger;
+//# sourceMappingURL=log.js.map

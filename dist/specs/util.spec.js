@@ -10,3 +10,4 @@ describe('splitEvent', function () {
         done();
     });
 });
+//# sourceMappingURL=util.spec.js.map

@@ -75,3 +75,4 @@ var RsiWebSocket = /** @class */ (function () {
     return RsiWebSocket;
 }());
 exports.RsiWebSocket = RsiWebSocket;
+//# sourceMappingURL=web.socket.server.js.map

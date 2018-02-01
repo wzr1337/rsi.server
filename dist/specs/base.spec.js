@@ -85,3 +85,4 @@ describe('operate on /', function () {
         });
     });
 });
+//# sourceMappingURL=base.spec.js.map

@@ -29,3 +29,4 @@ describe('operate on /', function () {
         });
     });
 });
+//# sourceMappingURL=service.registry.spec.js.map
