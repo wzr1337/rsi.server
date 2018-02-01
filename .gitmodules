@@ -1,6 +1,0 @@
-[submodule "src/rsp/rsp.media"]
-	path = src/rsp/rsp.media
-	url = https://github.com/wzr1337/rsp.media.git
-[submodule "src/rsp/rsp.medialibrary"]
-	path = src/rsp/rsp.medialibrary
-	url = https://github.com/wzr1337/rsp.medialibrary.git
