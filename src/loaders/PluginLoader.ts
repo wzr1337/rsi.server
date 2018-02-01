@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { lstatSync, readdirSync } from 'fs';
 import { RsiServer } from '../rsi.server';
-import { SchemaPlugin } from '@rsi/core';
+import { SchemaPlugin, Service } from '@rsi/core';
 
 export class PluginLoader {
 
@@ -11,27 +11,47 @@ export class PluginLoader {
     }
 
 
-    public loadPlugins(directory: string): Array<SchemaPlugin> {
+    public loadPlugins(directory: string): Array<Service> {
         const files = readdirSync(directory);
-        const services = files.map(file => {
+        let services: Array<Service> = [];
+        files.forEach(file => {
             const plugin = join(directory, file);
-            return this.loadPlugin(plugin);
+            services = [...services, ...this.loadPlugin(plugin)];
         });
         return services;
     }
 
-    public loadPlugin(directory: string): SchemaPlugin {
+    public loadPlugin(directory: string): Array<Service> {
+        console.log('Load Plugin ', directory);
         let service: SchemaPlugin;
+        const services: Array<Service> = [];
         if (lstatSync(directory).isDirectory()) {
             const _plugin = require(directory);
-            service = new _plugin.Service();
+            console.log('Directory ', directory);
+            console.log("Plugin ", _plugin);
+            if (_plugin.hasOwnProperty('getPlugins')) {
+                _plugin.getPlugins().forEach((serviceClass) => {
+                    service = new serviceClass();//new _plugin.Service();
+                    console.log("Service ", service);
+                    service.pluginDir = directory;
+                    if (service.init) {
+                        service.init();
+                    }
+                    this.server.addService(service);
+                    services.push(service);
+                });
+            }
+
+            /*
+            service = _plugin.getPlugins();//new _plugin.Service();
             service.pluginDir = directory;
             if (service.init) {
                 service.init();
             }
             this.server.addService(service);
+            */
         }
-        return service;
+        return services;
     }
 
 

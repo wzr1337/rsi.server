@@ -9,24 +9,44 @@ var PluginLoader = /** @class */ (function () {
     PluginLoader.prototype.loadPlugins = function (directory) {
         var _this = this;
         var files = fs_1.readdirSync(directory);
-        var services = files.map(function (file) {
+        var services = [];
+        files.forEach(function (file) {
             var plugin = path_1.join(directory, file);
-            return _this.loadPlugin(plugin);
+            services = services.concat(_this.loadPlugin(plugin));
         });
         return services;
     };
     PluginLoader.prototype.loadPlugin = function (directory) {
+        var _this = this;
+        console.log('Load Plugin ', directory);
         var service;
+        var services = [];
         if (fs_1.lstatSync(directory).isDirectory()) {
             var _plugin = require(directory);
-            service = new _plugin.Service();
+            console.log('Directory ', directory);
+            console.log("Plugin ", _plugin);
+            if (_plugin.hasOwnProperty('getPlugins')) {
+                _plugin.getPlugins().forEach(function (serviceClass) {
+                    service = new serviceClass(); //new _plugin.Service();
+                    console.log("Service ", service);
+                    service.pluginDir = directory;
+                    if (service.init) {
+                        service.init();
+                    }
+                    _this.server.addService(service);
+                    services.push(service);
+                });
+            }
+            /*
+            service = _plugin.getPlugins();//new _plugin.Service();
             service.pluginDir = directory;
             if (service.init) {
                 service.init();
             }
             this.server.addService(service);
+            */
         }
-        return service;
+        return services;
     };
     return PluginLoader;
 }());
