@@ -102,7 +102,6 @@ var RsiServer = /** @class */ (function () {
         var _this = this;
         if (options === void 0) { options = {}; }
         this.logger.transports['console'].level = options.verbosity || 'warn';
-        this.logger.info("Blub");
         this.BASEURI = options.base ? options.base : this.BASEURI;
         this.port = options.port ? options.port : this.port;
         this.serviceRegistry = options.serviceRegistry ? options.serviceRegistry : '';
