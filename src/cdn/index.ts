@@ -1,6 +1,6 @@
 import * as filetype from 'file-type';
 import * as fs from "fs";
-import { rsiLogger, rsiLoggerInstance } from "../log";
+import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
 import * as express from 'express';
 
 /**
@@ -8,23 +8,23 @@ import * as express from 'express';
  * 
  * @return a Buffer
  */
-interface CdnCallback {(resourceName:string, fileName:string):Buffer};
+export interface CdnCallback { (resourceName: string, fileName: string): Buffer };
 
 /**
  * The cdn service provides access to binary data (e.g. images)
  */
 class Cdn {
 
-  private static _instance:Cdn = new Cdn();
+  private static _instance: Cdn = new Cdn();
 
-  private _logger:rsiLoggerInstance;
-  private _fileRegistry:{
-    [filename:string]: CdnCallback
+  private _logger: rsiLoggerInstance;
+  private _fileRegistry: {
+    [filename: string]: CdnCallback
   } = {};
 
   private constructor() {
-    this._logger = rsiLogger.getInstance().getLogger("cdn2");
-    if(Cdn._instance){
+    this._logger = rsiLogger.getInstance().getLogger("cdn");
+    if (Cdn._instance) {
       throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
     }
     Cdn._instance = this;
@@ -33,8 +33,7 @@ class Cdn {
   /**
    * The Cdn is a singleton, get an instance by calling the method.
    */
-  public static getInstance():Cdn
-  {
+  public static getInstance(): Cdn {
     return Cdn._instance;
   }
 
@@ -44,14 +43,22 @@ class Cdn {
    * 
    * @return a function that takes a response, request and next argument
    */
-  public process():express.RequestHandler {
+  public process(): express.RequestHandler {
     const FILENAME_REGEX = /^.*\/([\w,\s-]+)\/([\w,\s-]+)\/([\w,\s-]+\.[A-Za-z]{3,4})(?:\?.*)?$/;
 
-    return (req:express.Request, res:express.Response, next:express.NextFunction) => {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       let origUrl = req.originalUrl;
-      let filename:string = origUrl.match(FILENAME_REGEX)[3];
-      let resourcename:string = origUrl.match(FILENAME_REGEX)[2];
-      let path:string = resourcename + "/" + filename;
+      if (null === origUrl.match(FILENAME_REGEX) ) {
+        res.status(501);
+        res.json({
+          status: "error",
+          message: "Directory listing not supported"
+        });
+        return;
+      }
+      let filename: string = origUrl.match(FILENAME_REGEX)[3];
+      let resourcename: string = origUrl.match(FILENAME_REGEX)[2];
+      let path: string = resourcename + "/" + filename;
       if (this._fileRegistry[path]) {
         let img = this._fileRegistry[path](resourcename, filename);
 
@@ -59,7 +66,7 @@ class Cdn {
           'Content-Type': filetype(img).mime,
           'Content-Length': img.length
         });
-        res.end(img); 
+        res.end(img);
       }
       else {
         res.status(404);
@@ -76,10 +83,10 @@ class Cdn {
    * @param fileName [string] The name of the file to be made available
    * @param callback [CdnCallback] The callback to be called on route access
    */
-  public register(resourceName:string, fileName:string, callback:CdnCallback):Boolean {
+  public register(resourceName: string, fileName: string, callback: CdnCallback): Boolean {
     let path = resourceName + '/' + fileName;
     let lookup = typeof this._fileRegistry[path] === "function";
-    if(!lookup && typeof callback === "function") {
+    if (!lookup && typeof callback === "function") {
       //filename not yet registered
       this._fileRegistry[path] = callback;
       return true
@@ -88,4 +95,4 @@ class Cdn {
   }
 }
 
-export { Cdn, CdnCallback };
+export { Cdn };
