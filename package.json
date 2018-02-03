@@ -9,6 +9,9 @@
     "build": "tsc"
   },
   "author": "Dr. Patrick Bartsch",
+  "contributors": [
+    "Benjamin Dobler"
+  ],
   "license": "MIT",
   "dependencies": {
     "@rsi/core": "https://github.com/wzr1337/rsi.core",
