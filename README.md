@@ -1,89 +1,55 @@
-# Viwi Server 0.1.2
+# RSI server module
 
-This project implements the Volkswagen Infotainment Web Interface as published under [https://www.w3.org/Submission/2016/01/](https://www.w3.org/Submission/2016/01/).
+This project implements the Volkswagen Infotainment Web Interface (viwi/RSI) as published under [https://www.w3.org/Submission/2016/01/](https://www.w3.org/Submission/2016/01/). The module provides a server which works with plugins like:
+
+* [@RSI-plugins/medialibrary](https://github.com/wzr1337/rsi-plugins.medialibrary)
 
 
-### Prerequisites
+## Development
+Anyone is invited to join our forces and help implement, test or document the software provided inhere.
 
-This project uses Gulp and TypeScript which needs to be available globally, so please make them available via
-
-```sh
-$ npm install gulp typescript -g
-```
-
-#### Install local dependencies
+### Install local dependencies
 To install the server's dependencies, run the following command
 
 ```sh
 $ npm install
 ```
 
-##### known issues
-
-If you are developing on Windows or Linux, you might experience issue when using above command, because the lame dependency has to compile per platform.
-
-**Linux**
-On some Linux (e.g. Ubuntu 16.04) distros the libasound2 libs are missing, so please install it via
-```
-$ sudo apt-get install libasound2-dev
-```
-
-**Windows**
-On Windows you will need a visual studio installation to have a working compiler at hand.
-
-## Build it
-
+### Build it
 To build the server, use
 
 ```sh
-$ gulp build
+$ npm run build
 ```
-
-## Test it
-
-To run the server and test it, use
-
-```sh
-$ http_proxy='' gulp test
-```
-
-Please ensure that proxy settings are set appropriately for your environment.
-Test specifications will always follow the `+.spec`form, i.e. source file named `myfile.ts` => test file named `myfile.spec.ts`.
-
-
-## Develop it
-
-To run a watch on the source file and trigger an automatic reload on file changes, use
-
-```sh
-$ gulp watch
-```
-
-# Run it
-
-To run the server separately, use the cli
-
-```
-  $ node ./bin/cli.js -p 9999 -v 'error'
-```
-
-alternatively you can use
-
-```
-  $ npm start
-```
-
-after you `gulp build` it
-
-### Available command line arguments
-
-| long parameter | short parameter | type   | description                                    |
-|----------------|-----------------|--------|------------------------------------------------|
-| --port         | -p              | number | the port number to listen on                   |
-| --verbosity    | -v              | string | the winston log level to plot into the console |
-
 
 ## Examples
+
+### Using the module
+While there is a [RSI Demo](https://github.com/wzr1337/rsi.demo) available, a minimal working example would be:
+
+```typescript
+import { RsiServer } from '@rsi/server';
+import * as ml from '@rsi-plugins/medialibrary';
+
+const server: RsiServer = new RsiServer();
+server.run(); // run the server
+server.addService(new ml.Service()); // add a single service
+```
+
+accessing `http://127.0.0.1:3000` will give you the following response:
+
+```JSON
+{
+  "status": "ok",
+  "data": [
+    {
+      "id": "ea65d5eb-d5fb-4ceb-a568-ed24fcf37e20",
+      "name": "medialibrary",
+      "uri": "/medialibrary/"
+    }
+  ]
+}
+```
 
 ### Client side subscription
 
@@ -191,7 +157,7 @@ If there is a breaking change, put **BREAKING CHANGE:** in your commit body, and
 
 ## License (MIT)
 
-Copyright (c) 2017 Dr. Patrick Bartsch
+Copyright (c) 2018 Dr. Patrick Bartsch
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
