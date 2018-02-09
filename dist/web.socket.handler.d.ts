@@ -30,6 +30,6 @@ export declare class WsHandler {
      * @param ws        The WebSocket the client is sending data on.
      */
     handleWebSocketMessages: (msg: RsiClientWebSocketMessage, _rsiWebSocket: RsiWebSocket) => void;
-    handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any): void;
+    handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any): Promise<void>;
     handleResourceSubscriptions(rsiWebSocket: any, msg: RsiClientWebSocketMessage, eventObj: any): void;
 }

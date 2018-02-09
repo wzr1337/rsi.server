@@ -1,4 +1,4 @@
-import { rsiLogger } from '@rsi/core';
+import { rsiLogger, ElementResponse } from '@rsi/core';
 import { WebServer } from './web.server';
 import { Element, Resource, Service, StatusCode } from '@rsi/core';
 import { WsHandler } from './web.socket.handler';
@@ -215,14 +215,14 @@ export class RsiServer {
   private elementGET(service: Service, resource: Resource) {
     let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
     //if(resource.getElement) { logger.info("GET   ", elementPath, "registered") };
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (!resource.getElement) {
         res.status(StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
         return;
       }
       
       // proprietary element fetching
-      let element = resource.getElement(req.params.id);
+      let element = await resource.getElement(req.params.id);
       if (element && element.data) {
         let data = (<BehaviorSubject<Element>>element.data).getValue().data;
         // filter the result before responding if need
@@ -257,7 +257,7 @@ export class RsiServer {
   resourceGET(service: Service, resource: Resource) {
     let resourcePath = pathof(this.BASEURI, service, resource);
     //if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (req.query.hasOwnProperty('$spec') && resource.getResourceSpec) {
         res.status(StatusCode.OK);
         res.json({
@@ -277,7 +277,7 @@ export class RsiServer {
         return (typeof n === 'undefined') ? undefined : ((!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString());
       }
       
-      let elements = resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
+      let elements = await resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
       
       if (elements) {
         let resp:Array<any> = elements.data.map((value: BehaviorSubject<Element>) => {
@@ -398,12 +398,12 @@ export class RsiServer {
   */
   resourcePOST = (service: Service, resource: Resource) => {
     let resourcePath = pathof(this.BASEURI, service, resource);
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (!resource.createElement) {
         res.status(StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
         return;
       }
-      let newElement = resource.createElement(req.body);
+      let newElement: ElementResponse = await resource.createElement(req.body);
       if (newElement.status === 'ok') {
         res.status(StatusCode.CREATED);
         res.header({'Location': (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
@@ -445,14 +445,14 @@ export class RsiServer {
   */
   elementDELETE = (service: Service, resource: Resource) => {
     let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       
       if (!resource.deleteElement) {
         res.status(501).send('Not Implemented');
         return;
       }
       // proprietary element deletion
-      let deletionResponse = resource.deleteElement(req.params.id);
+      let deletionResponse = await resource.deleteElement(req.params.id);
       
       // respond
       if (deletionResponse.status && deletionResponse.status === 'ok' || deletionResponse.status === 'error') {
@@ -476,12 +476,12 @@ export class RsiServer {
   private elementPOST(service: Service, resource: Resource) {
     let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
     //if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       
       // find the element requested by the client
-      let element = resource.getElement(req.params.id);
+      let element:ElementResponse = await resource.getElement(req.params.id);
       if (element && element.status === 'ok') {
-        let resp = resource.updateElement(req.params.id, req.body);
+        let resp = await resource.updateElement(req.params.id, req.body);
         res.status(resp.code || StatusCode.OK);
         res.json({
           code: resp.code || undefined,

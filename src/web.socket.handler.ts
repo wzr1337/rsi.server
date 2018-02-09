@@ -92,10 +92,10 @@ export class WsHandler {
 
     }
 
-    handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any) {
+    async handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any) {
         if (this.resource.elementSubscribable) {
             // this is an element subscription
-            let element = this.resource.getElement(eventObj.element);
+            let element = await this.resource.getElement(eventObj.element);
             let subject: BehaviorSubject<Element> = element.data;
             if (element && subject) {
                 //logger.debug("New element level subscription:", msg.event);
@@ -157,9 +157,9 @@ export class WsHandler {
 
             // filter only updates because resource subscription should only fire on add and remove
             this._subscriptions[rsiWebSocket.id][msg.event] = resourceStream$
-                .subscribe((change: ResourceUpdate) => {
+                .subscribe(async (change: ResourceUpdate) => {
                         //logger.info("New resource data:", change);
-                        let elements = this.resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
+                        let elements = await this.resource.getResource(/*parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit)*/);
                         if (elements) {
                             let resp = elements.data.map((value: BehaviorSubject<Element>) => {
                                 return value.getValue().data;

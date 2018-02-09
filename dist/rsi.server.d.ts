@@ -42,14 +42,14 @@ export declare class RsiServer {
     * @param service   The service name.
     * @param resource  The resource name.
     */
-    resourceGET(service: Service, resource: Resource): (req: express.Request, res: express.Response, next: express.NextFunction) => void;
+    resourceGET(service: Service, resource: Resource): (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
     /**
     * handling POST requests on resource level (elment creation).
     *
     * @param service   The service name.
     * @param resource  The resource name.
     */
-    resourcePOST: (service: Service, resource: Resource) => (req: express.Request, res: express.Response, next: express.NextFunction) => void;
+    resourcePOST: (service: Service, resource: Resource) => (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
     serviceGETSpec: (service: Service) => (req: express.Request, res: express.Response, next: express.NextFunction) => void;
     /**
     * handling DELETE requests on element level (element removal or property reset).
@@ -57,7 +57,7 @@ export declare class RsiServer {
     * @param service   The service name.
     * @param resource  The resource name.
     */
-    elementDELETE: (service: Service, resource: Resource) => (req: express.Request, res: express.Response, next: express.NextFunction) => void;
+    elementDELETE: (service: Service, resource: Resource) => (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
     /**
     * handling POST requests on element level (modify an existing element).
     *
