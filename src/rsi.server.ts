@@ -10,6 +10,9 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import * as request from 'request';
 
 
+/**
+ * The rsiServer class to be instantiated for running a server
+ */
 export class RsiServer {
   
   private logger = rsiLogger.getInstance().getLogger('general');
@@ -30,6 +33,9 @@ export class RsiServer {
     this.elementUtil = new ElementUtil(this.availableServices, this.serviceMap);
   }
   
+  /**
+   * stop the server and disconnect all clients gracefully
+   */
   public stop() {
     if (this.server) {
       this.clientWebsockets.forEach((c: RsiWebSocket) => c.close(1001));
@@ -38,12 +44,18 @@ export class RsiServer {
     }
   }
   
-  public run(options: RunOptions = {}): Promise<any> {
+  /**
+   * 
+   * @param options {RunOptions} the 
+   * 
+   * @return {Promise<void>} resolves after proper startup
+   */
+  public run(options: RunOptions = {}): Promise<void> {
     this.logger.transports['console'].level = options.verbosity || 'warn';
     this.BASEURI = options.base ? options.base : this.BASEURI;
     this.port = options.port ? options.port : this.port;
     this.serviceRegistry = options.serviceRegistry ? options.serviceRegistry : '';
-    return new Promise<any>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.shuttingDown = false;
       this.server = new WebServer(options.port, this.BASEURI);
       this.server.init(); // need to init
