@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "stupidPlayer": "file:src/plugins/media/stupidPlayer.d.ts"
-  }
-}
