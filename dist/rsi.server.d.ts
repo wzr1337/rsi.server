@@ -2,6 +2,9 @@
 import { Resource, Service } from '@rsi/core';
 import { RunOptions } from './types';
 import * as express from 'express';
+/**
+ * The rsiServer class to be instantiated for running a server
+ */
 export declare class RsiServer {
     private logger;
     private server;
@@ -17,8 +20,17 @@ export declare class RsiServer {
     /** the servers id */
     private ID;
     constructor();
+    /**
+     * stop the server and disconnect all clients gracefully
+     */
     stop(): void;
-    run(options?: RunOptions): Promise<any>;
+    /**
+     *
+     * @param options {RunOptions} the
+     *
+     * @return {Promise<void>} resolves after proper startup
+     */
+    run(options?: RunOptions): Promise<void>;
     addService(service: Service): void;
     announceService(service: Service): void;
     /**

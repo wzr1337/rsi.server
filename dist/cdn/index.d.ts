@@ -4,7 +4,10 @@ import * as express from 'express';
 /**
  * Defines a callback signature for callback into the server
  *
- * @return a Buffer
+ * @param resourceName {string} the resource name or file type (e.g. /cdn/images/ => resourceName is 'images'))
+ * @param fileName {string} the filename to reigster for (e.g. /cdn/images/foo.jpg => fileName is 'foo.jpg'))
+ *
+ * @return {Buffer} a Buffer containing the content to be delivered
  */
 export interface CdnCallback {
     (resourceName: string, fileName: string): Buffer;
@@ -19,21 +22,24 @@ declare class Cdn {
     private constructor();
     /**
      * The Cdn is a singleton, get an instance by calling the method.
+     *
+     * @return {Cdn} instance of cdn service
      */
     static getInstance(): Cdn;
     /**
-     * This method
+     * This method process es Cdn calls
      *
-     * @return a function that takes a response, request and next argument
+     * @return {express.RequestHandler} a function that takes a response, request and next argument
      */
     process(): express.RequestHandler;
     /**
+     * Other services use this method to register callbacks for file access
      *
-     * Other service use this method to register callbacks for file access
+     * @param resourceName {string} The resource of the file to be made available (e.g. 'images')
+     * @param fileName {string} The name of the file to be made available
+     * @param callback {CdnCallback} The callback to be called on route access
      *
-     * @param resourceName [string] The resource o the file to be made available (e.g. 'images')
-     * @param fileName [string] The name of the file to be made available
-     * @param callback [CdnCallback] The callback to be called on route access
+     * @return {Boolean} true on success
      */
     register(resourceName: string, fileName: string, callback: CdnCallback): Boolean;
 }

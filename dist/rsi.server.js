@@ -42,6 +42,9 @@ var web_socket_handler_1 = require("./web.socket.handler");
 var web_socket_server_1 = require("./web.socket.server");
 var helpers_1 = require("./helpers");
 var request = require("request");
+/**
+ * The rsiServer class to be instantiated for running a server
+ */
 var RsiServer = /** @class */ (function () {
     function RsiServer() {
         var _this = this;
@@ -143,6 +146,9 @@ var RsiServer = /** @class */ (function () {
         };
         this.elementUtil = new helpers_1.ElementUtil(this.availableServices, this.serviceMap);
     }
+    /**
+     * stop the server and disconnect all clients gracefully
+     */
     RsiServer.prototype.stop = function () {
         if (this.server) {
             this.clientWebsockets.forEach(function (c) { return c.close(1001); });
@@ -150,6 +156,12 @@ var RsiServer = /** @class */ (function () {
             this.server.close();
         }
     };
+    /**
+     *
+     * @param options {RunOptions} the
+     *
+     * @return {Promise<void>} resolves after proper startup
+     */
     RsiServer.prototype.run = function (options) {
         var _this = this;
         if (options === void 0) { options = {}; }
