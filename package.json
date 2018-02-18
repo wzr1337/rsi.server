@@ -14,7 +14,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@rsi/core": "https://github.com/wzr1337/rsi.core#feature/ReasourceAbstractClass",
+    "@rsi/core": "https://github.com/wzr1337/rsi.core",
     "body-parser": "^1.15.2",
     "compression": "^1.6.2",
     "cors": "^2.8.3",
