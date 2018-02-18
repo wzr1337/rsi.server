@@ -17,14 +17,16 @@ var Cdn = /** @class */ (function () {
     }
     /**
      * The Cdn is a singleton, get an instance by calling the method.
+     *
+     * @return {Cdn} instance of cdn service
      */
     Cdn.getInstance = function () {
         return Cdn._instance;
     };
     /**
-     * This method
+     * This method process es Cdn calls
      *
-     * @return a function that takes a response, request and next argument
+     * @return {express.RequestHandler} a function that takes a response, request and next argument
      */
     Cdn.prototype.process = function () {
         var _this = this;
@@ -57,15 +59,17 @@ var Cdn = /** @class */ (function () {
         };
     };
     /**
+     * Other services use this method to register callbacks for file access
      *
-     * Other service use this method to register callbacks for file access
+     * @param resourceName {string} The resource of the file to be made available (e.g. 'images')
+     * @param fileName {string} The name of the file to be made available
+     * @param callback {CdnCallback} The callback to be called on route access
      *
-     * @param resourceName [string] The resource o the file to be made available (e.g. 'images')
-     * @param fileName [string] The name of the file to be made available
-     * @param callback [CdnCallback] The callback to be called on route access
+     * @return {Boolean} true on success
      */
     Cdn.prototype.register = function (resourceName, fileName, callback) {
         var path = resourceName + '/' + fileName;
+        this._logger.silly("registering a handler for " + path);
         var lookup = typeof this._fileRegistry[path] === "function";
         if (!lookup && typeof callback === "function") {
             //filename not yet registered
