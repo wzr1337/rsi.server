@@ -111,7 +111,7 @@ export class WsHandler {
                     subscription$ = subject;
                 }
 
-                this._subscriptions[rsiWebSocket.id][msg.event] = subscription$.subscribe((data: any) => {
+                this._subscriptions[rsiWebSocket.id][msg.event] = subscription$.subscribe(async (data: any) => {
                         const params = getEventParams(msg.event);
                         let d: any = data.data;
 
@@ -121,7 +121,7 @@ export class WsHandler {
                         }
 
                         const expandLevel: any = params.$expand ? params.$expand : 0;
-                        this.elementUtil.traverse(d, expandLevel, 0);
+                        await this.elementUtil.traverse(d, expandLevel, 0);
 
 
                         if (!rsiWebSocket.sendData(msg.event, d)) subject.complete();
@@ -177,10 +177,10 @@ export class WsHandler {
                                 });
                             }
 
-                            resp = resp.map((x: any) => {
-                                this.elementUtil.traverse(x, expandLevel, 0);
+                            resp = await Promise.all(resp.map(async (x: any) => {
+                                await this.elementUtil.traverse(x, expandLevel, 0);
                                 return x;
-                            });
+                            }));
 
                             if (!rsiWebSocket.sendData(msg.event, resp)) this.resource.change.complete();
                         }

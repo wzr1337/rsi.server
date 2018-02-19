@@ -244,7 +244,7 @@ export class RsiServer {
         }
         
         const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
-        this.elementUtil.traverse(data, expandLevel, 0);
+        await this.elementUtil.traverse(data, expandLevel, 0);
         
         //respond
         res.status(StatusCode.OK);
@@ -298,11 +298,12 @@ export class RsiServer {
         
         // enrich object refs + $expand handling
         const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
-        resp = resp.map((x: any) => {
-          this.elementUtil.traverse(x, expandLevel, 0);
+        resp = await Promise.all(resp.map(async (x: any) => {
+          await this.elementUtil.traverse(x, expandLevel, 0);
           return x;
-        });
-        
+        }));
+
+
         // Object ref search
         for (var propName in req.query) {
           if (req.query.hasOwnProperty(propName)) {
@@ -351,7 +352,6 @@ export class RsiServer {
         // $sorting
         if (req.query.hasOwnProperty('$sortby')) {
           let sort: string = req.query['$sortby'];
-          console.log("Sort result ", sort );
           let dec:number = 1;
           if (sort.indexOf('-') === 0) {
             sort = sort.substring(1);

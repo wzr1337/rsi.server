@@ -141,18 +141,27 @@ var WsHandler = /** @class */ (function () {
                             else {
                                 subscription$ = subject_1;
                             }
-                            this._subscriptions[rsiWebSocket.id][msg.event] = subscription$.subscribe(function (data) {
-                                var params = helpers_1.getEventParams(msg.event);
-                                var d = data.data;
-                                if (params.$fields) {
-                                    var fields = params.$fields.split(',');
-                                    d = helpers_1.filterByKeys(d, ['id', 'name', 'uri'].concat(fields));
-                                }
-                                var expandLevel = params.$expand ? params.$expand : 0;
-                                _this.elementUtil.traverse(d, expandLevel, 0);
-                                if (!rsiWebSocket.sendData(msg.event, d))
-                                    subject_1.complete();
-                            }, function (err) {
+                            this._subscriptions[rsiWebSocket.id][msg.event] = subscription$.subscribe(function (data) { return __awaiter(_this, void 0, void 0, function () {
+                                var params, d, fields, expandLevel;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            params = helpers_1.getEventParams(msg.event);
+                                            d = data.data;
+                                            if (params.$fields) {
+                                                fields = params.$fields.split(',');
+                                                d = helpers_1.filterByKeys(d, ['id', 'name', 'uri'].concat(fields));
+                                            }
+                                            expandLevel = params.$expand ? params.$expand : 0;
+                                            return [4 /*yield*/, this.elementUtil.traverse(d, expandLevel, 0)];
+                                        case 1:
+                                            _a.sent();
+                                            if (!rsiWebSocket.sendData(msg.event, d))
+                                                subject_1.complete();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); }, function (err) {
                                 if (!rsiWebSocket.sendError(msg.event, core_1.StatusCode.INTERNAL_SERVER_ERROR, new Error(err)))
                                     subject_1.complete();
                             });
@@ -198,32 +207,40 @@ var WsHandler = /** @class */ (function () {
                         case 0: return [4 /*yield*/, this.resource.getResource()];
                         case 1:
                             elements = _a.sent();
-                            if (elements) {
-                                resp = elements.data.map(function (value) {
-                                    return value.getValue().data;
+                            if (!elements) return [3 /*break*/, 3];
+                            resp = elements.data.map(function (value) {
+                                return value.getValue().data;
+                            });
+                            params_1 = helpers_1.getEventParams(msg.event);
+                            expandLevel_1 = params_1.$expand ? params_1.$expand : 0;
+                            if (params_1.$q) {
+                                resp = resp.filter(function (item) {
+                                    var stringValue = JSON.stringify(item);
+                                    if (stringValue.indexOf(params_1.$q) != -1) {
+                                        return item;
+                                    }
                                 });
-                                params_1 = helpers_1.getEventParams(msg.event);
-                                expandLevel_1 = params_1.$expand ? params_1.$expand : 0;
-                                if (params_1.$q) {
-                                    resp = resp.filter(function (item) {
-                                        var stringValue = JSON.stringify(item);
-                                        if (stringValue.indexOf(params_1.$q) != -1) {
-                                            return item;
+                            }
+                            return [4 /*yield*/, Promise.all(resp.map(function (x) { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, this.elementUtil.traverse(x, expandLevel_1, 0)];
+                                            case 1:
+                                                _a.sent();
+                                                return [2 /*return*/, x];
                                         }
                                     });
-                                }
-                                resp = resp.map(function (x) {
-                                    _this.elementUtil.traverse(x, expandLevel_1, 0);
-                                    return x;
-                                });
-                                if (!rsiWebSocket.sendData(msg.event, resp))
-                                    this.resource.change.complete();
-                            }
-                            else {
-                                if (!rsiWebSocket.sendError(msg.event, core_1.StatusCode.NOT_FOUND, new Error('Not found')))
-                                    this.resource.change.complete();
-                            }
-                            return [2 /*return*/];
+                                }); }))];
+                        case 2:
+                            resp = _a.sent();
+                            if (!rsiWebSocket.sendData(msg.event, resp))
+                                this.resource.change.complete();
+                            return [3 /*break*/, 4];
+                        case 3:
+                            if (!rsiWebSocket.sendError(msg.event, core_1.StatusCode.NOT_FOUND, new Error('Not found')))
+                                this.resource.change.complete();
+                            _a.label = 4;
+                        case 4: return [2 /*return*/];
                     }
                 });
             }); }, function (err) {
