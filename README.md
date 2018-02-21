@@ -64,7 +64,7 @@ ws.onopen = () => {
 ```
 
 ## Contribution
-I welcome everyone to contribute to this repo. Let us build awesome software - together. Please see [Contribution](CONTRIBUTION.MD) for some rules to follow.
+I welcome everyone to contribute to this repo. Let us build awesome software - together. Please see [Contribution](CONTRIBUTION.md) for some rules to follow.
 
 ## License (MIT)
 
