@@ -10,6 +10,11 @@ export interface xObject {
     name: string;
     uri: string;
 }
+export interface errorObject {
+    status: "error";
+    message: string;
+    code: number;
+}
 /**
  * options to run the server
  */

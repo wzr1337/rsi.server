@@ -96,16 +96,23 @@ export function getEventParams(value: string) {
 }
 
 
+export async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array)
+    }
+}
+
+
 export class ElementUtil {
 
     constructor(private availableServices: { id: string; name: string; uri: string }[], private serviceMap: any) {
 
     }
 
-    public getElementById(id: string): any {
+    public async getElementById(id: string): Promise<any> {
         let el: any;
-        this.availableServices.forEach((s: any) => {
-            this.serviceMap[s.name].resources.forEach((r: Resource) => {
+        await asyncForEach(this.availableServices, async (s: any) => {
+            await asyncForEach(this.serviceMap[s.name].resources, async (r: Resource) => {
                 let element: any = r.getElement(id);
                 if (element && element.data) {
                     let data = (<BehaviorSubject<Element>>element.data).getValue().data;
@@ -148,7 +155,7 @@ export class ElementUtil {
         return obj.hasOwnProperty('id') && obj.hasOwnProperty('uri');
     }
 
-    public traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
+    public async traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
         const byLevel: boolean = /^\d+$/.test(maxLevel);
         let keywords: Array<string>;
         if (!byLevel) {
@@ -160,8 +167,7 @@ export class ElementUtil {
             if (obj.hasOwnProperty(property)) {
                 if (typeof obj[property] == 'object' && !Array.isArray(obj[property])) {
                     let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
-                    let fullObj: any = this.getElementById(obj[property].id);
-
+                    let fullObj: any = await this.getElementById(obj[property].id);
                     if (expandNode) {
                         if (fullObj) {
                             obj[property] = fullObj;
@@ -175,13 +181,13 @@ export class ElementUtil {
                         }
 
                     }
-                    this.traverse(obj[property], maxLevel, level + 1);
+                    await this.traverse(obj[property], maxLevel, level + 1);
                 } else if (Array.isArray(obj[property])) {
                     for (let i = 0; i < obj[property].length; i++) {
                         if (typeof obj[property][i] == 'object') {
                             let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
                             if (expandNode) {
-                                let fullObj: any = this.getElementById(obj[property][i].id);
+                                let fullObj: any = await this.getElementById(obj[property][i].id);
                                 if (fullObj) {
                                     obj[property][i] = fullObj;
                                 }
@@ -191,7 +197,7 @@ export class ElementUtil {
                                     uri: obj[property][i].uri
                                 };
                             }
-                            this.traverse(obj[property][i], maxLevel, level + 1);
+                            await this.traverse(obj[property][i], maxLevel, level + 1);
                         }
                     }
                 }

@@ -21,6 +21,7 @@ export declare function pathof(baseUri: string, service: Service, resource: Reso
  */
 export declare function filterByKeys(inputObject: any, keep: string[]): Object;
 export declare function getEventParams(value: string): any;
+export declare function asyncForEach(array: any, callback: any): Promise<void>;
 export declare class ElementUtil {
     private availableServices;
     private serviceMap;
@@ -29,7 +30,7 @@ export declare class ElementUtil {
         name: string;
         uri: string;
     }[], serviceMap: any);
-    getElementById(id: string): any;
+    getElementById(id: string): Promise<any>;
     /**
      * Deep clone object, except for keys that contain RSI-object references.
      *
@@ -38,5 +39,5 @@ export declare class ElementUtil {
      */
     private clone(obj);
     private isObjectReference(obj);
-    traverse(obj: any, maxLevel?: any, level?: number): void;
+    traverse(obj: any, maxLevel?: any, level?: number): Promise<void>;
 }

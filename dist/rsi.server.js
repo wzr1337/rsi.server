@@ -187,6 +187,15 @@ var RsiServer = /** @class */ (function () {
                     data: _this.availableServices
                 });
             });
+            _this.server.app.all(_this.BASEURI, function (req, res, next) {
+                // respond
+                res.status(core_2.StatusCode.NOT_IMPLEMENTED);
+                res.json({
+                    status: 'error',
+                    message: "Not implemented",
+                    code: 501
+                });
+            });
             _this.server.ws.on('connection', function (ws) {
                 var rsiWebSocket = new web_socket_server_1.RsiWebSocket(ws);
                 _this.clientWebsockets.push(rsiWebSocket);
@@ -338,26 +347,28 @@ var RsiServer = /** @class */ (function () {
                         return [4 /*yield*/, resource.getElement(req.params.id)];
                     case 1:
                         element = _a.sent();
-                        if (element && element.data) {
-                            data = element.data.getValue().data;
-                            // filter the result before responding if need
-                            // ed
-                            if (req.query.hasOwnProperty('$fields')) {
-                                data = helpers_1.filterByKeys(data, ['id', 'name', 'uri'].concat(req.query['$fields'].split(',')));
-                            }
-                            expandLevel = req.query['$expand'] ? req.query['$expand'] : 0;
-                            this.elementUtil.traverse(data, expandLevel, 0);
-                            //respond
-                            res.status(core_2.StatusCode.OK);
-                            res.json({
-                                status: 'ok',
-                                data: data
-                            });
+                        if (!(element && element.data)) return [3 /*break*/, 3];
+                        data = element.data.getValue().data;
+                        // filter the result before responding if need
+                        // ed
+                        if (req.query.hasOwnProperty('$fields')) {
+                            data = helpers_1.filterByKeys(data, ['id', 'name', 'uri'].concat(req.query['$fields'].split(',')));
                         }
-                        else {
-                            res.status(404).send();
-                        }
-                        return [2 /*return*/];
+                        expandLevel = req.query['$expand'] ? req.query['$expand'] : 0;
+                        return [4 /*yield*/, this.elementUtil.traverse(data, expandLevel, 0)];
+                    case 2:
+                        _a.sent();
+                        //respond
+                        res.status(core_2.StatusCode.OK);
+                        res.json({
+                            status: 'ok',
+                            data: data
+                        });
+                        return [3 /*break*/, 4];
+                    case 3:
+                        res.status(404).send();
+                        _a.label = 4;
+                    case 4: return [2 /*return*/];
                 }
             });
         }); };
@@ -398,102 +409,108 @@ var RsiServer = /** @class */ (function () {
                         return [4 /*yield*/, resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit))];
                     case 1:
                         elements = _a.sent();
-                        if (elements) {
-                            resp = elements.data.map(function (value) {
-                                return value.getValue().data;
-                            });
-                            expandLevel_1 = req.query['$expand'] ? req.query['$expand'] : 0;
-                            resp = resp.map(function (x) {
-                                _this.elementUtil.traverse(x, expandLevel_1, 0);
-                                return x;
-                            });
-                            // Object ref search
-                            for (propName in req.query) {
-                                if (req.query.hasOwnProperty(propName)) {
-                                    if (propName.charAt(0) != '$') {
-                                        resp = resp.filter(function (item) {
-                                            if (!item.hasOwnProperty(propName)) {
-                                                return false;
-                                            }
-                                            if (typeof item[propName] === 'object') {
-                                                if (item[propName].id === req.query[propName]) {
-                                                    return true;
-                                                }
-                                            }
-                                            else if (item[propName] === req.query[propName]) {
+                        if (!elements) return [3 /*break*/, 3];
+                        resp = elements.data.map(function (value) {
+                            return value.getValue().data;
+                        });
+                        expandLevel_1 = req.query['$expand'] ? req.query['$expand'] : 0;
+                        return [4 /*yield*/, Promise.all(resp.map(function (x) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, this.elementUtil.traverse(x, expandLevel_1, 0)];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/, x];
+                                    }
+                                });
+                            }); }))];
+                    case 2:
+                        resp = _a.sent();
+                        // Object ref search
+                        for (propName in req.query) {
+                            if (req.query.hasOwnProperty(propName)) {
+                                if (propName.charAt(0) != '$') {
+                                    resp = resp.filter(function (item) {
+                                        if (!item.hasOwnProperty(propName)) {
+                                            return false;
+                                        }
+                                        if (typeof item[propName] === 'object') {
+                                            if (item[propName].id === req.query[propName]) {
                                                 return true;
                                             }
-                                        });
-                                    }
-                                }
-                            }
-                            // $q Freesearch
-                            if (req.query.hasOwnProperty('$q')) {
-                                resp = resp.filter(function (item) {
-                                    var stringValue = JSON.stringify(item);
-                                    if (stringValue.indexOf(req.query['$q']) != -1) {
-                                        return item;
-                                    }
-                                });
-                            }
-                            // $fields filtering
-                            if (req.query.hasOwnProperty('$fields')) {
-                                fieldsList_1 = req.query['$fields'];
-                                medatoryFields_1 = ['name', 'id', 'uri'];
-                                resp = resp.map(function (item) {
-                                    var newItem = {};
-                                    for (var i in item) {
-                                        if (fieldsList_1.indexOf(i) != -1 || medatoryFields_1.indexOf(i) != -1) {
-                                            newItem[i] = item[i];
                                         }
-                                    }
-                                    return newItem;
-                                });
-                            }
-                            // $sorting
-                            if (req.query.hasOwnProperty('$sortby')) {
-                                sort_1 = req.query['$sortby'];
-                                console.log("Sort result ", sort_1);
-                                dec_1 = 1;
-                                if (sort_1.indexOf('-') === 0) {
-                                    sort_1 = sort_1.substring(1);
-                                    dec_1 = -1;
+                                        else if (item[propName] === req.query[propName]) {
+                                            return true;
+                                        }
+                                    });
                                 }
-                                if (sort_1.indexOf('+') === 0) {
-                                    sort_1 = sort_1.substring(1);
-                                    dec_1 = 1;
-                                }
-                                resp = resp.sort(function (a, b) {
-                                    var val1 = 'z';
-                                    var val2 = 'z';
-                                    if (a.hasOwnProperty(sort_1)) {
-                                        val1 = a[sort_1];
-                                    }
-                                    if (b.hasOwnProperty(sort_1)) {
-                                        val2 = b[sort_1];
-                                    }
-                                    val1 = val1.toLowerCase();
-                                    val2 = val2.toLowerCase();
-                                    if (val1 < val2) {
-                                        return -1 * dec_1;
-                                    }
-                                    if (val1 > val2) {
-                                        return 1 * dec_1;
-                                    }
-                                    return 0;
-                                });
                             }
-                            res.status(core_2.StatusCode.OK);
-                            res.json({
-                                status: 'ok',
-                                data: resp
+                        }
+                        // $q Freesearch
+                        if (req.query.hasOwnProperty('$q')) {
+                            resp = resp.filter(function (item) {
+                                var stringValue = JSON.stringify(item);
+                                if (stringValue.indexOf(req.query['$q']) != -1) {
+                                    return item;
+                                }
                             });
-                            return [2 /*return*/];
                         }
-                        else {
-                            res.status(core_2.StatusCode.NOT_FOUND).send('Not found');
+                        // $fields filtering
+                        if (req.query.hasOwnProperty('$fields')) {
+                            fieldsList_1 = req.query['$fields'];
+                            medatoryFields_1 = ['name', 'id', 'uri'];
+                            resp = resp.map(function (item) {
+                                var newItem = {};
+                                for (var i in item) {
+                                    if (fieldsList_1.indexOf(i) != -1 || medatoryFields_1.indexOf(i) != -1) {
+                                        newItem[i] = item[i];
+                                    }
+                                }
+                                return newItem;
+                            });
                         }
+                        // $sorting
+                        if (req.query.hasOwnProperty('$sortby')) {
+                            sort_1 = req.query['$sortby'];
+                            dec_1 = 1;
+                            if (sort_1.indexOf('-') === 0) {
+                                sort_1 = sort_1.substring(1);
+                                dec_1 = -1;
+                            }
+                            if (sort_1.indexOf('+') === 0) {
+                                sort_1 = sort_1.substring(1);
+                                dec_1 = 1;
+                            }
+                            resp = resp.sort(function (a, b) {
+                                var val1 = 'z';
+                                var val2 = 'z';
+                                if (a.hasOwnProperty(sort_1)) {
+                                    val1 = a[sort_1];
+                                }
+                                if (b.hasOwnProperty(sort_1)) {
+                                    val2 = b[sort_1];
+                                }
+                                val1 = val1.toLowerCase();
+                                val2 = val2.toLowerCase();
+                                if (val1 < val2) {
+                                    return -1 * dec_1;
+                                }
+                                if (val1 > val2) {
+                                    return 1 * dec_1;
+                                }
+                                return 0;
+                            });
+                        }
+                        res.status(core_2.StatusCode.OK);
+                        res.json({
+                            status: 'ok',
+                            data: resp
+                        });
                         return [2 /*return*/];
+                    case 3:
+                        res.status(core_2.StatusCode.NOT_FOUND).send('Not found');
+                        _a.label = 4;
+                    case 4: return [2 /*return*/];
                 }
             });
         }); };
