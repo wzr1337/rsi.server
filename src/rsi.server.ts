@@ -3,7 +3,7 @@ import { WebServer } from './web.server';
 import { Element, Resource, Service, StatusCode } from '@rsi/core';
 import { WsHandler } from './web.socket.handler';
 import { RsiWebSocket } from './web.socket.server';
-import { RunOptions, RsiClientWebSocketMessage } from './types';
+import { RunOptions, RsiClientWebSocketMessage, errorObject } from './types';
 import { ElementUtil, filterByKeys, pathof, splitEvent } from './helpers';
 import * as express from 'express';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -76,7 +76,17 @@ export class RsiServer {
           data: this.availableServices
         });
       });
-      
+
+      this.server.app.all(this.BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        // respond
+        res.status(StatusCode.NOT_IMPLEMENTED);
+        res.json(<errorObject>{
+          status: 'error',
+          message: "Not implemented",
+          code: 501
+        });
+      });
+
       this.server.ws.on('connection', (ws: any) => {                                //subscribe|unsubscribe
         
         const rsiWebSocket = new RsiWebSocket(ws);

@@ -187,6 +187,15 @@ var RsiServer = /** @class */ (function () {
                     data: _this.availableServices
                 });
             });
+            _this.server.app.all(_this.BASEURI, function (req, res, next) {
+                // respond
+                res.status(core_2.StatusCode.NOT_IMPLEMENTED);
+                res.json({
+                    status: 'error',
+                    message: "Not implemented",
+                    code: 501
+                });
+            });
             _this.server.ws.on('connection', function (ws) {
                 var rsiWebSocket = new web_socket_server_1.RsiWebSocket(ws);
                 _this.clientWebsockets.push(rsiWebSocket);
