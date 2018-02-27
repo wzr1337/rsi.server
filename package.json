@@ -6,7 +6,9 @@
   "types": "dist/public_api.d.ts",
   "scripts": {
     "test": "node spec/runner.js",
-    "build": "tsc"
+    "build": "npm run build:dev",
+    "build:dev": "tsc",
+    "build:prod": "tsc && tslint -p ./tsconfig.json"
   },
   "author": "Dr. Patrick Bartsch",
   "contributors": [
@@ -45,6 +47,7 @@
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
     "jasmine-console-reporter": "^2.0.1",
+    "tslint": "^5.9.1",
     "typescript": "^2.7.2"
   }
 }
