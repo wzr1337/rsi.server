@@ -2,7 +2,9 @@ import { Element, Resource, Service } from "@rsi/core";
 import * as queryString from "query-string";
 import { BehaviorSubject } from "rxjs";
 
-const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
+// tslint:disable-next-line:max-line-length
+const URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/;
+// Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 
 export function splitEvent(event: string): {
   service?: string,
@@ -122,6 +124,56 @@ export class ElementUtil {
     return this.clone(el);
   }
 
+  public async traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
+    const byLevel: boolean = /^\d+$/.test(maxLevel);
+    let keywords: string[] ;
+    if (!byLevel) {
+      keywords = maxLevel.split(",");
+    } else if (level > maxLevel) {
+      return;
+    }
+    for (const property in obj) {
+      if (obj.hasOwnProperty(property)) {
+        if (typeof obj[property] === "object" && !Array.isArray(obj[property])) {
+          const expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) !== -1;
+          const fullObj: any = await this.getElementById(obj[property].id);
+          if (expandNode) {
+            if (fullObj) {
+              obj[property] = fullObj;
+            }
+          } else {
+            if (fullObj) {
+              obj[property] = {
+                id: obj[property].id,
+                uri: obj[property].uri
+              };
+            }
+
+          }
+          await this.traverse(obj[property], maxLevel, level + 1);
+        } else if (Array.isArray(obj[property])) {
+          for (let i = 0; i < obj[property].length; i++) {
+            if (typeof obj[property][i] === "object") {
+              const expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) !== -1;
+              if (expandNode) {
+                const fullObj: any = await this.getElementById(obj[property][i].id);
+                if (fullObj) {
+                  obj[property][i] = fullObj;
+                }
+              } else {
+                obj[property][i] = {
+                  id: obj[property][i].id,
+                  uri: obj[property][i].uri
+                };
+              }
+              await this.traverse(obj[property][i], maxLevel, level + 1);
+            }
+          }
+        }
+      }
+    }
+  }
+
   /**
    * Deep clone object, except for keys that contain RSI-object references.
    *
@@ -152,55 +204,5 @@ export class ElementUtil {
 
   private isObjectReference(obj: object) {
     return obj.hasOwnProperty("id") && obj.hasOwnProperty("uri");
-  }
-
-  public async traverse(obj: any, maxLevel: any = Number.POSITIVE_INFINITY, level: number = 0) {
-    const byLevel: boolean = /^\d+$/.test(maxLevel);
-    let keywords: Array < string > ;
-    if (!byLevel) {
-      keywords = maxLevel.split(",");
-    } else if (level > maxLevel) {
-      return;
-    }
-    for (var property in obj) {
-      if (obj.hasOwnProperty(property)) {
-        if (typeof obj[property] == "object" && !Array.isArray(obj[property])) {
-          let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
-          let fullObj: any = await this.getElementById(obj[property].id);
-          if (expandNode) {
-            if (fullObj) {
-              obj[property] = fullObj;
-            }
-          } else {
-            if (fullObj) {
-              obj[property] = {
-                id: obj[property].id,
-                uri: obj[property].uri
-              };
-            }
-
-          }
-          await this.traverse(obj[property], maxLevel, level + 1);
-        } else if (Array.isArray(obj[property])) {
-          for (let i = 0; i < obj[property].length; i++) {
-            if (typeof obj[property][i] == "object") {
-              let expandNode: boolean = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
-              if (expandNode) {
-                let fullObj: any = await this.getElementById(obj[property][i].id);
-                if (fullObj) {
-                  obj[property][i] = fullObj;
-                }
-              } else {
-                obj[property][i] = {
-                  id: obj[property][i].id,
-                  uri: obj[property][i].uri
-                };
-              }
-              await this.traverse(obj[property][i], maxLevel, level + 1);
-            }
-          }
-        }
-      }
-    }
   }
 }
