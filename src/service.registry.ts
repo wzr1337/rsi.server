@@ -175,8 +175,7 @@ class ServiceRegistry {
         let bind = typeof addr === 'string'
             ? 'pipe ' + addr
             : 'port ' + addr.port;
-
-        console.log('Service Registry Listening on ' + bind);
+        this._logger.log('log', 'Service Registry Listening on ' + bind);
     };
 
     /**

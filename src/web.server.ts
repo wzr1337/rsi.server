@@ -4,27 +4,27 @@ import * as WebSocketServer from 'ws';
 import * as cors from 'cors';
 import * as compression from 'compression';
 import * as path from 'path';
-import http = require('http');
+import * as http from 'http';
 import { rsiLogger, rsiLoggerInstance } from '@rsi/core';
 import { Cdn } from './cdn';
 
 // create server and listen on provided port (on all network interfaces).
 export class WebServer {
-  public app: express.Express;
-  public ws: WebSocketServer.Server;
+  app: express.Express;
+  ws: WebSocketServer.Server;
   private _server: any;
   private _port: number | string | boolean;
   private _logger: rsiLoggerInstance;
-  
+
   constructor(_port?: number, private _BASEURI: string = '/') {
-    
+
     this._logger = rsiLogger.getInstance().getLogger('general');
     this.app = express();
-    
+
     var whitelist = ['127.0.0.1', 'localhost'];
     let corsOpts: cors.CorsOptions = {
       origin: function (origin, callback) {
-        
+
         if (1 || typeof(origin) === 'undefined') { //@TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
           /**
           * The origin may be hidden if the user comes from an ssl encrypted website.
@@ -98,8 +98,7 @@ export class WebServer {
     let bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-    
-    console.log('Listening on ' + bind);
+    this._logger.log('log', 'Listening on ' + bind);
   }
   
   /**
