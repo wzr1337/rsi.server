@@ -3,7 +3,7 @@ import { WebServer } from './web.server';
 import { Element, Resource, Service, StatusCode } from '@rsi/core';
 import { WsHandler } from './web.socket.handler';
 import { RsiWebSocket } from './web.socket.server';
-import { RunOptions, RsiClientWebSocketMessage, errorObject } from './types';
+import { IRunOptions, IRsiClientWebSocketMessage, IErrorObject } from './types';
 import { ElementUtil, filterByKeys, pathof, splitEvent } from './helpers';
 import * as express from 'express';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -46,11 +46,11 @@ export class RsiServer {
   
   /**
    * 
-   * @param options {RunOptions} the 
+   * @param options {IRunOptions} the 
    * 
    * @return {Promise<void>} resolves after proper startup
    */
-  public run(options: RunOptions = {}): Promise<void> {
+  public run(options: IRunOptions = {}): Promise<void> {
     this.logger.transports['console'].level = options.verbosity || 'warn';
     this.BASEURI = options.base ? options.base : this.BASEURI;
     this.port = options.port ? options.port : this.port;
@@ -80,7 +80,7 @@ export class RsiServer {
       this.server.app.all(this.BASEURI, (req: express.Request, res: express.Response, next: express.NextFunction) => {
         // respond
         res.status(StatusCode.NOT_IMPLEMENTED);
-        res.json(<errorObject>{
+        res.json(<IErrorObject>{
           status: 'error',
           message: "Not implemented",
           code: 501
@@ -100,7 +100,7 @@ export class RsiServer {
         });
         
         ws.on('message', (message: string) => {
-          let msg: RsiClientWebSocketMessage;
+          let msg: IRsiClientWebSocketMessage;
           // make sure we actually parse the incomming message
           try {
             msg = JSON.parse(message);

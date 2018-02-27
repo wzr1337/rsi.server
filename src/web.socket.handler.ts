@@ -1,7 +1,7 @@
 import { ElementUtil, filterByKeys, getEventParams, splitEvent } from './helpers';
 import { RsiWebSocket } from './web.socket.server';
 import { Element, Resource, ResourceUpdate, Service, StatusCode } from '@rsi/core';
-import { RsiClientWebSocketMessage } from './types';
+import { IRsiClientWebSocketMessage } from './types';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
@@ -49,7 +49,7 @@ export class WsHandler {
      * @param resource  The resource name.
      * @param ws        The WebSocket the client is sending data on.
      */
-    handleWebSocketMessages = (msg: RsiClientWebSocketMessage, _rsiWebSocket: RsiWebSocket) => {
+    handleWebSocketMessages = (msg: IRsiClientWebSocketMessage, _rsiWebSocket: RsiWebSocket) => {
         var eventObj = splitEvent(msg.event);
 
         this._subscriptions[_rsiWebSocket.id] = this._subscriptions[_rsiWebSocket.id] || {}; // init if not yet initialized
@@ -92,7 +92,7 @@ export class WsHandler {
 
     }
 
-    async handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any) {
+    async handleElementSubscriptions(rsiWebSocket: RsiWebSocket, msg: IRsiClientWebSocketMessage, eventObj: any) {
         if (this.resource.elementSubscribable) {
             // this is an element subscription
             let element = await this.resource.getElement(eventObj.element);
@@ -137,7 +137,7 @@ export class WsHandler {
         }
     }
 
-    handleResourceSubscriptions(rsiWebSocket, msg: RsiClientWebSocketMessage, eventObj: any) {
+    handleResourceSubscriptions(rsiWebSocket, msg: IRsiClientWebSocketMessage, eventObj: any) {
         if (this.resource.resourceSubscribable) {
             // resource subscription
             //logger.info("New resource level subscription:", msg.event);
