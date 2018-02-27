@@ -1,115 +1,116 @@
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
-import * as WebSocketServer from 'ws';
-import * as cors from 'cors';
-import * as compression from 'compression';
-import * as path from 'path';
-import * as http from 'http';
-import { rsiLogger, rsiLoggerInstance } from '@rsi/core';
-import { Cdn } from './cdn';
+import * as bodyParser from "body-parser";
+import * as compression from "compression";
+import * as cors from "cors";
+import * as express from "express";
+import * as http from "http";
+import * as path from "path";
+import * as WebSocketServer from "ws";
+
+import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
+import { Cdn } from "./cdn";
 
 // create server and listen on provided port (on all network interfaces).
 export class WebServer {
-  app: express.Express;
-  ws: WebSocketServer.Server;
-  private _server: any;
-  private _port: number | string | boolean;
-  private _logger: rsiLoggerInstance;
+  public app: express.Express;
+  public ws: WebSocketServer.Server;
 
-  constructor(_port?: number, private _BASEURI: string = '/') {
+  private server: any;
+  private port: number | string | boolean;
+  private logger: rsiLoggerInstance;
 
-    this._logger = rsiLogger.getInstance().getLogger('general');
+  constructor(port?: number, private _BASEURI: string = "/") {
+
+    this.logger = rsiLogger.getInstance().getLogger("general");
     this.app = express();
 
-    var whitelist = ['127.0.0.1', 'localhost'];
-    let corsOpts: cors.CorsOptions = {
-      origin: function (origin, callback) {
+    const whitelist = ["127.0.0.1", "localhost"];
+    const corsOpts: cors.CorsOptions = {
+      exposedHeaders: "Location",
+      origin: (origin, callback) => {
 
-        if (1 || typeof(origin) === 'undefined') { //@TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
+        if (1 || typeof(origin) === "undefined") {
+          // @TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
           /**
-          * The origin may be hidden if the user comes from an ssl encrypted website.
-          *
-          * Also: Some browser extensions remove origin and referer from the http-request headers, and therefore the origin property will be empty.
-          */
+           * The origin may be hidden if the user comes from an ssl encrypted website.
+           *
+           * Also: Some browser extensions remove origin and referer from the http-request headers,
+           * and therefore the origin property will be empty.
+           */
           callback(null, true);
-        }
-        else {
+        } else {
           // subdomains and tlds need to be whitelisted explicitly
-          let hostRegex = new RegExp('(https?://)([^:^/]*)(:\\d*)?(.*)?', 'gi');
-          let result = hostRegex.exec(origin);
-          let host = (result && result.length >= 2) ? result[2] : undefined;
-          let originIsWhitelisted = whitelist.indexOf(host) !== -1;
-          callback(originIsWhitelisted ? null : new Error('Bad Request'), originIsWhitelisted);
+          const hostRegex = new RegExp("(https?://)([^:^/]*)(:\\d*)?(.*)?", "gi");
+          const result = hostRegex.exec(origin);
+          const host = (result && result.length >= 2) ? result[2] : undefined;
+          const originIsWhitelisted = whitelist.indexOf(host) !== -1;
+          callback(originIsWhitelisted ? null : new Error("Bad Request"), originIsWhitelisted);
         }
-      },
-      exposedHeaders: 'Location'
-    }
-    
+      }
+    };
+
     this.app.use(cors(corsOpts));
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-      this._logger.info('Query:', req.method, req.url);
+      this.logger.info("Query:", req.method, req.url);
       next();
     });
     this.app.use(compression());
-    
-    //serve static content for cdn
-    this.app.use(this._BASEURI + 'cdn/images', Cdn.getInstance().process());
-    
+
+    // serve static content for cdn
+    this.app.use(this._BASEURI + "cdn/images", Cdn.getInstance().process());
+
     // Get port from environment and store in Express.
-    this._port = this.normalizePort(process.env.PORT || _port || '3000');
-    this.app.set('port', this._port);
-    
-    this._server = http.createServer(this.app);
-    
-    this.ws = new WebSocketServer.Server({ server: this._server });
+    this.port = this.normalizePort(process.env.PORT || port || "3000");
+    this.app.set("port", this.port);
+
+    this.server = http.createServer(this.app);
+
+    this.ws = new WebSocketServer.Server({ server: this.server });
   }
-  
-  init() {
-    this._server.listen(this._port);
-    this._server.on('listening', this.onListening);
+
+  public init() {
+    this.server.listen(this.port);
+    this.server.on("listening", this.onListening);
   }
-  
   /**
-  * Normalize a port into a number, string, or false.
-  */
-  normalizePort(val: any): number | string | boolean {
-    let port = parseInt(val, 10);
-    
+   * Normalize a port into a number, string, or false.
+   */
+  public normalizePort(val: any): number | string | boolean {
+    const port = parseInt(val, 10);
+
     if (isNaN(port)) {
       // named pipe
       return val;
     }
-    
+
     if (port >= 0) {
       // port number
       return port;
     }
-    
+
     return false;
   }
-  
+
   /**
-  * Event listener for HTTP server "listening" event.
-  */
-  onListening = () => {
-    let addr = this._server.address();
-    let bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-    this._logger.log('log', 'Listening on ' + bind);
+   * Event listener for HTTP server "listening" event.
+   */
+  public onListening = () => {
+    const addr = this.server.address();
+    const bind = typeof addr === "string"
+    ? "pipe " + addr
+    : "port " + addr.port;
+    this.logger.log("log", "Listening on " + bind);
   }
-  
+
   /**
-  * Shutdown the server
-  */
-  close = () => {
-    this.ws.close(()=>{
-      //console.log("Closed WS");
+   * Shutdown the server
+   */
+  public close = () => {
+    this.ws.close(() => {
+      // console.log("Closed WS");
     });
-    this._server.close();
+    this.server.close();
     this.app = null;
   }
-};
-
+}
