@@ -104,7 +104,7 @@ export async function asyncForEach(array, callback) {
 
 export class ElementUtil {
 
-  constructor(private availableServices: { id: string; name: string; uri: string }[], private serviceMap: any) {
+  constructor(private availableServices: Array<{ id: string; name: string; uri: string }>, private serviceMap: any) {
 
   }
 
@@ -112,9 +112,9 @@ export class ElementUtil {
     let el: any;
     await asyncForEach(this.availableServices, async (s: any) => {
       await asyncForEach(this.serviceMap[s.name].resources, async (r: Resource) => {
-        let element: any = r.getElement(id);
+        const element: any = r.getElement(id);
         if (element && element.data) {
-          let data = (<BehaviorSubject<Element>>element.data).getValue().data;
+          const data = (element.data as BehaviorSubject<Element>).getValue().data;
           el = data;
         }
       });

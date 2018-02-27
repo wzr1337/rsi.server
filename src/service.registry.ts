@@ -16,7 +16,6 @@ class ServiceRegistry {
   private port: number | string | boolean;
   private logger: rsiLoggerInstance;
 
-
   private services: any[] = [];
   private serviceMap: any = {};
 
@@ -130,7 +129,7 @@ class ServiceRegistry {
         const service = this.serviceMap[req.params.service];
         let redirectUrl: string = "http://localhost:" + service.port + "/" + service.name + "/"
                                   + req.params.collection + "/" + req.params.resource;
-        let r: any = req;
+        const r: any = req;
         if (r._parsedUrl.query) {
           redirectUrl += "?" + r._parsedUrl.query;
         }
