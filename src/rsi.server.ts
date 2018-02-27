@@ -60,7 +60,8 @@ export class RsiServer {
       this.server.init(); // need to init
 
       // repsonse to /$id queries with the servers ID
-      this.server.app.get(this.BASEURI + "([\$])id", (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      this.server.app.get(this.BASEURI + "([\$])id",
+                          (req: express.Request, res: express.Response, next: express.NextFunction) => {
         // respond
         res.status(StatusCode.OK);
         res.send(this.ID);
@@ -193,6 +194,217 @@ export class RsiServer {
   }
 
   /**
+   * handling GET requests on resource level (element listing).
+   *
+   * @param service   The service name.
+   * @param resource  The resource name.
+   */
+  public resourceGET(service: Service, resource: Resource) {
+    const resourcePath = pathof(this.BASEURI, service, resource);
+    // if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (req.query.hasOwnProperty("$spec") && resource.getResourceSpec) {
+        res.status(StatusCode.OK);
+        res.json({
+          data: resource.getResourceSpec(),
+          status: "ok"
+        });
+        return;
+      }
+
+      if (!resource.getResource) {
+        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
+        return;
+      }
+
+      // get all available renderes and map their representation to JSON compatible values
+      function parseNumberOrId(n: string | number): string | number {
+        return (typeof n === "undefined") ? undefined : ((!isNaN(parseFloat(n as string)) && isFinite(n as number)) ?
+                                                          parseFloat(n as string) : n.toString());
+      }
+
+      // tslint:disable-next-line:max-line-length
+      const elements = await resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
+
+      if (elements) {
+        let resp: any[] = elements.data.map((value: BehaviorSubject<Element>) => {
+          return value.getValue().data;
+        });
+
+        // enrich object refs + $expand handling
+        const expandLevel: any = req.query.$expand ? req.query.$expand : 0;
+        resp = await Promise.all(resp.map(async (x: any) => {
+          await this.elementUtil.traverse(x, expandLevel, 0);
+          return x;
+        }));
+
+        // Object ref search
+        for (const propName in req.query) {
+          if (req.query.hasOwnProperty(propName)) {
+            if (propName.charAt(0) !== "$") {
+              resp = resp.filter((item) => {
+                if (!item.hasOwnProperty(propName)) {
+                  return false;
+                }
+                if (typeof item[propName] === "object") {
+                  if (item[propName].id === req.query[propName]) {
+                    return true;
+                  }
+                } else if (item[propName] === req.query[propName]) {
+                  return true;
+                }
+              });
+            }
+          }
+        }
+
+        // $q Freesearch
+        if (req.query.hasOwnProperty("$q")) {
+          resp = resp.filter((item: any) => {
+            const stringValue: string = JSON.stringify(item);
+            if (stringValue.indexOf(req.query.$q) !== -1) {
+              return item;
+            }
+          });
+        }
+
+        // $fields filtering
+        if (req.query.hasOwnProperty("$fields")) {
+          const fieldsList: string[] = req.query.$fields;
+          const medatoryFields: string[] = ["name", "id", "uri"];
+          resp = resp.map((item: any) => {
+            const newItem: any = {};
+            for (const i in item) {
+              if (fieldsList.indexOf(i) !== -1 || medatoryFields.indexOf(i) !== -1) {
+                newItem[i] = item[i];
+              }
+            }
+            return newItem;
+          });
+        }
+
+        // $sorting
+        if (req.query.hasOwnProperty("$sortby")) {
+          let sort: string = req.query.$sortby;
+          let dec: number = 1;
+          if (sort.indexOf("-") === 0) {
+            sort = sort.substring(1);
+            dec = -1;
+          }
+          if (sort.indexOf("+") === 0) {
+            sort = sort.substring(1);
+            dec = 1;
+          }
+
+          resp = resp.sort((a: any, b: any) => {
+            let val1: any = "z";
+            let val2: any = "z";
+            if (a.hasOwnProperty(sort)) {
+              val1 = a[sort];
+            }
+
+            if (b.hasOwnProperty(sort)) {
+              val2 = b[sort];
+            }
+
+            val1 = val1.toLowerCase();
+            val2 = val2.toLowerCase();
+
+            if (val1 < val2) {
+              return -1 * dec;
+            }
+
+            if (val1 > val2) {
+              return 1 * dec;
+            }
+            return 0;
+          });
+        }
+
+        res.status(StatusCode.OK);
+        res.json({
+          data: resp,
+          status: "ok"
+        });
+        return;
+      } else {
+        res.status(StatusCode.NOT_FOUND).send("Not found");
+      }
+    };
+  }
+
+  /**
+   * handling POST requests on resource level (elment creation).
+   *
+   * @param service   The service name.
+   * @param resource  The resource name.
+   */
+  public resourcePOST(service: Service, resource: Resource) {
+    const resourcePath = pathof(this.BASEURI, service, resource);
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (!resource.createElement) {
+        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
+        return;
+      }
+      const newElement: ElementResponse = await resource.createElement(req.body);
+      if (newElement.status === "ok") {
+        res.status(StatusCode.CREATED);
+        res.header({Location: (newElement.data as BehaviorSubject<Element>).getValue().data.uri});
+        res.json({
+          status: "ok"
+        });
+      } else if (newElement.status) {
+        res.json(newElement);
+      } else {
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      }
+    };
+  }
+
+  public serviceGETSpec(service: Service) {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (service != null) {
+        res.status(StatusCode.OK);
+        res.json({
+          data: service.getSpecification(),
+          status: "ok"
+        });
+      } else {
+        res.status(StatusCode.NOT_FOUND).send("Internal Server Error");
+      }
+    };
+  }
+
+  /**
+   * handling DELETE requests on element level (element removal or property reset).
+   *
+   * @param service   The service name.
+   * @param resource  The resource name.
+   */
+  public elementDELETE(service: Service, resource: Resource) {
+    const elementPath = pathof(this.BASEURI, service, resource) + "/:id";
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+      if (!resource.deleteElement) {
+        res.status(501).send("Not Implemented");
+        return;
+      }
+      // proprietary element deletion
+      const deletionResponse = await resource.deleteElement(req.params.id);
+
+      // respond
+      if (deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
+        // tslint:disable-next-line:max-line-length
+        res.status(deletionResponse.code || (deletionResponse.status === "ok") ? StatusCode.OK : StatusCode.INTERNAL_SERVER_ERROR);
+        res.json(deletionResponse);
+      } else {
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+        return;
+      }
+    };
+  }
+
+  /**
    * retrieve all resources of a service
    *
    * @param service the service to discover
@@ -262,254 +474,33 @@ export class RsiServer {
   }
 
   /**
-   * handling GET requests on resource level (element listing).
+   * handling POST requests on element level (modify an existing element).
    *
    * @param service   The service name.
    * @param resource  The resource name.
    */
-  public resourceGET(service: Service, resource: Resource) {
-    let resourcePath = pathof(this.BASEURI, service, resource);
-    // if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
-    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      if (req.query.hasOwnProperty("$spec") && resource.getResourceSpec) {
-        res.status(StatusCode.OK);
-        res.json({
-          status: "ok",
-          data: resource.getResourceSpec()
-        });
-        return;
-      }
-      
-      if (!resource.getResource) {
-        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
-        return;
-      }
-      
-      // get all available renderes and map their representation to JSON compatible values
-      function parseNumberOrId(n: string | number): string | number {
-        return (typeof n === "undefined") ? undefined : ((!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString());
-      }
-      
-      let elements = await resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
-
-      if (elements) {
-        let resp:Array<any> = elements.data.map((value: BehaviorSubject<Element>) => {
-          return value.getValue().data;
-        });
-
-        // enrich object refs + $expand handling
-        const expandLevel: any = req.query["$expand"] ? req.query["$expand"] : 0;
-        resp = await Promise.all(resp.map(async (x: any) => {
-          await this.elementUtil.traverse(x, expandLevel, 0);
-          return x;
-        }));
-
-        // Object ref search
-        for (var propName in req.query) {
-          if (req.query.hasOwnProperty(propName)) {
-            if (propName.charAt(0) != "$") {
-              resp = resp.filter((item) => {
-                if (!item.hasOwnProperty(propName)) {
-                  return false;
-                }
-                if (typeof item[propName] === "object") {
-                  if (item[propName].id === req.query[propName]) {
-                    return true;
-                  }
-                } else if (item[propName] === req.query[propName]) {
-                  return true;
-                }
-              });
-            }
-          }
-        }
-
-        // $q Freesearch
-        if (req.query.hasOwnProperty("$q")) {
-          resp = resp.filter((item: any) => {
-            let stringValue: string = JSON.stringify(item);
-            if (stringValue.indexOf(req.query["$q"]) != -1) {
-              return item;
-            }
-          });
-        }
-
-        // $fields filtering
-        if (req.query.hasOwnProperty("$fields")) {
-          const fieldsList: Array<string> = req.query["$fields"];
-          const medatoryFields: Array<string> = ["name", "id", "uri"];
-          resp = resp.map((item: any) => {
-            let newItem: any = {};
-            for (var i in item) {
-              if (fieldsList.indexOf(i) != -1 || medatoryFields.indexOf(i) != -1) {
-                newItem[i] = item[i];
-              }
-            }
-            return newItem;
-          });
-        }
-
-        // $sorting
-        if (req.query.hasOwnProperty("$sortby")) {
-          let sort: string = req.query["$sortby"];
-          let dec:number = 1;
-          if (sort.indexOf("-") === 0) {
-            sort = sort.substring(1);
-            dec = -1;
-          }
-          if (sort.indexOf("+") === 0) {
-            sort = sort.substring(1);
-            dec = 1;
-          }
-
-
-          resp = resp.sort((a: any, b: any) => {
-            let val1:any = "z";
-            let val2:any = "z";
-            if (a.hasOwnProperty(sort)) {
-              val1 = a[sort];
-            }
-
-            if (b.hasOwnProperty(sort)) {
-              val2 = b[sort];
-            }
-
-            val1 = val1.toLowerCase();
-            val2 = val2.toLowerCase();
-
-            if (val1 < val2) {
-              return -1 * dec;
-            }
-
-            if (val1 > val2) {
-              return 1 * dec;
-            }
-            return 0;
-          });
-        }
-
-
-        res.status(StatusCode.OK);
-        res.json({
-          status: "ok",
-          data: resp
-        });
-        return;
-      }
-      else {
-        res.status(StatusCode.NOT_FOUND).send("Not found");
-      }
-    };
-  };
-
-  /**
-  * handling POST requests on resource level (elment creation).
-  *
-  * @param service   The service name.
-  * @param resource  The resource name.
-  */
-  resourcePOST = (service: Service, resource: Resource) => {
-    let resourcePath = pathof(this.BASEURI, service, resource);
-    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      if (!resource.createElement) {
-        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
-        return;
-      }
-      let newElement: ElementResponse = await resource.createElement(req.body);
-      if (newElement.status === "ok") {
-        res.status(StatusCode.CREATED);
-        res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
-        res.json({
-          status: "ok"
-        });
-      }
-      else if (newElement.status) {
-        res.json(newElement);
-      }
-      else {
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-      }
-    };
-  };
-
-  serviceGETSpec = (service: Service) => {
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      if (service != null) {
-        res.status(StatusCode.OK);
-        res.json({
-          status: "ok",
-          data: service.getSpecification()
-        });
-      }
-
-      else {
-        res.status(StatusCode.NOT_FOUND).send("Internal Server Error");
-      }
-    };
-
-  };
-
-  /**
-  * handling DELETE requests on element level (element removal or property reset).
-  *
-  * @param service   The service name.
-  * @param resource  The resource name.
-  */
-  elementDELETE = (service: Service, resource: Resource) => {
-    let elementPath = pathof(this.BASEURI, service, resource) + "/:id";
-    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-
-      if (!resource.deleteElement) {
-        res.status(501).send("Not Implemented");
-        return;
-      }
-      // proprietary element deletion
-      let deletionResponse = await resource.deleteElement(req.params.id);
-
-      // respond
-      if (deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
-        res.status(deletionResponse.code || (deletionResponse.status === "ok") ? StatusCode.OK : StatusCode.INTERNAL_SERVER_ERROR);
-        res.json(deletionResponse);
-      }
-      else {
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-        return;
-      }
-    };
-  };
-
-
-  /**
-  * handling POST requests on element level (modify an existing element).
-  *
-  * @param service   The service name.
-  * @param resource  The resource name.
-  */
   private elementPOST(service: Service, resource: Resource) {
-    let elementPath = pathof(this.BASEURI, service, resource) + "/:id";
-    //if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
+    const elementPath = pathof(this.BASEURI, service, resource) + "/:id";
+    // if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
       // find the element requested by the client
-      let element:ElementResponse = await resource.getElement(req.params.id);
+      const element: ElementResponse = await resource.getElement(req.params.id);
       if (element && element.status === "ok") {
-        let resp = await resource.updateElement(req.params.id, req.body);
+        const resp = await resource.updateElement(req.params.id, req.body);
         res.status(resp.code || StatusCode.OK);
         res.json({
           code: resp.code || undefined,
-          status: resp.status,
-          message: resp.error ? (resp.error.message || undefined) : undefined
+          message: resp.error ? (resp.error.message || undefined) : undefined,
+          status: resp.status
         });
-      }
-      else {
+      } else {
         res.status(element ? element.code : StatusCode.NOT_FOUND).json({
           code: element ? element.code : StatusCode.NOT_FOUND,
-          status: element ? element.status : "error",
-          message: element ? element.message : "Not found."
+          message: element ? element.message : "Not found.",
+          status: element ? element.status : "error"
         });
       }
     };
-  };
-
-
+  }
 }
