@@ -1,23 +1,22 @@
-import { rsiLogger, ElementResponse } from '@rsi/core';
-import { WebServer } from './web.server';
-import { Element, Resource, Service, StatusCode } from '@rsi/core';
-import { WsHandler } from './web.socket.handler';
-import { RsiWebSocket } from './web.socket.server';
-import { IRunOptions, IRsiClientWebSocketMessage, IErrorObject } from './types';
-import { ElementUtil, filterByKeys, pathof, splitEvent } from './helpers';
-import * as express from 'express';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import * as request from 'request';
 
+import { Element, ElementResponse, Resource, rsiLogger, Service, StatusCode } from "@rsi/core";
+import * as express from "express";
+import * as request from "request";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { ElementUtil, filterByKeys, pathof, splitEvent } from "./helpers";
+import { IErrorObject, IRsiClientWebSocketMessage, IRunOptions } from "./types";
+import { WebServer } from "./web.server";
+import { WsHandler } from "./web.socket.handler";
+import { RsiWebSocket } from "./web.socket.server";
 
 /**
  * The rsiServer class to be instantiated for running a server
  */
 export class RsiServer {
-  
-  private logger = rsiLogger.getInstance().getLogger('general');
+
+  private logger = rsiLogger.getInstance().getLogger("general");
   private server: WebServer;
-  private BASEURI: string = '/';
+  private BASEURI: string = "/";
   private availableServices: { id: string; name: string; uri: string }[] = [];
   private wsMapping: { [path: string]: WsHandler } = {};
   private shuttingDown: boolean;
@@ -25,9 +24,9 @@ export class RsiServer {
   private serviceMap: any = {};
   private elementUtil: ElementUtil;
   private port: number = 3000;
-  private serviceRegistry: string = '';
+  private serviceRegistry: string = "";
   /** the servers id */
-  private ID = '50182B97-1AE1-4701-A6CE-017648990969';
+  private ID = "50182B97-1AE1-4701-A6CE-017648990969";
   
   constructor() {
     this.elementUtil = new ElementUtil(this.availableServices, this.serviceMap);
@@ -51,17 +50,17 @@ export class RsiServer {
    * @return {Promise<void>} resolves after proper startup
    */
   public run(options: IRunOptions = {}): Promise<void> {
-    this.logger.transports['console'].level = options.verbosity || 'warn';
+    this.logger.transports["console"].level = options.verbosity || "warn";
     this.BASEURI = options.base ? options.base : this.BASEURI;
     this.port = options.port ? options.port : this.port;
-    this.serviceRegistry = options.serviceRegistry ? options.serviceRegistry : '';
+    this.serviceRegistry = options.serviceRegistry ? options.serviceRegistry : "";
     return new Promise<void>((resolve, reject) => {
       this.shuttingDown = false;
       this.server = new WebServer(options.port, this.BASEURI);
       this.server.init(); // need to init
       
       // repsonse to /$id queries with the servers ID
-      this.server.app.get(this.BASEURI + '([\$])id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      this.server.app.get(this.BASEURI + "([\$])id", (req: express.Request, res: express.Response, next: express.NextFunction) => {
         // respond
         res.status(StatusCode.OK);
         res.send(this.ID);
@@ -72,7 +71,7 @@ export class RsiServer {
         // respond
         res.status(StatusCode.OK);
         res.json({
-          status: 'ok',
+          status: "ok",
           data: this.availableServices
         });
       });
@@ -81,17 +80,17 @@ export class RsiServer {
         // respond
         res.status(StatusCode.NOT_IMPLEMENTED);
         res.json(<IErrorObject>{
-          status: 'error',
+          status: "error",
           message: "Not implemented",
           code: 501
         });
       });
 
-      this.server.ws.on('connection', (ws: any) => {                                //subscribe|unsubscribe
+      this.server.ws.on("connection", (ws: any) => {                                //subscribe|unsubscribe
         
         const rsiWebSocket = new RsiWebSocket(ws);
         this.clientWebsockets.push(rsiWebSocket);
-        ws.on('close', () => {
+        ws.on("close", () => {
           for (let prop in this.wsMapping) {
             this.wsMapping[prop].unsubscribeWebSocket(rsiWebSocket);
           }
@@ -99,23 +98,23 @@ export class RsiServer {
           this.clientWebsockets.splice(this.clientWebsockets.indexOf(rsiWebSocket), 1);
         });
         
-        ws.on('message', (message: string) => {
+        ws.on("message", (message: string) => {
           let msg: IRsiClientWebSocketMessage;
           // make sure we actually parse the incomming message
           try {
             msg = JSON.parse(message);
           }
           catch (err) {
-            rsiWebSocket.sendError(msg ? msg.event : '', StatusCode.BAD_REQUEST, new Error(err));
+            rsiWebSocket.sendError(msg ? msg.event : "", StatusCode.BAD_REQUEST, new Error(err));
             return;
           }
           let event = splitEvent(msg.event);
-          let basePath = this.BASEURI + event.service + '/' + event.resource + '/';
+          let basePath = this.BASEURI + event.service + "/" + event.resource + "/";
           if (this.wsMapping[basePath] && this.wsMapping[basePath].isHandlingEvent(msg.event)) {
             this.wsMapping[basePath].handleWebSocketMessages(msg, rsiWebSocket);
           }
           else {
-            rsiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error('Not Found'));
+            rsiWebSocket.sendError(msg.event, StatusCode.NOT_FOUND, new Error("Not Found"));
           }
         });
       });
@@ -138,49 +137,49 @@ export class RsiServer {
     this.availableServices.push({
       id: service.id,
       name: service.name,
-      uri: this.BASEURI + service.name.toLowerCase() + '/'
+      uri: this.BASEURI + service.name.toLowerCase() + "/"
     });
     
     this.serviceMap[service.name] = service;
-    this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/', this.serviceGET(service));
-    this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/spec', this.serviceGETSpec(service));
+    this.server.app.get(this.BASEURI + service.name.toLowerCase() + "/", this.serviceGET(service));
+    this.server.app.get(this.BASEURI + service.name.toLowerCase() + "/spec", this.serviceGETSpec(service));
     // repsonse to {{basePath}}/$id queries with the services ID
-    this.server.app.get(this.BASEURI + service.name.toLowerCase() + '/([\$])id', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    this.server.app.get(this.BASEURI + service.name.toLowerCase() + "/([\$])id", (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // respond
       res.status(StatusCode.OK);
       res.send(service.id);
     });
 
-    if (this.serviceRegistry !== '') {
+    if (this.serviceRegistry !== "") {
       this.announceService(service);
     }
     service.resources.map((resource: Resource) => {
-      let basePath = this.BASEURI + service.name.toLowerCase() + '/' + resource.name.toLowerCase() + '/';
+      let basePath = this.BASEURI + service.name.toLowerCase() + "/" + resource.name.toLowerCase() + "/";
       this.server.app.get(basePath, this.resourceGET(service, resource));               //READ
       this.server.app.post(basePath, this.resourcePOST(service, resource));             //CREATE
-      this.server.app.post(basePath + ':id', this.elementPOST(service, resource));      //READ
-      this.server.app.get(basePath + ':id', this.elementGET(service, resource));        //UPDATE
-      this.server.app.delete(basePath + ':id', this.elementDELETE(service, resource));  //DELETE
+      this.server.app.post(basePath + ":id", this.elementPOST(service, resource));      //READ
+      this.server.app.get(basePath + ":id", this.elementGET(service, resource));        //UPDATE
+      this.server.app.delete(basePath + ":id", this.elementDELETE(service, resource));  //DELETE
       this.wsMapping[basePath] = new WsHandler(service, resource, this.elementUtil);
     });
   }
-  
-  announceService(service: Service) {
+
+  public announceService(service: Service) {
     const jsonBody = {
       name: service.name,
       port: this.port
     };
-    
+
     const options = {
-      method: 'PUT',
-      uri: this.serviceRegistry,
       body: jsonBody,
-      json: true
+      json: true,
+      method: "PUT",
+      uri: this.serviceRegistry
     };
-    
+
     request(options, (err, response) => {
       if (err) {
-        console.log('Error registering ', err);
+        console.log("Error registering", err);
         setTimeout(() => {
           this.announceService(service);
         }, 2000);
@@ -190,39 +189,36 @@ export class RsiServer {
             this.announceService(service);
           }, 2000);
         } else {
-          //console.log('Service 2 ' + service.name + ' Registered!');
+          // console.log("Service 2 " + service.name + " Registered!");
         }
-        
       }
     });
-    
   }
-  
-  
+
   /**
-  * retrieve all resources of a service
-  *
-  * @param service the service to discover
-  *
-  * returns an express route callback
-  */
+   * retrieve all resources of a service
+   *
+   * @param service the service to discover
+   *
+   * returns an express route callback
+   */
   private serviceGET(service: Service) {
     let resources: Array<any> = service.resources.map((res: Resource) => {
       return {
         name: res.name.toLowerCase(),
-        uri: this.BASEURI + service.name.toLowerCase() + '/' + res.name.toLowerCase() + '/'
+        uri: this.BASEURI + service.name.toLowerCase() + "/" + res.name.toLowerCase() + "/"
       };
     });
-    
+
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       let result: any = resources;
-      if (req.query.hasOwnProperty('$spec') && service.getSpecification()) {
+      if (req.query.hasOwnProperty("$spec") && service.getSpecification()) {
         result = service.getSpecification();
       }
       
       res.status(StatusCode.OK);
       res.json({
-        status: 'ok',
+        status: "ok",
         data: result
       });
     };
@@ -235,11 +231,11 @@ export class RsiServer {
   * @param resource  The resource name.
   */
   private elementGET(service: Service, resource: Resource) {
-    let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
+    let elementPath = pathof(this.BASEURI, service, resource) + "/:id";
     //if(resource.getElement) { logger.info("GET   ", elementPath, "registered") };
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (!resource.getElement) {
-        res.status(StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
         return;
       }
       
@@ -249,17 +245,17 @@ export class RsiServer {
         let data = (<BehaviorSubject<Element>>element.data).getValue().data;
         // filter the result before responding if need
         // ed
-        if (req.query.hasOwnProperty('$fields')) {
-          data = filterByKeys(data, ['id', 'name', 'uri'].concat(req.query['$fields'].split(',')));
+        if (req.query.hasOwnProperty("$fields")) {
+          data = filterByKeys(data, ["id", "name", "uri"].concat(req.query["$fields"].split(",")));
         }
         
-        const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+        const expandLevel: any = req.query["$expand"] ? req.query["$expand"] : 0;
         await this.elementUtil.traverse(data, expandLevel, 0);
         
         //respond
         res.status(StatusCode.OK);
         res.json({
-          status: 'ok',
+          status: "ok",
           data: data
         });
       }
@@ -280,23 +276,23 @@ export class RsiServer {
     let resourcePath = pathof(this.BASEURI, service, resource);
     //if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      if (req.query.hasOwnProperty('$spec') && resource.getResourceSpec) {
+      if (req.query.hasOwnProperty("$spec") && resource.getResourceSpec) {
         res.status(StatusCode.OK);
         res.json({
-          status: 'ok',
+          status: "ok",
           data: resource.getResourceSpec()
         });
         return;
       }
       
       if (!resource.getResource) {
-        res.status(StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
         return;
       }
       
       // get all available renderes and map their representation to JSON compatible values
       function parseNumberOrId(n: string | number): string | number {
-        return (typeof n === 'undefined') ? undefined : ((!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString());
+        return (typeof n === "undefined") ? undefined : ((!isNaN(parseFloat(<string>n)) && isFinite(<number>n)) ? parseFloat(<string>n) : n.toString());
       }
       
       let elements = await resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
@@ -307,7 +303,7 @@ export class RsiServer {
         });
         
         // enrich object refs + $expand handling
-        const expandLevel: any = req.query['$expand'] ? req.query['$expand'] : 0;
+        const expandLevel: any = req.query["$expand"] ? req.query["$expand"] : 0;
         resp = await Promise.all(resp.map(async (x: any) => {
           await this.elementUtil.traverse(x, expandLevel, 0);
           return x;
@@ -317,12 +313,12 @@ export class RsiServer {
         // Object ref search
         for (var propName in req.query) {
           if (req.query.hasOwnProperty(propName)) {
-            if (propName.charAt(0) != '$') {
+            if (propName.charAt(0) != "$") {
               resp = resp.filter((item) => {
                 if (!item.hasOwnProperty(propName)) {
                   return false;
                 }
-                if (typeof item[propName] === 'object') {
+                if (typeof item[propName] === "object") {
                   if (item[propName].id === req.query[propName]) {
                     return true;
                   }
@@ -335,19 +331,19 @@ export class RsiServer {
         }
         
         // $q Freesearch
-        if (req.query.hasOwnProperty('$q')) {
+        if (req.query.hasOwnProperty("$q")) {
           resp = resp.filter((item: any) => {
             let stringValue: string = JSON.stringify(item);
-            if (stringValue.indexOf(req.query['$q']) != -1) {
+            if (stringValue.indexOf(req.query["$q"]) != -1) {
               return item;
             }
           });
         }
         
         // $fields filtering
-        if (req.query.hasOwnProperty('$fields')) {
-          const fieldsList: Array<string> = req.query['$fields'];
-          const medatoryFields: Array<string> = ['name', 'id', 'uri'];
+        if (req.query.hasOwnProperty("$fields")) {
+          const fieldsList: Array<string> = req.query["$fields"];
+          const medatoryFields: Array<string> = ["name", "id", "uri"];
           resp = resp.map((item: any) => {
             let newItem: any = {};
             for (var i in item) {
@@ -360,22 +356,22 @@ export class RsiServer {
         }
         
         // $sorting
-        if (req.query.hasOwnProperty('$sortby')) {
-          let sort: string = req.query['$sortby'];
+        if (req.query.hasOwnProperty("$sortby")) {
+          let sort: string = req.query["$sortby"];
           let dec:number = 1;
-          if (sort.indexOf('-') === 0) {
+          if (sort.indexOf("-") === 0) {
             sort = sort.substring(1);
             dec = -1;
           }
-          if (sort.indexOf('+') === 0) {
+          if (sort.indexOf("+") === 0) {
             sort = sort.substring(1);
             dec = 1;
           }
           
           
           resp = resp.sort((a: any, b: any) => {
-            let val1:any = 'z';
-            let val2:any = 'z';
+            let val1:any = "z";
+            let val2:any = "z";
             if (a.hasOwnProperty(sort)) {
               val1 = a[sort];
             }
@@ -401,13 +397,13 @@ export class RsiServer {
         
         res.status(StatusCode.OK);
         res.json({
-          status: 'ok',
+          status: "ok",
           data: resp
         });
         return;
       }
       else {
-        res.status(StatusCode.NOT_FOUND).send('Not found');
+        res.status(StatusCode.NOT_FOUND).send("Not found");
       }
     };
   };
@@ -422,22 +418,22 @@ export class RsiServer {
     let resourcePath = pathof(this.BASEURI, service, resource);
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (!resource.createElement) {
-        res.status(StatusCode.NOT_IMPLEMENTED).send('Not Implemented');
+        res.status(StatusCode.NOT_IMPLEMENTED).send("Not Implemented");
         return;
       }
       let newElement: ElementResponse = await resource.createElement(req.body);
-      if (newElement.status === 'ok') {
+      if (newElement.status === "ok") {
         res.status(StatusCode.CREATED);
-        res.header({'Location': (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
+        res.header({"Location": (<BehaviorSubject<Element>>newElement.data).getValue().data.uri});
         res.json({
-          status: 'ok'
+          status: "ok"
         });
       }
       else if (newElement.status) {
         res.json(newElement);
       }
       else {
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
       }
     };
   };
@@ -447,13 +443,13 @@ export class RsiServer {
       if (service != null) {
         res.status(StatusCode.OK);
         res.json({
-          status: 'ok',
+          status: "ok",
           data: service.getSpecification()
         });
       }
       
       else {
-        res.status(StatusCode.NOT_FOUND).send('Internal Server Error');
+        res.status(StatusCode.NOT_FOUND).send("Internal Server Error");
       }
     };
     
@@ -466,23 +462,23 @@ export class RsiServer {
   * @param resource  The resource name.
   */
   elementDELETE = (service: Service, resource: Resource) => {
-    let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
+    let elementPath = pathof(this.BASEURI, service, resource) + "/:id";
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       
       if (!resource.deleteElement) {
-        res.status(501).send('Not Implemented');
+        res.status(501).send("Not Implemented");
         return;
       }
       // proprietary element deletion
       let deletionResponse = await resource.deleteElement(req.params.id);
       
       // respond
-      if (deletionResponse.status && deletionResponse.status === 'ok' || deletionResponse.status === 'error') {
-        res.status(deletionResponse.code || (deletionResponse.status === 'ok') ? StatusCode.OK : StatusCode.INTERNAL_SERVER_ERROR);
+      if (deletionResponse.status && deletionResponse.status === "ok" || deletionResponse.status === "error") {
+        res.status(deletionResponse.code || (deletionResponse.status === "ok") ? StatusCode.OK : StatusCode.INTERNAL_SERVER_ERROR);
         res.json(deletionResponse);
       }
       else {
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
         return;
       }
     };
@@ -496,13 +492,13 @@ export class RsiServer {
   * @param resource  The resource name.
   */
   private elementPOST(service: Service, resource: Resource) {
-    let elementPath = pathof(this.BASEURI, service, resource) + '/:id';
+    let elementPath = pathof(this.BASEURI, service, resource) + "/:id";
     //if(resource.updateElement) { logger.info("POST  ", elementPath, "registered") };
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       
       // find the element requested by the client
       let element:ElementResponse = await resource.getElement(req.params.id);
-      if (element && element.status === 'ok') {
+      if (element && element.status === "ok") {
         let resp = await resource.updateElement(req.params.id, req.body);
         res.status(resp.code || StatusCode.OK);
         res.json({
@@ -514,8 +510,8 @@ export class RsiServer {
       else {
         res.status(element ? element.code : StatusCode.NOT_FOUND).json({
           code: element ? element.code : StatusCode.NOT_FOUND,
-          status: element ? element.status : 'error',
-          message: element ? element.message : 'Not found.'
+          status: element ? element.status : "error",
+          message: element ? element.message : "Not found."
         });
       }
     };
