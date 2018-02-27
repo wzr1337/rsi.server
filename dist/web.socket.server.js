@@ -5,19 +5,10 @@ var uuid = require("uuid");
 var RsiWebSocket = /** @class */ (function () {
     function RsiWebSocket(ws) {
         this.ws = ws;
-        this._logger = core_1.rsiLogger.getInstance().getLogger('RsiWebSocket');
-        this._logger.transports['console'].level = 'silly'; // for debug
+        this.logger = core_1.rsiLogger.getInstance().getLogger("RsiWebSocket");
+        this.logger.transports.console.level = "silly"; // for debug
         this._id = uuid.v4();
     }
-    RsiWebSocket.prototype._send = function (rsiMessageObject) {
-        if (this.ws.readyState === this.ws.OPEN) {
-            //this._logger.debug(this.constructor.name + "._send():", rsiMessageObject);
-            this.ws.send(JSON.stringify(rsiMessageObject));
-            return true;
-        }
-        this._logger.error('RsiWebSocket._send(): WebSocket readyState is ', this.ws.readyState);
-        return false;
-    };
     Object.defineProperty(RsiWebSocket.prototype, "id", {
         get: function () {
             return this._id;
@@ -33,8 +24,13 @@ var RsiWebSocket = /** @class */ (function () {
      * @returns true on successful send
      */
     RsiWebSocket.prototype.sendData = function (event, payload) {
-        //this._logger.debug(this.constructor.name + ".sendData():", event);
-        return this._send({ type: 'data', status: 'ok', event: event, data: payload });
+        // this._logger.debug(this.constructor.name + ".sendData():", event);
+        return this._send({
+            data: payload,
+            event: event,
+            status: "ok",
+            type: "data"
+        });
     };
     /**
      * send formatted error message via WebSocket
@@ -44,8 +40,13 @@ var RsiWebSocket = /** @class */ (function () {
      * @returns true on successful send
      */
     RsiWebSocket.prototype.sendError = function (event, code, err) {
-        this._logger.debug('RsiWebSocket.sendError():', event, code, err.message);
-        return this._send({ type: 'error', 'event': event, code: code, data: err.message });
+        this.logger.debug("RsiWebSocket.sendError():", event, code, err.message);
+        return this._send({
+            code: code,
+            data: err.message,
+            event: event,
+            type: "error"
+        });
     };
     /**
      * acknowledge the subscription
@@ -54,8 +55,12 @@ var RsiWebSocket = /** @class */ (function () {
      * @returns true on successful acknowledgement
      */
     RsiWebSocket.prototype.acknowledgeSubscription = function (event) {
-        this._logger.debug('RsiWebSocket.acknowledgeSubscription():', event);
-        return this._send({ type: 'subscribe', status: 'ok', event: event });
+        this.logger.debug("RsiWebSocket.acknowledgeSubscription():", event);
+        return this._send({
+            event: event,
+            status: "ok",
+            type: "subscribe"
+        });
     };
     /**
      * acknowledge the subscription
@@ -64,13 +69,26 @@ var RsiWebSocket = /** @class */ (function () {
      * @returns true on successful acknowledgement
      */
     RsiWebSocket.prototype.acknowledgeUnsubscription = function (event) {
-        this._logger.debug('RsiWebSocket.acknowledgeUnsubscription():', event);
-        return this._send({ type: 'unsubscribe', status: 'ok', event: event });
+        this.logger.debug("RsiWebSocket.acknowledgeUnsubscription():", event);
+        return this._send({
+            event: event,
+            status: "ok",
+            type: "unsubscribe"
+        });
     };
     RsiWebSocket.prototype.close = function (code) {
         if (this.ws.readyState) {
             this.ws.close(code);
         }
+    };
+    RsiWebSocket.prototype._send = function (rsiMessageObject) {
+        if (this.ws.readyState === this.ws.OPEN) {
+            // this._logger.debug(this.constructor.name + "._send():", rsiMessageObject);
+            this.ws.send(JSON.stringify(rsiMessageObject));
+            return true;
+        }
+        this.logger.error("RsiWebSocket._send(): WebSocket readyState is ", this.ws.readyState);
+        return false;
     };
     return RsiWebSocket;
 }());

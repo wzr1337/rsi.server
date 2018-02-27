@@ -16,6 +16,11 @@
         },
         "esSpecCompliant": true
       }
+    ],
+    "no-console": [
+      true,
+      "dir",
+      "error"
     ]
   },
   "rulesDirectory": []

@@ -11,20 +11,17 @@ const BASEURI = PROTO + "://" + ADDRESS + ":" + SERVICE_REGISTRY_PORT;
 let server;
 let serviceRegistry;
 
-
-export function startServer(done: Function) {
+export function startServer(done: () => void) {
     serviceRegistry = new ServiceRegistry(3000);
     serviceRegistry.init();
     server = new RsiServer();
 
     console.log(join(__dirname, "..", "plugins"));
 
-
     server.run({
         port: PORT,
         serviceRegistry: "http://localhost:3000"
     }).then(() => {
-        console.log("DONE");
         const plugins: PluginLoader = new PluginLoader(server);
 
         plugins.loadPlugins(join(__dirname, "..", "plugins"));
@@ -37,8 +34,7 @@ export function startServer(done: Function) {
     });
 }
 
-
-export function stopServer(done: Function) {
+export function stopServer(done: () => void) {
     server.stop();
     serviceRegistry.close();
     setTimeout(() => {

@@ -2,18 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var filetype = require("file-type");
 var core_1 = require("@rsi/core");
-;
 /**
  * The cdn service provides access to binary data (e.g. images)
  */
 var Cdn = /** @class */ (function () {
     function Cdn() {
-        this._fileRegistry = {};
-        this._logger = core_1.rsiLogger.getInstance().getLogger("cdn");
-        if (Cdn._instance) {
+        this.fileRegistry = {};
+        this.logger = core_1.rsiLogger.getInstance().getLogger("cdn");
+        if (Cdn.instance) {
             throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
         }
-        Cdn._instance = this;
+        Cdn.instance = this;
     }
     /**
      * The Cdn is a singleton, get an instance by calling the method.
@@ -21,7 +20,7 @@ var Cdn = /** @class */ (function () {
      * @return {Cdn} instance of cdn service
      */
     Cdn.getInstance = function () {
-        return Cdn._instance;
+        return Cdn.instance;
     };
     /**
      * This method process es Cdn calls
@@ -36,19 +35,19 @@ var Cdn = /** @class */ (function () {
             if (null === origUrl.match(FILENAME_REGEX)) {
                 res.status(501);
                 res.json({
-                    status: "error",
-                    message: "Directory listing not supported"
+                    message: "Directory listing not supported",
+                    status: "error"
                 });
                 return;
             }
             var filename = origUrl.match(FILENAME_REGEX)[3];
             var resourcename = origUrl.match(FILENAME_REGEX)[2];
             var path = resourcename + "/" + filename;
-            if (_this._fileRegistry[path]) {
-                var img = _this._fileRegistry[path](resourcename, filename);
+            if (_this.fileRegistry[path]) {
+                var img = _this.fileRegistry[path](resourcename, filename);
                 res.writeHead(200, {
-                    'Content-Type': filetype(img).mime,
-                    'Content-Length': img.length
+                    "Content-Length": img.length,
+                    "Content-Type": filetype(img).mime
                 });
                 res.end(img);
             }
@@ -61,24 +60,24 @@ var Cdn = /** @class */ (function () {
     /**
      * Other services use this method to register callbacks for file access
      *
-     * @param resourceName {string} The resource of the file to be made available (e.g. 'images')
+     * @param resourceName {string} The resource of the file to be made available (e.g. "images")
      * @param fileName {string} The name of the file to be made available
-     * @param callback {CdnCallback} The callback to be called on route access
+     * @param callback {ICdnCallback} The callback to be called on route access
      *
      * @return {Boolean} true on success
      */
     Cdn.prototype.register = function (resourceName, fileName, callback) {
-        var path = resourceName + '/' + fileName;
-        this._logger.silly("registering a handler for " + path);
-        var lookup = typeof this._fileRegistry[path] === "function";
+        var path = resourceName + "/" + fileName;
+        this.logger.silly("registering a handler for " + path);
+        var lookup = typeof this.fileRegistry[path] === "function";
         if (!lookup && typeof callback === "function") {
-            //filename not yet registered
-            this._fileRegistry[path] = callback;
+            // filename not yet registered
+            this.fileRegistry[path] = callback;
             return true;
         }
         return false;
     };
-    Cdn._instance = new Cdn();
+    Cdn.instance = new Cdn();
     return Cdn;
 }());
 exports.Cdn = Cdn;

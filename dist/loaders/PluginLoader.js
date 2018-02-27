@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var path_1 = require("path");
 var fs_1 = require("fs");
+var path_1 = require("path");
 var PluginLoader = /** @class */ (function () {
     function PluginLoader(server) {
         this.server = server;
@@ -21,9 +21,9 @@ var PluginLoader = /** @class */ (function () {
         var service;
         var services = [];
         if (fs_1.lstatSync(directory).isDirectory()) {
-            var _plugin = require(directory);
-            if (_plugin.hasOwnProperty('getPlugins')) {
-                _plugin.getPlugins().forEach(function (serviceClass) {
+            var plugin = require(directory);
+            if (plugin.hasOwnProperty("getPlugins")) {
+                plugin.getPlugins().forEach(function (serviceClass) {
                     service = new serviceClass();
                     service.pluginDir = directory;
                     if (service.init) {
