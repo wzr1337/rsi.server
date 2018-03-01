@@ -46,7 +46,7 @@ var web_socket_server_1 = require("./web.socket.server");
  */
 var RsiServer = /** @class */ (function () {
     function RsiServer() {
-        this.logger = core_1.rsiLogger.getInstance().getLogger("general");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("general");
         this.BASEURI = "/";
         this.availableServices = [];
         this.wsMapping = {};

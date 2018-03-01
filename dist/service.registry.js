@@ -34,7 +34,7 @@ var ServiceRegistry = /** @class */ (function () {
             _this.app = null;
         };
         this.port = port;
-        this.logger = core_1.rsiLogger.getInstance().getLogger("general");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("general");
         this.app = express();
         var whitelist = ["127.0.0.1", "localhost"];
         var corsOpts = {

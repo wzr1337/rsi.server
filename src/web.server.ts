@@ -6,7 +6,7 @@ import * as http from "http";
 import * as path from "path";
 import * as WebSocketServer from "ws";
 
-import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
+import { IRsiLoggerInstance, RsiLogger } from "@rsi/core";
 import { Cdn } from "./cdn";
 
 // create server and listen on provided port (on all network interfaces).
@@ -16,11 +16,11 @@ export class WebServer {
 
   private server: any;
   private port: number | string | boolean;
-  private logger: rsiLoggerInstance;
+  private logger: IRsiLoggerInstance;
 
   constructor(port?: number, private _BASEURI: string = "/") {
 
-    this.logger = rsiLogger.getInstance().getLogger("general");
+    this.logger = RsiLogger.getInstance().getLogger("general");
     this.app = express();
 
     const whitelist = ["127.0.0.1", "localhost"];

@@ -1,5 +1,5 @@
 
-import { Element, ElementResponse, Resource, rsiLogger, Service, StatusCode } from "@rsi/core";
+import { ElementResponse, IElement, Resource, RsiLogger, Service, StatusCode } from "@rsi/core";
 import * as express from "express";
 import * as request from "request";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
@@ -14,7 +14,7 @@ import { RsiWebSocket } from "./web.socket.server";
  */
 export class RsiServer {
 
-  private logger = rsiLogger.getInstance().getLogger("general");
+  private logger = RsiLogger.getInstance().getLogger("general");
   private server: WebServer;
   private BASEURI: string = "/";
   private availableServices: Array<{ id: string; name: string; uri: string }> = [];
@@ -227,7 +227,7 @@ export class RsiServer {
       const elements = await resource.getResource(parseNumberOrId(req.query.$offset), parseNumberOrId(req.query.$limit));
 
       if (elements) {
-        let resp: any[] = elements.data.map((value: BehaviorSubject<Element>) => {
+        let resp: any[] = elements.data.map((value: BehaviorSubject<IElement>) => {
           return value.getValue().data;
         });
 
@@ -349,7 +349,7 @@ export class RsiServer {
       const newElement: ElementResponse = await resource.createElement(req.body);
       if (newElement.status === "ok") {
         res.status(StatusCode.CREATED);
-        res.header({Location: (newElement.data as BehaviorSubject<Element>).getValue().data.uri});
+        res.header({Location: (newElement.data as BehaviorSubject<IElement>).getValue().data.uri});
         res.json({
           status: "ok"
         });
@@ -451,7 +451,7 @@ export class RsiServer {
       // proprietary element fetching
       const element = await resource.getElement(req.params.id);
       if (element && element.data) {
-        let data = (element.data as BehaviorSubject<Element>).getValue().data;
+        let data = (element.data as BehaviorSubject<IElement>).getValue().data;
         // filter the result before responding if need
         // ed
         if (req.query.hasOwnProperty("$fields")) {

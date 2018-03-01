@@ -8,7 +8,7 @@ var core_1 = require("@rsi/core");
 var Cdn = /** @class */ (function () {
     function Cdn() {
         this.fileRegistry = {};
-        this.logger = core_1.rsiLogger.getInstance().getLogger("cdn");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("cdn");
         if (Cdn.instance) {
             throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
         }

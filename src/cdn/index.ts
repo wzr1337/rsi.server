@@ -2,7 +2,7 @@ import * as express from "express";
 import * as filetype from "file-type";
 import * as fs from "fs";
 
-import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
+import { IRsiLoggerInstance , RsiLogger } from "@rsi/core";
 
 /**
  * Defines a callback signature for callback into the server
@@ -30,13 +30,13 @@ class Cdn {
 
   private static instance: Cdn = new Cdn();
 
-  private logger: rsiLoggerInstance;
+  private logger: IRsiLoggerInstance;
   private fileRegistry: {
     [filename: string]: ICdnCallback
   } = {};
 
   private constructor() {
-    this.logger = rsiLogger.getInstance().getLogger("cdn");
+    this.logger = RsiLogger.getInstance().getLogger("cdn");
     if (Cdn.instance) {
       throw new Error("Error: Instantiation failed: Use SingletonClass.getInstance() instead of new.");
     }

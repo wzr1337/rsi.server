@@ -5,7 +5,7 @@ var uuid = require("uuid");
 var RsiWebSocket = /** @class */ (function () {
     function RsiWebSocket(ws) {
         this.ws = ws;
-        this.logger = core_1.rsiLogger.getInstance().getLogger("RsiWebSocket");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("RsiWebSocket");
         this.logger.transports.console.level = "silly"; // for debug
         this._id = uuid.v4();
     }

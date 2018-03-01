@@ -1,4 +1,4 @@
-import { Element, Resource, Service } from "@rsi/core";
+import { IElement, Resource, Service } from "@rsi/core";
 import * as queryString from "query-string";
 import { BehaviorSubject } from "rxjs";
 
@@ -116,7 +116,7 @@ export class ElementUtil {
       await asyncForEach(this.serviceMap[s.name].resources, async (r: Resource) => {
         const element: any = r.getElement(id);
         if (element && element.data) {
-          const data = (element.data as BehaviorSubject<Element>).getValue().data;
+          const data = (element.data as BehaviorSubject<IElement>).getValue().data;
           el = data;
         }
       });

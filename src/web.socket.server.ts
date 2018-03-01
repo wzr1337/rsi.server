@@ -1,13 +1,13 @@
-import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
+import { IRsiLoggerInstance, RsiLogger } from "@rsi/core";
 import * as uuid from "uuid";
 
 class RsiWebSocket {
   // tslint:disable-next-line:variable-name
   private _id: string;
-  private logger: rsiLoggerInstance;
+  private logger: IRsiLoggerInstance;
 
   constructor(private ws: WebSocket) {
-    this.logger = rsiLogger.getInstance().getLogger("RsiWebSocket");
+    this.logger = RsiLogger.getInstance().getLogger("RsiWebSocket");
     this.logger.transports.console.level = "silly"; // for debug
     this._id = uuid.v4();
   }

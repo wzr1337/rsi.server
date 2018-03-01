@@ -12,11 +12,12 @@
   },
   "author": "Dr. Patrick Bartsch",
   "contributors": [
-    "Benjamin Dobler"
+    "Benjamin Dobler",
+    "Denny Trebbin"
   ],
   "license": "MIT",
   "dependencies": {
-    "@rsi/core": "https://github.com/wzr1337/rsi.core",
+    "@rsi/core": "https://github.com/wzr1337/rsi.core#feature/tslint",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "cors": "^2.8.4",

@@ -1,4 +1,4 @@
-import { rsiLogger, rsiLoggerInstance } from "@rsi/core";
+import { IRsiLoggerInstance, RsiLogger } from "@rsi/core";
 import * as bodyParser from "body-parser";
 import * as compression from "compression";
 import * as cors from "cors";
@@ -14,14 +14,14 @@ class ServiceRegistry {
   public ws: WebSocketServer.Server;
   private server: any;
   private port: number | string | boolean;
-  private logger: rsiLoggerInstance;
+  private logger: IRsiLoggerInstance;
 
   private services: any[] = [];
   private serviceMap: any = {};
 
   constructor(port?: number, private _BASEURI: string = "/") {
     this.port = port;
-    this.logger = rsiLogger.getInstance().getLogger("general");
+    this.logger = RsiLogger.getInstance().getLogger("general");
     this.app = express();
 
     const whitelist = ["127.0.0.1", "localhost"];

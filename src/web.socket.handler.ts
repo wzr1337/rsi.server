@@ -1,4 +1,4 @@
-import { Element, Resource, ResourceUpdate, rsiLogger, rsiLoggerInstance, Service, StatusCode } from "@rsi/core";
+import { IElement, IResourceUpdate, IRsiLoggerInstance, Resource, RsiLogger, Service, StatusCode } from "@rsi/core";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { ElementUtil, filterByKeys, getEventParams, splitEvent } from "./helpers";
@@ -7,10 +7,10 @@ import { RsiWebSocket } from "./web.socket.server";
 
 export class WsHandler {
   private subscriptions: any = {};
-  private logger: rsiLoggerInstance;
+  private logger: IRsiLoggerInstance;
 
   constructor(private service: Service, private resource: Resource, private elementUtil: ElementUtil) {
-    this.logger = rsiLogger.getInstance().getLogger("WsHandler");
+    this.logger = RsiLogger.getInstance().getLogger("WsHandler");
   }
 
   public toString() {
@@ -102,7 +102,7 @@ export class WsHandler {
     if (this.resource.elementSubscribable) {
       // this is an element subscription
       const element = await this.resource.getElement(eventObj.element);
-      const subject: BehaviorSubject < Element > = element.data;
+      const subject: BehaviorSubject < IElement > = element.data;
       if (element && subject) {
         // logger.debug("New element level subscription:", msg.event);
         rsiWebSocket.acknowledgeSubscription(msg.event);
@@ -168,14 +168,14 @@ export class WsHandler {
 
       // filter only updates because resource subscription should only fire on add and remove
       this.subscriptions[rsiWebSocket.id][msg.event] = resourceStream$
-        .subscribe(async (change: ResourceUpdate) => {
+        .subscribe(async (change: IResourceUpdate) => {
             // logger.info("New resource data:", change);
             const elements = await this.resource.getResource(
               /*parseNumberOrId(req.query.$offset),
               parseNumberOrId(req.query.$limit)*/
             );
             if (elements) {
-              let resp = elements.data.map((value: BehaviorSubject < Element > ) => {
+              let resp = elements.data.map((value: BehaviorSubject < IElement > ) => {
                 return value.getValue().data;
               });
 

@@ -34,7 +34,7 @@ var WebServer = /** @class */ (function () {
             _this.server.close();
             _this.app = null;
         };
-        this.logger = core_1.rsiLogger.getInstance().getLogger("general");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("general");
         this.app = express();
         var whitelist = ["127.0.0.1", "localhost"];
         var corsOpts = {

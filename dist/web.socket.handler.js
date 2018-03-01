@@ -105,7 +105,7 @@ var WsHandler = /** @class */ (function () {
                     break;
             }
         };
-        this.logger = core_1.rsiLogger.getInstance().getLogger("WsHandler");
+        this.logger = core_1.RsiLogger.getInstance().getLogger("WsHandler");
     }
     WsHandler.prototype.toString = function () {
         return this.service.name + "/" + this.resource.name + "/";
