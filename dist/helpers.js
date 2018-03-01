@@ -36,7 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var queryString = require("query-string");
-var URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/; //Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
+// tslint:disable-next-line:max-line-length
+var URIREGEX = /^\/(\w+)\/(\w+)\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fAF]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?#?\w*\??([\w$=&\(\)\:\,\;\-\+]*)?$/;
+// Group1: Servicename, Group2: Resourcename, Group3: element id, Group4: queryparameter list
 function splitEvent(event) {
     /*
     let captureGroups = event.match(URIREGEX);
@@ -49,16 +51,16 @@ function splitEvent(event) {
         element: captureGroups[3]
     }
     */
-    if (event.lastIndexOf('#') != -1) {
-        event = event.substring(0, event.lastIndexOf('#'));
+    if (event.lastIndexOf("#") !== -1) {
+        event = event.substring(0, event.lastIndexOf("#"));
     }
-    if (event.indexOf('?') != -1) {
-        event = event.substring(0, event.lastIndexOf('?'));
+    if (event.indexOf("?") !== -1) {
+        event = event.substring(0, event.lastIndexOf("?"));
     }
-    if (event.charAt(0) === '/') {
+    if (event.charAt(0) === "/") {
         event = event.substring(1);
     }
-    var eventParts = event.split('/');
+    var eventParts = event.split("/");
     var service;
     var resource;
     var element;
@@ -72,9 +74,9 @@ function splitEvent(event) {
         element = eventParts[2].toLowerCase();
     }
     return {
-        service: service,
+        element: element,
         resource: resource,
-        element: element
+        service: service
     };
 }
 exports.splitEvent = splitEvent;
@@ -86,7 +88,7 @@ exports.splitEvent = splitEvent;
  * @returns         The combined path use as a route.
  */
 function pathof(baseUri, service, resource) {
-    return baseUri + service.name.toLowerCase() + '/' + resource.name.toLowerCase();
+    return baseUri + service.name.toLowerCase() + "/" + resource.name.toLowerCase();
 }
 exports.pathof = pathof;
 /**
@@ -97,8 +99,9 @@ exports.pathof = pathof;
  * @returns             the filtered object
  */
 function filterByKeys(inputObject, keep) {
-    if (!Array.isArray(keep) || keep.length === 0)
+    if (!Array.isArray(keep) || keep.length === 0) {
         return inputObject;
+    }
     var result = {};
     for (var i = 0, len = keep.length; i < len; i++) {
         var key = keep[i];
@@ -109,9 +112,8 @@ function filterByKeys(inputObject, keep) {
     return result;
 }
 exports.filterByKeys = filterByKeys;
-;
 function getEventParams(value) {
-    value = value.substring(value.lastIndexOf('?'));
+    value = value.substring(value.lastIndexOf("?"));
     var parsed = queryString.parse(value);
     return parsed;
 }
@@ -178,39 +180,6 @@ var ElementUtil = /** @class */ (function () {
             });
         });
     };
-    /**
-     * Deep clone object, except for keys that contain RSI-object references.
-     *
-     * @param obj
-     * @returns {any}
-     */
-    ElementUtil.prototype.clone = function (obj) {
-        var _this = this;
-        if (typeof obj !== 'object' || obj === null) {
-            return obj;
-        }
-        var objClone = Array.isArray(obj) ? [] : {};
-        Object.keys(obj).forEach(function (key) {
-            if (typeof obj[key] === 'object' && obj[key] !== null) {
-                if (_this.isObjectReference(obj[key])) {
-                    objClone[key] = {
-                        id: obj[key]['id'],
-                        uri: obj[key]['uri']
-                    };
-                }
-                else {
-                    objClone[key] = _this.clone(obj[key]);
-                }
-            }
-            else {
-                objClone[key] = obj[key];
-            }
-        });
-        return objClone;
-    };
-    ElementUtil.prototype.isObjectReference = function (obj) {
-        return obj.hasOwnProperty('id') && obj.hasOwnProperty('uri');
-    };
     ElementUtil.prototype.traverse = function (obj, maxLevel, level) {
         if (maxLevel === void 0) { maxLevel = Number.POSITIVE_INFINITY; }
         if (level === void 0) { level = 0; }
@@ -221,7 +190,7 @@ var ElementUtil = /** @class */ (function () {
                     case 0:
                         byLevel = /^\d+$/.test(maxLevel);
                         if (!byLevel) {
-                            keywords = maxLevel.split(',');
+                            keywords = maxLevel.split(",");
                         }
                         else if (level > maxLevel) {
                             return [2 /*return*/];
@@ -235,8 +204,8 @@ var ElementUtil = /** @class */ (function () {
                         if (!(_i < _a.length)) return [3 /*break*/, 12];
                         property = _a[_i];
                         if (!obj.hasOwnProperty(property)) return [3 /*break*/, 11];
-                        if (!(typeof obj[property] == 'object' && !Array.isArray(obj[property]))) return [3 /*break*/, 4];
-                        expandNode = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                        if (!(typeof obj[property] === "object" && !Array.isArray(obj[property]))) return [3 /*break*/, 4];
+                        expandNode = byLevel ? level < maxLevel : keywords.indexOf(property) !== -1;
                         return [4 /*yield*/, this.getElementById(obj[property].id)];
                     case 2:
                         fullObj = _c.sent();
@@ -263,8 +232,8 @@ var ElementUtil = /** @class */ (function () {
                         _c.label = 5;
                     case 5:
                         if (!(i < obj[property].length)) return [3 /*break*/, 11];
-                        if (!(typeof obj[property][i] == 'object')) return [3 /*break*/, 10];
-                        expandNode = byLevel ? level < maxLevel : keywords.indexOf(property) != -1;
+                        if (!(typeof obj[property][i] === "object")) return [3 /*break*/, 10];
+                        expandNode = byLevel ? level < maxLevel : keywords.indexOf(property) !== -1;
                         if (!expandNode) return [3 /*break*/, 7];
                         return [4 /*yield*/, this.getElementById(obj[property][i].id)];
                     case 6:
@@ -293,6 +262,39 @@ var ElementUtil = /** @class */ (function () {
                 }
             });
         });
+    };
+    /**
+     * Deep clone object, except for keys that contain RSI-object references.
+     *
+     * @param obj
+     * @returns {any}
+     */
+    ElementUtil.prototype.clone = function (obj) {
+        var _this = this;
+        if (typeof obj !== "object" || obj === null) {
+            return obj;
+        }
+        var objClone = Array.isArray(obj) ? [] : {};
+        Object.keys(obj).forEach(function (key) {
+            if (typeof obj[key] === "object" && obj[key] !== null) {
+                if (_this.isObjectReference(obj[key])) {
+                    objClone[key] = {
+                        id: obj[key].id,
+                        uri: obj[key].uri
+                    };
+                }
+                else {
+                    objClone[key] = _this.clone(obj[key]);
+                }
+            }
+            else {
+                objClone[key] = obj[key];
+            }
+        });
+        return objClone;
+    };
+    ElementUtil.prototype.isObjectReference = function (obj) {
+        return obj.hasOwnProperty("id") && obj.hasOwnProperty("uri");
     };
     return ElementUtil;
 }());

@@ -1,9 +1,27 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:recommended"
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:recommended"
+  ],
+  "jsRules": {},
+  "rules": {
+    "trailing-comma": [
+      true,
+      {
+        "multiline": {
+          "objects": "never",
+          "arrays": "never",
+          "functions": "never",
+          "typeLiterals": "ignore"
+        },
+        "esSpecCompliant": true
+      }
     ],
-    "jsRules": {},
-    "rules": {},
-    "rulesDirectory": []
+    "no-console": [
+      true,
+      "dir",
+      "error"
+    ]
+  },
+  "rulesDirectory": []
 }

@@ -1,8 +1,8 @@
-import { RsiServer } from '../rsi.server';
-import { Service } from '@rsi/core';
+import { Service } from "@rsi/core";
+import { RsiServer } from "../rsi.server";
 export declare class PluginLoader {
     private server;
     constructor(server: RsiServer);
-    loadPlugins(directory: string): Array<Service>;
-    loadPlugin(directory: string): Array<Service>;
+    loadPlugins(directory: string): Service[];
+    loadPlugin(directory: string): Service[];
 }

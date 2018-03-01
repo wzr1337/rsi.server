@@ -1,16 +1,11 @@
-export interface RsiClientWebSocketMessage {
+export interface IRsiClientWebSocketMessage {
     type: string;
     event: string;
     interval?: number;
     updatelimit?: number;
     Authorization?: string;
 }
-export interface xObject {
-    id: string;
-    name: string;
-    uri: string;
-}
-export interface errorObject {
+export interface IErrorObject {
     status: "error";
     message: string;
     code: number;
@@ -18,9 +13,9 @@ export interface errorObject {
 /**
  * options to run the server
  */
-export interface RunOptions {
+export interface IRunOptions {
     port?: number;
-    verbosity?: 'silly' | 'debug' | 'verbose' | 'info' | 'warn' | 'error';
+    verbosity?: "silly" | "debug" | "verbose" | "info" | "warn" | "error";
     base?: string;
     serviceRegistry?: string;
 }

@@ -1,9 +1,8 @@
 declare class RsiWebSocket {
     private ws;
     private _id;
-    private _logger;
+    private logger;
     constructor(ws: WebSocket);
-    private _send(rsiMessageObject);
     readonly id: string;
     /**
      * send formatted data via WebSocket
@@ -12,7 +11,7 @@ declare class RsiWebSocket {
      *
      * @returns true on successful send
      */
-    sendData(event: string, payload: Object): boolean;
+    sendData(event: string, payload: object): boolean;
     /**
      * send formatted error message via WebSocket
      * @param code error code
@@ -36,5 +35,6 @@ declare class RsiWebSocket {
      */
     acknowledgeUnsubscription(event: string): boolean;
     close(code?: number): void;
+    private _send(rsiMessageObject);
 }
 export { RsiWebSocket };

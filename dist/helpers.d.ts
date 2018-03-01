@@ -1,4 +1,4 @@
-import { Resource, Service } from '@rsi/core';
+import { Resource, Service } from "@rsi/core";
 export declare function splitEvent(event: string): {
     service?: string;
     resource?: string;
@@ -19,18 +19,19 @@ export declare function pathof(baseUri: string, service: Service, resource: Reso
  * @param keep          an array of strings (keys) to keep
  * @returns             the filtered object
  */
-export declare function filterByKeys(inputObject: any, keep: string[]): Object;
+export declare function filterByKeys(inputObject: any, keep: string[]): object;
 export declare function getEventParams(value: string): any;
 export declare function asyncForEach(array: any, callback: any): Promise<void>;
 export declare class ElementUtil {
     private availableServices;
     private serviceMap;
-    constructor(availableServices: {
+    constructor(availableServices: Array<{
         id: string;
         name: string;
         uri: string;
-    }[], serviceMap: any);
+    }>, serviceMap: any);
     getElementById(id: string): Promise<any>;
+    traverse(obj: any, maxLevel?: any, level?: number): Promise<void>;
     /**
      * Deep clone object, except for keys that contain RSI-object references.
      *
@@ -39,5 +40,4 @@ export declare class ElementUtil {
      */
     private clone(obj);
     private isObjectReference(obj);
-    traverse(obj: any, maxLevel?: any, level?: number): Promise<void>;
 }

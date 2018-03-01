@@ -8,15 +8,18 @@
     "test": "node spec/runner.js",
     "build": "npm run build:dev",
     "build:dev": "tsc",
-    "build:prod": "tsc && tslint -p ./tsconfig.json"
+    "build:prod": "npm run lint && tsc",
+    "lint": "tslint --project ./tsconfig.json",
+    "lint:fix": "tslint --fix --project ./tsconfig.json"
   },
   "author": "Dr. Patrick Bartsch",
   "contributors": [
-    "Benjamin Dobler"
+    "Benjamin Dobler",
+    "Denny Trebbin"
   ],
   "license": "MIT",
   "dependencies": {
-    "@rsi/core": "https://github.com/wzr1337/rsi.core",
+    "@rsi/core": "https://github.com/wzr1337/rsi.core#0.2.0",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "cors": "^2.8.4",
