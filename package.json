@@ -8,8 +8,8 @@
     "test": "node spec/runner.js",
     "build": "npm run build:dev",
     "build:dev": "tsc",
-    "build:prod": "tsc && npm run lint",
-    "lint": "tslint",
+    "build:prod": "npm run lint && tsc",
+    "lint": "tslint --project ./tsconfig.json",
     "lint:fix": "tslint --fix --project ./tsconfig.json"
   },
   "author": "Dr. Patrick Bartsch",
