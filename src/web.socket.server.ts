@@ -10,7 +10,7 @@ class RsiWebSocket {
     this.logger = RsiLogger.getInstance().getLogger("RsiWebSocket");
     this.logger.transports.console.level = "silly"; // for debug
     this._id = uuid.v4();
-    this.ws.onerror = (err) => this.logger.error("WebSocket Error", err);
+    this.ws.onerror = this.handleErrors;
   }
 
   get id(): string {
@@ -79,6 +79,15 @@ class RsiWebSocket {
       status: "ok",
       type: "unsubscribe"
     });
+  }
+
+  public handleErrors(err) {
+    if (err.message === "read ECONNRESET") {
+      // Ignore ECONNRESET and re throw anything else
+      console.log("Client connection broke..");
+    } else {
+      console.log("WebSocket Error", err);
+    }
   }
 
   public close(code?: number): void {

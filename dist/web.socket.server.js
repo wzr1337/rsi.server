@@ -4,12 +4,11 @@ var core_1 = require("@rsi/core");
 var uuid = require("uuid");
 var RsiWebSocket = /** @class */ (function () {
     function RsiWebSocket(ws) {
-        var _this = this;
         this.ws = ws;
         this.logger = core_1.RsiLogger.getInstance().getLogger("RsiWebSocket");
         this.logger.transports.console.level = "silly"; // for debug
         this._id = uuid.v4();
-        this.ws.onerror = function (err) { return _this.logger.error("WebSocket Error", err); };
+        this.ws.onerror = this.handleErrors;
     }
     Object.defineProperty(RsiWebSocket.prototype, "id", {
         get: function () {
@@ -77,6 +76,15 @@ var RsiWebSocket = /** @class */ (function () {
             status: "ok",
             type: "unsubscribe"
         });
+    };
+    RsiWebSocket.prototype.handleErrors = function (err) {
+        if (err.message === "read ECONNRESET") {
+            // Ignore ECONNRESET and re throw anything else
+            console.log("Client connection broke..");
+        }
+        else {
+            console.log("WebSocket Error", err);
+        }
     };
     RsiWebSocket.prototype.close = function (code) {
         if (this.ws.readyState) {

@@ -34,6 +34,7 @@ declare class RsiWebSocket {
      * @returns true on successful acknowledgement
      */
     acknowledgeUnsubscription(event: string): boolean;
+    handleErrors(err: any): void;
     close(code?: number): void;
     private _send(rsiMessageObject);
 }
