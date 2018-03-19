@@ -10,6 +10,7 @@ class RsiWebSocket {
     this.logger = RsiLogger.getInstance().getLogger("RsiWebSocket");
     this.logger.transports.console.level = "silly"; // for debug
     this._id = uuid.v4();
+    this.ws.onerror = (err) => this.logger.error("WebSocket Error", err);
   }
 
   get id(): string {

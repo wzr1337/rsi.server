@@ -4,10 +4,12 @@ var core_1 = require("@rsi/core");
 var uuid = require("uuid");
 var RsiWebSocket = /** @class */ (function () {
     function RsiWebSocket(ws) {
+        var _this = this;
         this.ws = ws;
         this.logger = core_1.RsiLogger.getInstance().getLogger("RsiWebSocket");
         this.logger.transports.console.level = "silly"; // for debug
         this._id = uuid.v4();
+        this.ws.onerror = function (err) { return _this.logger.error("WebSocket Error", err); };
     }
     Object.defineProperty(RsiWebSocket.prototype, "id", {
         get: function () {
