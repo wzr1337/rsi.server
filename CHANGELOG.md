@@ -1,5 +1,16 @@
+<a name="0.2.2"></a>
+## [0.2.2](https://github.com/wzr1337/rsiServer/compare/0.2.0...v0.2.2) (2018-03-19)
+
+
+### Bug Fixes
+
+* **Websocket:** handle connection break ([d0cfe5d](https://github.com/wzr1337/rsiServer/commit/d0cfe5d))
+* **wsError:** add general handler ([c2c51d9](https://github.com/wzr1337/rsiServer/commit/c2c51d9))
+
+
+
 <a name="0.2.0"></a>
-# [0.2.0](https://github.com/wzr1337/rsiServer/compare/0.0.4...v0.2.0) (2018-03-01)
+# [0.2.0](https://github.com/wzr1337/rsiServer/compare/0.0.4...0.2.0) (2018-03-01)
 
 
 ### Bug Fixes

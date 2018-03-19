@@ -1,6 +1,6 @@
 {
   "name": "@rsi/server",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "A Reactive Extensions based server for the Volkswagen Infotainment Web Interface as public in 2016 by W3C",
   "main": "dist/public_api.js",
   "types": "dist/public_api.d.ts",
