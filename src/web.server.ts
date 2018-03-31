@@ -7,7 +7,7 @@ import * as path from "path";
 import * as WebSocketServer from "ws";
 
 import { IRsiLoggerInstance, RsiLogger } from "@rsi/core";
-import { Cdn } from "./cdn";
+import { Cdn } from "@rsi/cdn";
 
 // create server and listen on provided port (on all network interfaces).
 export class WebServer {
