@@ -19,7 +19,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@rsi/core": "https://github.com/wzr1337/rsi.core#0.2.2",
+    "@rsi/core": "https://github.com/wzr1337/rsi.core#0.2.4",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "cors": "^2.8.4",
