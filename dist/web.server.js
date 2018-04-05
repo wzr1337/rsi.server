@@ -69,7 +69,7 @@ var WebServer = /** @class */ (function () {
         });
         this.app.use(compression());
         // serve static content for cdn
-        this.app.use(this._BASEURI + "cdn/images", cdn_1.Cdn.getInstance().process());
+        this.app.use(this._BASEURI + "cdn/:resource/:filename?", cdn_1.Cdn.getInstance().requestHandler());
         // Get port from environment and store in Express.
         this.port = this.normalizePort(process.env.PORT || port || "3000");
         this.app.set("port", this.port);
