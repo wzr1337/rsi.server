@@ -1,5 +1,16 @@
+<a name="0.2.3"></a>
+## [0.2.3](https://github.com/wzr1337/rsiServer/compare/0.2.2...v0.2.3) (2018-04-05)
+
+
+### Features
+
+* **cdb:** fix routing syntax for cdn ([4361fb4](https://github.com/wzr1337/rsiServer/commit/4361fb4))
+* **cdn:** separate cdn into own repo ([bc7073e](https://github.com/wzr1337/rsiServer/commit/bc7073e))
+
+
+
 <a name="0.2.2"></a>
-## [0.2.2](https://github.com/wzr1337/rsiServer/compare/0.2.0...v0.2.2) (2018-03-19)
+## [0.2.2](https://github.com/wzr1337/rsiServer/compare/0.2.0...0.2.2) (2018-03-19)
 
 
 ### Bug Fixes
