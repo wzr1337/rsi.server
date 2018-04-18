@@ -1,5 +1,15 @@
+<a name="0.2.4"></a>
+## [0.2.4](https://github.com/wzr1337/rsiServer/compare/0.2.3...v0.2.4) (2018-04-18)
+
+
+### Features
+
+* **general:** migrate to singleton sevrices ([3b6b8e0](https://github.com/wzr1337/rsiServer/commit/3b6b8e0))
+
+
+
 <a name="0.2.3"></a>
-## [0.2.3](https://github.com/wzr1337/rsiServer/compare/0.2.2...v0.2.3) (2018-04-05)
+## [0.2.3](https://github.com/wzr1337/rsiServer/compare/0.2.2...0.2.3) (2018-04-05)
 
 
 ### Features

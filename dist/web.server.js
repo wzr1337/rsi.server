@@ -6,8 +6,8 @@ var cors = require("cors");
 var express = require("express");
 var http = require("http");
 var WebSocketServer = require("ws");
-var core_1 = require("@rsi/core");
 var cdn_1 = require("@rsi/cdn");
+var core_1 = require("@rsi/core");
 // create server and listen on provided port (on all network interfaces).
 var WebServer = /** @class */ (function () {
     function WebServer(port, _BASEURI) {
