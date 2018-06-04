@@ -63,7 +63,13 @@ export class RsiServer {
       this.server.app.get(this.BASEURI + "([\$])id",
                           (req: express.Request, res: express.Response, next: express.NextFunction) => {
         // respond
+        if (req.get("Accept") !== "text/plain") {
+          res.status(StatusCode.NOT_FOUND);
+          res.send();
+          return;
+        }
         res.status(StatusCode.OK);
+        res.set("Content-Type", "text/plain");
         res.send(this.ID);
       });
 

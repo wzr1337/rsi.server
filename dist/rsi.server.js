@@ -88,7 +88,13 @@ var RsiServer = /** @class */ (function () {
             // repsonse to /$id queries with the servers ID
             _this.server.app.get(_this.BASEURI + "([\$])id", function (req, res, next) {
                 // respond
+                if (req.get("Accept") !== "text/plain") {
+                    res.status(core_1.StatusCode.NOT_FOUND);
+                    res.send();
+                    return;
+                }
                 res.status(core_1.StatusCode.OK);
+                res.set("Content-Type", "text/plain");
                 res.send(_this.ID);
             });
             _this.server.app.get(_this.BASEURI, function (req, res, next) {
