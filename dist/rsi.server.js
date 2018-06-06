@@ -55,7 +55,7 @@ var RsiServer = /** @class */ (function () {
         this.port = 3000;
         this.serviceRegistry = "";
         /** the servers id */
-        this.ID = "50182B97-1AE1-4701-A6CE-017648990969";
+        this.ID = "50182B97-1AE1-4701-A6CE-017648990969".toLowerCase();
         this.elementUtil = new helpers_1.ElementUtil(this.availableServices, this.serviceMap);
     }
     /**
@@ -94,7 +94,7 @@ var RsiServer = /** @class */ (function () {
                     return;
                 }
                 res.status(core_1.StatusCode.OK);
-                res.set("Content-Type", "text/plain");
+                res.set("content-type", "text/plain");
                 res.send(_this.ID);
             });
             _this.server.app.get(_this.BASEURI, function (req, res, next) {

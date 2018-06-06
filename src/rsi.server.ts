@@ -26,7 +26,7 @@ export class RsiServer {
   private port: number = 3000;
   private serviceRegistry: string = "";
   /** the servers id */
-  private ID = "50182B97-1AE1-4701-A6CE-017648990969";
+  private ID = "50182B97-1AE1-4701-A6CE-017648990969".toLowerCase();
 
   constructor() {
     this.elementUtil = new ElementUtil(this.availableServices, this.serviceMap);
@@ -69,7 +69,7 @@ export class RsiServer {
           return;
         }
         res.status(StatusCode.OK);
-        res.set("Content-Type", "text/plain");
+        res.set("content-type", "text/plain");
         res.send(this.ID);
       });
 
