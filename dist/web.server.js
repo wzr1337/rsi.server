@@ -39,26 +39,7 @@ var WebServer = /** @class */ (function () {
         var whitelist = ["127.0.0.1", "localhost"];
         var corsOpts = {
             exposedHeaders: "Location",
-            origin: function (origin, callback) {
-                if (1 || typeof (origin) === "undefined") {
-                    // @TODO: find an actual solution for https://github.com/wzr1337/viwiServer/issues/31
-                    /**
-                     * The origin may be hidden if the user comes from an ssl encrypted website.
-                     *
-                     * Also: Some browser extensions remove origin and referer from the http-request headers,
-                     * and therefore the origin property will be empty.
-                     */
-                    callback(null, true);
-                }
-                else {
-                    // subdomains and tlds need to be whitelisted explicitly
-                    var hostRegex = new RegExp("(https?://)([^:^/]*)(:\\d*)?(.*)?", "gi");
-                    var result = hostRegex.exec(origin);
-                    var host = (result && result.length >= 2) ? result[2] : undefined;
-                    var originIsWhitelisted = whitelist.indexOf(host) !== -1;
-                    callback(originIsWhitelisted ? null : new Error("Bad Request"), originIsWhitelisted);
-                }
-            }
+            origin: "*"
         };
         this.app.use(cors(corsOpts));
         this.app.use(bodyParser.json());
