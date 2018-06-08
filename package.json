@@ -10,7 +10,8 @@
     "build:dev": "tsc",
     "build:prod": "npm run lint && tsc",
     "lint": "tslint --project ./tsconfig.json",
-    "lint:fix": "tslint --fix --project ./tsconfig.json"
+    "lint:fix": "tslint --fix --project ./tsconfig.json",
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
   },
   "author": "Dr. Patrick Bartsch",
   "contributors": [
