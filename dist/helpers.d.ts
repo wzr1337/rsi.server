@@ -38,6 +38,6 @@ export declare class ElementUtil {
      * @param obj
      * @returns {any}
      */
-    private clone(obj);
-    private isObjectReference(obj);
+    private clone;
+    private isObjectReference;
 }

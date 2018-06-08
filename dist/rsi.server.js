@@ -221,13 +221,13 @@ var RsiServer = /** @class */ (function () {
         var resourcePath = helpers_1.pathof(this.BASEURI, service, resource);
         // if(resource.getResource ) { logger.info("GET   ", resourcePath, "registered") };
         return function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
             // get all available renderes and map their representation to JSON compatible values
             function parseNumberOrId(n) {
                 return (typeof n === "undefined") ? undefined : ((!isNaN(parseFloat(n)) && isFinite(n)) ?
                     parseFloat(n) : n.toString());
             }
             var elements, resp, expandLevel_1, _loop_1, propName, fieldsList_1, medatoryFields_1, sort_1, dec_1;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
