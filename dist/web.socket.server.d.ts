@@ -36,6 +36,6 @@ declare class RsiWebSocket {
     acknowledgeUnsubscription(event: string): boolean;
     handleErrors(err: any): void;
     close(code?: number): void;
-    private _send(rsiMessageObject);
+    private _send;
 }
 export { RsiWebSocket };

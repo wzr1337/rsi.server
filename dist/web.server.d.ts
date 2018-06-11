@@ -1,5 +1,3 @@
-/// <reference types="express" />
-/// <reference types="ws" />
 import * as express from "express";
 import * as WebSocketServer from "ws";
 export declare class WebServer {

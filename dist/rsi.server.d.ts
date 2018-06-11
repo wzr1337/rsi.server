@@ -1,4 +1,3 @@
-/// <reference types="express" />
 import { Resource, Service } from "@rsi/core";
 import * as express from "express";
 import { IRunOptions } from "./types";
@@ -62,19 +61,19 @@ export declare class RsiServer {
      *
      * returns an express route callback
      */
-    private serviceGET(service);
+    private serviceGET;
     /**
      * handling GET requests on element level (retrieve element details).
      *
      * @param service   The service name.
      * @param resource  The resource name.
      */
-    private elementGET(service, resource);
+    private elementGET;
     /**
      * handling POST requests on element level (modify an existing element).
      *
      * @param service   The service name.
      * @param resource  The resource name.
      */
-    private elementPOST(service, resource);
+    private elementPOST;
 }
