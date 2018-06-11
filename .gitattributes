@@ -1,0 +1,4 @@
+* text eol=lf
+# ensure new line at eof - get rid of npm annoyances
+package.json text eol=lf
+package-lock.json text eol=lf
