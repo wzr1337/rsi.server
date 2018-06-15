@@ -5,7 +5,9 @@
   "main": "dist/public_api.js",
   "types": "dist/public_api.d.ts",
   "scripts": {
-    "test": "node spec/runner.js",
+    "test": "npm run build && npm run test:only",
+    "test:only": "jasmine",
+    "test:prod": "npm run build:prod && npm run test:only",
     "build": "npm run build:dev",
     "build:dev": "tsc",
     "build:prod": "npm run lint && tsc",
@@ -20,7 +22,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@rsi/core": "https://github.com/wzr1337/rsi.core#0.2.8",
+    "@rsi/core": "https://github.com/wzr1337/rsi.core#0.2.9",
     "@rsi/cdn": "https://github.com/wzr1337/rsi.cdn#0.2.8",
     "body-parser": "^1.18.3",
     "compression": "^1.7.2",
