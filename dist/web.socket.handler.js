@@ -123,8 +123,8 @@ var WsHandler = /** @class */ (function () {
     };
     WsHandler.prototype.handleElementSubscriptions = function (rsiWebSocket, msg, eventObj) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             var element, subject_1, subscription$;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -208,11 +208,14 @@ var WsHandler = /** @class */ (function () {
             // filter only updates because resource subscription should only fire on add and remove
             this.subscriptions[rsiWebSocket.id][msg.event] = resourceStream$
                 .subscribe(function (change) { return __awaiter(_this, void 0, void 0, function () {
-                var _this = this;
                 var elements, resp, params_1, expandLevel_1;
+                var _this = this;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [4 /*yield*/, this.resource.getResource()];
+                        case 0: return [4 /*yield*/, this.resource.getResource(
+                            /*parseNumberOrId(req.query.$offset),
+                            parseNumberOrId(req.query.$limit)*/
+                            )];
                         case 1:
                             elements = _a.sent();
                             if (!elements) return [3 /*break*/, 3];
