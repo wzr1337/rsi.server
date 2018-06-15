@@ -1,9 +1,18 @@
-<a name="0.2.4"></a>
-## [0.2.4](https://github.com/wzr1337/rsiServer/compare/0.2.3...v0.2.4) (2018-04-18)
+<a name="0.2.5"></a>
+## [0.2.5](https://github.com/wzr1337/rsiServer/compare/0.2.4...0.2.5) (2018-06-15)
+
+
+### Bug Fixes
+
+* repsond /$id correctly with text/plain uuid ([a38c3de](https://github.com/wzr1337/rsiServer/commit/a38c3de))
+* respond lowercase in  queries ([4db620f](https://github.com/wzr1337/rsiServer/commit/4db620f))
+* **package.json:** ensure new line at eof in package.json after npm i ([a05c8e9](https://github.com/wzr1337/rsiServer/commit/a05c8e9))
+* **web.server:** comply with access-allow-origin = * ([9823290](https://github.com/wzr1337/rsiServer/commit/9823290))
 
 
 ### Features
 
+* **dependencies:** update dependencies ([54f0555](https://github.com/wzr1337/rsiServer/commit/54f0555))
 * **general:** migrate to singleton sevrices ([3b6b8e0](https://github.com/wzr1337/rsiServer/commit/3b6b8e0))
 
 
@@ -41,7 +50,7 @@
 * **CI:** fix env settings to always use AUDIODEV=null ([ed9d2a5](https://github.com/wzr1337/rsiServer/commit/ed9d2a5))
 * **CI:** fix no-audio card error on TRAVIS-CI ([0d022a6](https://github.com/wzr1337/rsiServer/commit/0d022a6))
 * **general:** fix error responses to be compliant ([0af3ebc](https://github.com/wzr1337/rsiServer/commit/0af3ebc))
-* **general:** respond 501 on / POST and DELETE fixes #72 ([5a58747](https://github.com/wzr1337/rsiServer/commit/5a58747)), closes [#72](https://github.com/wzr1337/rsiServer/issues/72)
+* **general:** respond 501 on / POST and DELETE fixes [#72](https://github.com/wzr1337/rsiServer/issues/72) ([5a58747](https://github.com/wzr1337/rsiServer/commit/5a58747))
 * **git submodules:** remove submodules for now, so server at least can pass build ([3187097](https://github.com/wzr1337/rsiServer/commit/3187097))
 * **package:** fix build script ([462aa4a](https://github.com/wzr1337/rsiServer/commit/462aa4a))
 * **package:** fix npm task ([a6e82e1](https://github.com/wzr1337/rsiServer/commit/a6e82e1))
@@ -79,7 +88,6 @@
 * **ci:** sudo symbolic linking ([c421ff3](https://github.com/wzr1337/rsiServer/commit/c421ff3))
 * **cors:** answer if origin is undefined (cars disabled in this case) ([747fc2f](https://github.com/wzr1337/rsiServer/commit/747fc2f))
 * fix the POST element response to reflect actual outcome of operation ([192a5a1](https://github.com/wzr1337/rsiServer/commit/192a5a1))
-* **main:** fix server crashing on subscribe/unsubscribe or POST on non-existent elements (#32) ([9b3c337](https://github.com/wzr1337/rsiServer/commit/9b3c337)), closes [#32](https://github.com/wzr1337/rsiServer/issues/32)
 * **media:** add missing break statement ([fb8429c](https://github.com/wzr1337/rsiServer/commit/fb8429c))
 * **media:** fix media render stupidplayer not available on update ([9ada883](https://github.com/wzr1337/rsiServer/commit/9ada883))
 * **media:** player reference issue resloved ([b28c864](https://github.com/wzr1337/rsiServer/commit/b28c864))
@@ -109,7 +117,6 @@
 * updateElement returns an Elementresponse ([6e12452](https://github.com/wzr1337/rsiServer/commit/6e12452))
 * **submodules:** configure travis to pull in the submodules ([10fb5f8](https://github.com/wzr1337/rsiServer/commit/10fb5f8))
 * **travis:** add travis status ([bfe2163](https://github.com/wzr1337/rsiServer/commit/bfe2163))
-* **viwiPlugin:** separate ElementResponse and ListResponse for better readability and coding convinience ([c3f4059](https://github.com/wzr1337/rsiServer/commit/c3f4059))
 
 
 
@@ -139,7 +146,7 @@
 
 
 <a name="0.0.2"></a>
-## [0.0.2](https://github.com/wzr1337/rsiServer/compare/1ede568...0.0.2) (2017-03-04)
+## [0.0.2](https://github.com/wzr1337/rsiServer/compare/4e6296e...0.0.2) (2017-03-04)
 
 
 ### Bug Fixes
@@ -157,7 +164,7 @@
 * **$fields:** add support for $fields on GET element queries ([6987ec2](https://github.com/wzr1337/rsiServer/commit/6987ec2))
 * **buildchain:** add clean task ([54d6214](https://github.com/wzr1337/rsiServer/commit/54d6214))
 * **compression:** add compression ([fd27962](https://github.com/wzr1337/rsiServer/commit/fd27962))
-* **cors:** add cors relsoves #6 ([ea5208a](https://github.com/wzr1337/rsiServer/commit/ea5208a))
+* **cors:** add cors relsoves [#6](https://github.com/wzr1337/rsiServer/issues/6) ([ea5208a](https://github.com/wzr1337/rsiServer/commit/ea5208a))
 * **gulp:** add build task ([fee97d8](https://github.com/wzr1337/rsiServer/commit/fee97d8))
 * **index:** add service listing, require service id ([4710047](https://github.com/wzr1337/rsiServer/commit/4710047))
 * **logging:** add winston logger ([f4f9b43](https://github.com/wzr1337/rsiServer/commit/f4f9b43))
@@ -165,6 +172,7 @@
 * **main:** add basic subscription capabilities ([1ede568](https://github.com/wzr1337/rsiServer/commit/1ede568))
 * **main:** add unscubscribe feature on a per-event basis ([86ffc63](https://github.com/wzr1337/rsiServer/commit/86ffc63))
 * **main:** respond with message on 500 error ([0042009](https://github.com/wzr1337/rsiServer/commit/0042009))
+* **media/renderers:** add minimal media Renderer based on BehaviorSubject ([4e6296e](https://github.com/wzr1337/rsiServer/commit/4e6296e))
 * add resource POSt for colletctions ([79e491d](https://github.com/wzr1337/rsiServer/commit/79e491d))
 * prepare for easier subscription handling for updatelimit and changedetection ([96ccf9c](https://github.com/wzr1337/rsiServer/commit/96ccf9c))
 * **plugin:** prepare subscriptions on resource level ([d3b51c4](https://github.com/wzr1337/rsiServer/commit/d3b51c4))
