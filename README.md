@@ -58,7 +58,7 @@ To subscribe to the netfux media renderer from within a JavaScript application o
 ```js
 ws = new WebSocket("ws://localhost:3000");
 ws.onopen = () => {
-  ws.onmessage = (data) => {console.log(data)}
+  ws.onmessage = (data) => {console.log(JSON.parse(data.data))}
   ws.send(JSON.stringify({type:"subscribe", event:"/media/renderers/d6ebfd90-d2c1-11e6-9376-df943f51f0d8"}))
 }
 ```
