@@ -29,11 +29,11 @@ While there is a [RSI Demo](https://github.com/wzr1337/rsi.demo) available, a mi
 
 ```typescript
 import { RsiServer } from '@rsi/server';
-import * as ml from '@rsi-plugins/medialibrary';
+import * as m from '@rsi-plugins/media';
 
 const server: RsiServer = new RsiServer();
 server.run(); // run the server
-server.addService(new ml.Service()); // add a single service
+server.addService(m.Medialibrary.getInstance()); // add a single service
 ```
 
 accessing `http://127.0.0.1:3000` will give you the following response:
@@ -44,7 +44,7 @@ accessing `http://127.0.0.1:3000` will give you the following response:
   "data": [
     {
       "id": "ea65d5eb-d5fb-4ceb-a568-ed24fcf37e20",
-      "name": "medialibrary",
+      "name": "Medialibrary",
       "uri": "/medialibrary/"
     }
   ]
